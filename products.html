@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Kurma Ajwa Products</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom CSS files -->
+  <link rel="stylesheet" href="assets/css/fontawesome.css">
+  <link rel="stylesheet" href="assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="assets/css/owl.css">
+</head>
+
+<body>
+
+  <!-- Preloader spinner shown while the page is loading -->
+  <div id="preloader">
+    <div class="jumper"><div></div><div></div><div></div></div>
+  </div>
+
+  <!-- Navigation bar -->
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/home"><h2>KURMA <em>AJWA</em></h2></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
+            <li class="nav-item active"><a class="nav-link" href="/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
+            <li class="nav-item">
+              <!-- Logout: clears localStorage and goes back to login page -->
+              <a class="nav-link" href="#" onclick="logout()">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page banner / hero section -->
+  <div class="page-heading products-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Browse</h4>
+            <h2>Our Products</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Products section -->
+  <div class="products">
+    <div class="container">
+      <div class="row">
+
+        <!-- Filter buttons – uses the Isotope JS library to sort/filter cards -->
+        <div class="col-md-12">
+          <div class="filters">
+            <ul>
+              <li class="active" data-filter="*">All Products</li>
+              <li data-filter=".des">Featured</li>
+              <li data-filter=".dev">Flash Deals</li>
+              <li data-filter=".gra">Last Minute</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Product cards container
+             The 'grid' class is used by Isotope for the masonry/filter layout.
+             The id="productGrid" lets our JavaScript inject cards here. -->
+        <div class="col-md-12">
+          <div class="filters-content">
+            <div class="row grid" id="productGrid">
+
+              <!-- Product cards will be injected here by loadProducts() below.
+                   Each card will look exactly like the original HTML cards
+                   but the name, price, and description come from the server. -->
+
+              <!-- Loading placeholder shown while the API call is in progress -->
+              <div class="col-12 text-center py-4" id="loadingMsg">
+                <p>Loading products...</p>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="inner-content">
+            <p>Copyright &copy; 2025 Kurma Ajwa Enterprise</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- JavaScript libraries (must be in this order) -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/custom.js"></script>
+  <script src="assets/js/owl.js"></script>
+  <script src="assets/js/slick.js"></script>
+  <script src="assets/js/isotope.js"></script>
+  <script src="assets/js/accordions.js"></script>
+
+
+  <!-- ── Product loading + logout script ─────────────────────────────── -->
+  <script>
+
+    // ── Logout function ──────────────────────────────────────────────────
+    // Called when the user clicks "Logout" in the nav bar.
+    // Removes stored data and sends the user back to the login page.
+    function logout() {
+      localStorage.removeItem("role");       // remove the saved role
+      localStorage.removeItem("customer");   // remove saved customer info
+      window.location.href = "/";            // go back to index.html (login)
+    }
+
+
+    // ── loadProducts(): fetch products from server and render them ───────
+    // This replaces the hard-coded product cards in the original products.html
+    // with dynamic data coming from GET /api/products in server.js.
+    //
+    // In the future you would connect server.js to Oracle and run:
+    //   SELECT * FROM products
+    // The API would return the same JSON shape, so this code needs no changes.
+    async function loadProducts() {
+
+      try {
+        // Send a GET request to our Node.js API
+        const response = await fetch("/api/products");
+
+        // Convert the response body from JSON text to a JS object
+        const data = await response.json();
+
+        // If the request failed or returned no products, show a message
+        if (!data.success || !data.products.length) {
+          document.getElementById("loadingMsg").textContent = "No products found.";
+          return;
+        }
+
+        // Find the grid container where we'll put the product cards
+        const grid = document.getElementById("productGrid");
+
+        // Remove the "Loading..." placeholder
+        grid.innerHTML = "";
+
+        // Filter categories to cycle through for variety (mirrors original HTML classes)
+        const filterClasses = ["all des", "all dev", "all gra"];
+
+        // Loop through each product and build an HTML card for it
+        data.products.forEach((product, index) => {
+
+          // Pick a filter class based on the product's position in the list
+          const filterClass = filterClasses[index % filterClasses.length];
+
+          // Build the star rating HTML.
+          // For simplicity we show 5 stars; a real app would use product.rating
+          const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
+
+          // Build the complete HTML for one product card.
+          // Template literals (backtick strings) let us embed variables with ${}
+          const cardHTML = `
+            <div class="col-lg-4 col-md-4 ${filterClass}">
+              <div class="product-item">
+                <a href="#">
+                  <img src="assets/images/${product.image}" alt="${product.name}">
+                </a>
+                <div class="down-content">
+                  <a href="#"><h4>${product.name}</h4></a>
+                  <h6>$${product.price.toFixed(2)}</h6>
+                  <p>${product.description}</p>
+                  <ul class="stars">${stars}</ul>
+                  <span>Stock: ${product.stock} units</span>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Insert the card HTML into the grid
+          // insertAdjacentHTML is faster than innerHTML += because it doesn't
+          // re-parse the entire grid every time
+          grid.insertAdjacentHTML("beforeend", cardHTML);
+        });
+
+        // Re-initialise Isotope after adding dynamic content.
+        // Isotope needs to know about the new cards so its filter/sort works.
+        // We use a short timeout to let the browser render the cards first.
+        setTimeout(() => {
+          const $grid = $(".grid");
+          if ($grid.length && typeof $.fn.isotope !== "undefined") {
+            $grid.isotope({ itemSelector: "[class*='col-']", layoutMode: "fitRows" });
+          }
+        }, 200);
+
+      } catch (err) {
+        // Show an error if the network or server failed
+        document.getElementById("loadingMsg").textContent =
+          "Failed to load products. Is the server running?";
+        console.error("Products fetch error:", err);
+      }
+    }
+
+
+    // ── Run on page load ─────────────────────────────────────────────────
+    // Call loadProducts() as soon as the page's DOM is ready
+    document.addEventListener("DOMContentLoaded", loadProducts);
+
+  </script>
+
+</body>
+</html>
