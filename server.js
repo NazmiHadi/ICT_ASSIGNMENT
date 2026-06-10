@@ -131,54 +131,66 @@ app.post("/api/login", async (req, res) => {
     return res.status(400).json({ success: false, message: "Username and password are required." });
   }
 
-  // Admin: still hardcoded (not stored in Oracle)
+  // Admin: hardcoded
   if (username === "admin" && password === "admin123") {
     return res.json({ success: true, role: "admin", redirect: "/admin/dashboard" });
   }
 
-  let conn;
-
-  try {
-    conn = await getConnection();
-
-    // ── Look up the customer in Oracle ────────────────────────────────────
-    // SELECT the row where both username AND password match
-    // In production you would store hashed passwords and use bcrypt.compare()
-    const result = await conn.execute(
-      `SELECT customer_id, name, email, username
-       FROM customers
-       WHERE username = :username AND password = :password`,
-      { username, password }
-    );
-
-    if (result.rows.length === 0) {
-      // No matching row found → wrong credentials
-      return res.status(401).json({ success: false, message: "Invalid username or password." });
-    }
-
-    // result.rows[0] is the first (and only) matching row as an object
-    const customer = result.rows[0];
-
-    console.log(`[LOGIN] Customer logged in from Oracle: ${customer.USERNAME}`);
-    return res.json({
-      success: true,
-      role: "customer",
+  // Customer: hardcoded mock data
+  if (username === "cust" && password === "cust123") {
+    return res.json({ 
+      success: true, 
+      role: "customer", 
       redirect: "/home",
       customer: {
-        customer_id: customer.CUSTOMER_ID,  // Oracle returns column names in UPPERCASE
-        name:        customer.NAME,
-        email:       customer.EMAIL,
-        username:    customer.USERNAME
+        customer_id: 999,
+        name: "Test Customer",
+        email: "customer@test.com",
+        username: "cust"
       }
     });
-
-  } catch (err) {
-    console.error("[LOGIN ERROR]", err);
-    return res.status(500).json({ success: false, message: "Server error." });
-
-  } finally {
-    if (conn) await conn.close();
   }
+
+  /* ===========================================================================
+    ORACLE DATABASE LOGIN BLOCK (Temporarily Disabled)
+    ===========================================================================
+    let conn;
+    try {
+      conn = await getConnection();
+      const result = await conn.execute(
+        `SELECT customer_id, name, email, username
+         FROM customers
+         WHERE username = :username AND password = :password`,
+        { username, password }
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(401).json({ success: false, message: "Invalid username or password." });
+      }
+
+      const customer = result.rows[0];
+      console.log(`[LOGIN] Customer logged in from Oracle: ${customer.USERNAME}`);
+      return res.json({
+        success: true,
+        role: "customer",
+        redirect: "/home",
+        customer: {
+          customer_id: customer.CUSTOMER_ID,
+          name:        customer.NAME,
+          email:       customer.EMAIL,
+          username:    customer.USERNAME
+        }
+      });
+    } catch (err) {
+      console.error("[LOGIN ERROR]", err);
+      return res.status(500).json({ success: false, message: "Server error." });
+    } finally {
+      if (conn) await conn.close();
+    }
+  */
+
+  // Fallback if credentials don't match either hardcoded profile
+  return res.status(401).json({ success: false, message: "Invalid username or password." });
 });
 
 
