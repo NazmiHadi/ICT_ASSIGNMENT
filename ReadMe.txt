@@ -19,3 +19,6 @@ dengan git log.
 - file naming convension
 nnti aku letak file txt db dalam folder asset, pastu folder db comment dia nnti camni 
 "added a database creation sql script into /asset/db"  -- maksudnya dalam folder asset, dalam folder db
+
+
+QnA -
