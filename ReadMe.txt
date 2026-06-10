@@ -11,7 +11,7 @@ to be honest, korang boleh je google semua ni tapi knowing you guys, you probabl
 3. git pull origin main  atau git pull .
  
 4. git status -- tgk korang punya file dengan github punya file matching ke tak.
-
+5. cls        -- untuk clear terminal, dia clear command je dia tak clear apa yg korang buat.
 
 contoh nnti aku akan add file txt sql database yang korang boleh run dalam sql developer untuk dapat database. tapi kena check la bila aku letak
 dengan git log.  
@@ -19,6 +19,9 @@ dengan git log.
 - file naming convension
 nnti aku letak file txt db dalam folder asset, pastu folder db comment dia nnti camni 
 "added a database creation sql script into /asset/db"  -- maksudnya dalam folder asset, dalam folder db
+
+waktu dekat dalam git log, korang mungkin takleh buat command dah. tekan 'q' nnti dia bwk balik ke terminal.
+ 
 
 
 QnA -
