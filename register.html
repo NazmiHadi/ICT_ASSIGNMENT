@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Kurma Ajwa Enterprise</title>
+
+  <!-- Auth page styling (centered card layout) -->
+  <link rel="stylesheet" href="/assets/css/auth.css">
+
+  <style>
+    /* ── Extra styles for the registration card ── */
+
+    /* Give inputs a visible border so they look like proper fields */
+    input {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    /* Style the register button like the login button */
+    button {
+      background: #a0522d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #7a3f20; }
+
+    /* The message area shown below the form (success or error) */
+    #message {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      display: none;     /* hidden by default; shown by JavaScript */
+    }
+    #message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    #message.error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    /* Link at the bottom back to login */
+    .login-link { text-align: center; margin-top: 15px; font-size: 14px; }
+    .login-link a { color: #a0522d; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="auth-container">
+    <div class="card">
+
+      <!-- Page heading -->
+      <h1 style="text-align:center; color:#a0522d; margin-bottom:20px;">
+        KURMA <em>AJWA</em>
+      </h1>
+      <h2 style="text-align:center; font-size:18px; margin-bottom:20px;">
+        Create an Account
+      </h2>
+
+      <!-- Registration form
+           id="registerForm" lets JavaScript find this form
+           novalidate stops the browser's default popup messages
+           so we can show our own styled errors instead -->
+      <form id="registerForm" novalidate>
+
+        <!-- Full Name field -->
+        <input
+          type="text"
+          id="name"
+          placeholder="Full Name"
+          required>
+
+        <!-- Email field -->
+        <input
+          type="email"
+          id="email"
+          placeholder="Email Address"
+          required>
+
+        <!-- Phone (optional) -->
+        <input
+          type="tel"
+          id="phone"
+          placeholder="Phone Number (optional)">
+
+        <!-- Username – used to log in -->
+        <input
+          type="text"
+          id="username"
+          placeholder="Username"
+          required>
+
+        <!-- Password -->
+        <input
+          type="password"
+          id="password"
+          placeholder="Password"
+          required>
+
+        <!-- Confirm Password – must match the field above -->
+        <input
+          type="password"
+          id="confirmPassword"
+          placeholder="Confirm Password"
+          required>
+
+        <!-- Submit button -->
+        <button type="submit">Register</button>
+
+      </form>
+
+      <!-- Message area – hidden until JavaScript sets a success or error class -->
+      <div id="message"></div>
+
+      <!-- Link back to the login page -->
+      <div class="login-link">
+        <p>Already have an account? <a href="/">Sign in</a></p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ── Registration JavaScript ──────────────────────────────────────── -->
+  <script>
+
+    // Get a reference to the registration form element
+    const form    = document.getElementById("registerForm");
+
+    // Get a reference to the message div where we show results
+    const msgDiv  = document.getElementById("message");
+
+    // Helper function: show a styled message (type = "success" or "error")
+    function showMessage(text, type) {
+      msgDiv.textContent = text;        // set the text inside the div
+      msgDiv.className   = type;        // set the CSS class (success or error)
+      msgDiv.style.display = "block";   // make the div visible
+    }
+
+    // Listen for the form's "submit" event (fires when user clicks Register)
+    form.addEventListener("submit", async function (e) {
+
+      // Prevent the browser from refreshing the page (default form behaviour)
+      e.preventDefault();
+
+      // Read the values the user typed into each field
+      const name            = document.getElementById("name").value.trim();
+      const email           = document.getElementById("email").value.trim();
+      const phone           = document.getElementById("phone").value.trim();
+      const username        = document.getElementById("username").value.trim();
+      const password        = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      // ── Client-side validation (quick check before sending to server) ──
+      if (!name || !email || !username || !password || !confirmPassword) {
+        return showMessage("Please fill in all required fields.", "error");
+      }
+      if (password !== confirmPassword) {
+        return showMessage("Passwords do not match.", "error");
+      }
+      if (password.length < 6) {
+        return showMessage("Password must be at least 6 characters.", "error");
+      }
+
+      // ── Send data to the server via fetch (AJAX POST request) ──────────
+      // fetch() sends an HTTP request without refreshing the page.
+      // We send the form data as JSON in the request body.
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },  // tell server we're sending JSON
+          body: JSON.stringify({ name, email, phone, username, password, confirmPassword })
+        });
+
+        // Parse the JSON response that came back from server.js
+        const data = await response.json();
+
+        if (data.success) {
+          // Registration worked! Show success and redirect to login after 2 seconds
+          showMessage("Account created! Redirecting to login...", "success");
+          form.reset();  // clear all the form fields
+          setTimeout(() => { window.location.href = "/"; }, 2000);
+        } else {
+          // Server returned an error (e.g. username taken)
+          showMessage(data.message, "error");
+        }
+
+      } catch (err) {
+        // Network error or server crashed – very unlikely but handle it gracefully
+        showMessage("Could not connect to server. Please try again.", "error");
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>

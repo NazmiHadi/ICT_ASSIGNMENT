@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+
+    <title>KURMA AJWA ENTERPRISE</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Additional CSS Files -->
+    <link rel="stylesheet" href="css/fontawesome.css">
+    <link rel="stylesheet" href="css/templatemo-sixteen.css">
+    <link rel="stylesheet" href="css/owl.css">
+  </head>
+
+  <body>
+
+    <!-- Preloader spinner shown while page loads -->
+    <div id="preloader">
+      <div class="jumper">
+        <div></div><div></div><div></div>
+      </div>
+    </div>
+
+    <!-- Navigation bar -->
+    <header class="">
+      <nav class="navbar navbar-expand-lg">
+        <div class="container">
+          <a class="navbar-brand" href="/home"><h2>KURMA <em>AJWA</em></h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+            aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarResponsive">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/products">Our Products</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/about">About Us</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/contact">Contact Us</a>
+              </li>
+              <li class="nav-item">
+                <!-- Logout: clears saved role + customer info, returns to login -->
+                <a class="nav-link" href="#" onclick="logout()">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Banner / Hero carousel -->
+    <div class="banner header-text">
+      <div class="owl-banner owl-carousel">
+        <div class="banner-item-01">
+          <div class="text-content">
+            <h2>PRESENTING</h2>
+            <h4>A DATABASE USER INTERFACE</h4>
+          </div>
+        </div>
+        <div class="banner-item-02">
+          <div class="text-content">
+            <h2>FROM</h2>
+            <h4>THE BANANA GROUP OF DOOM</h4>
+          </div>
+        </div>
+        <div class="banner-item-03">
+          <div class="text-content">
+            <h2>THE</h2>
+            <h2>KURMA AJWA ENTERPRISE</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Latest Products section ─────────────────────────────────────────
+         The product cards here are injected by loadLatestProducts() below.
+         We only show the first 3 products as a "preview" on the home page.
+         The full list is on /products.
+    ──────────────────────────────────────────────────────────────────────── -->
+    <div class="latest-products">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>Latest Products</h2>
+              <a href="/products">view all products <i class="fa fa-angle-right"></i></a>
+            </div>
+          </div>
+
+          <!-- Cards will be injected here by JavaScript.
+               id="latestProductsRow" is the anchor point for insertAdjacentHTML. -->
+          <div id="latestProductsRow" class="col-md-12">
+            <div class="row" id="latestProductsGrid">
+              <!-- Loading placeholder – replaced once data arrives from server -->
+              <div class="col-12 text-center py-4" id="homeLoadingMsg">
+                <p>Loading products...</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- About section -->
+    <div class="best-features">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="section-heading">
+              <h2>About Kurma Ajwa</h2>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="left-content">
+              <h4>Something Something</h4>
+              <p>more something something</p>
+              <ul class="featured-list">
+                <li><a href="#">Lorem ipsum dolor sit amet</a></li>
+                <li><a href="#">Consectetur an adipisicing elit</a></li>
+                <li><a href="#">It aquecorporis nulla aspernatur</a></li>
+                <li><a href="#">Corporis, omnis doloremque</a></li>
+                <li><a href="#">Non cum id reprehenderit</a></li>
+              </ul>
+              <a href="/about" class="filled-button">Read More</a>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="right-image">
+              <img src="assets/images/feature-image.jpg" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- JavaScript libraries (must load in this order) -->
+    <script src="./vendor/jquery/jquery.min.js"></script>
+    <script src="./vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="./assets/js/custom.js"></script>
+    <script src="./assets/js/owl.js"></script>
+    <script src="./assets/js/slick.js"></script>
+    <script src="./assets/js/isotope.js"></script>
+    <script src="./assets/js/accordions.js"></script>
+
+
+    <!-- ── Home page script ──────────────────────────────────────────────── -->
+    <script>
+
+      // ── logout() ────────────────────────────────────────────────────────
+      // Called when the user clicks "Logout" in the nav.
+      // Clears localStorage and sends the user back to the login page.
+      function logout() {
+        localStorage.removeItem("role");       // remove saved role (admin/customer)
+        localStorage.removeItem("customer");   // remove saved customer info
+        window.location.href = "/";            // redirect to index.html (login page)
+      }
+
+
+      // ── loadLatestProducts() ─────────────────────────────────────────────
+      // Fetches products from GET /api/products (which reads from Oracle),
+      // then renders only the first 3 as preview cards on the home page.
+      //
+      // This replaces the 5 hard-coded cards that were in the original home.html.
+      // Now if you add or update a product in Oracle, the home page automatically
+      // reflects the change — no need to edit HTML manually.
+      async function loadLatestProducts() {
+
+        try {
+          // Call our Node.js API endpoint (defined in server.js)
+          const response = await fetch("/api/products");
+          const data     = await response.json();
+
+          // If the API returned an error or no products, show a message
+          if (!data.success || !data.products.length) {
+            document.getElementById("homeLoadingMsg").textContent = "No products found.";
+            return;
+          }
+
+          // Find the grid container where we'll inject the cards
+          const grid = document.getElementById("latestProductsGrid");
+
+          // Clear the loading placeholder text
+          grid.innerHTML = "";
+
+          // Show only the first 3 products on the home page (preview)
+          // The full list is on /products
+          const previewProducts = data.products.slice(0, 3);
+
+          // Build an HTML card for each product
+          previewProducts.forEach(product => {
+
+            // Build star rating HTML — 5 stars for all products on home page
+            // (same as the original hard-coded cards)
+            const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
+
+            // Template literal: builds the HTML string with product values inserted
+            const cardHTML = `
+              <div class="col-md-4">
+                <div class="product-item">
+                  <a href="/products">
+                    <img src="assets/images/${product.image}" alt="${product.name}">
+                  </a>
+                  <div class="down-content">
+                    <a href="/products"><h4>${product.name}</h4></a>
+                    <h6>$${product.price.toFixed(2)}</h6>
+                    <p>${product.description}</p>
+                    <ul class="stars">${stars}</ul>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            // Insert the card HTML into the grid without re-parsing existing content
+            grid.insertAdjacentHTML("beforeend", cardHTML);
+          });
+
+        } catch (err) {
+          // Show an error if the fetch failed (server not running, network issue, etc.)
+          document.getElementById("homeLoadingMsg").textContent =
+            "Failed to load products. Is the server running?";
+          console.error("Home products fetch error:", err);
+        }
+      }
+
+
+      // ── Run when the page DOM is ready ───────────────────────────────────
+      // DOMContentLoaded fires once the HTML is parsed (before images finish loading).
+      // We use this instead of window.onload so the fetch starts as early as possible.
+      document.addEventListener("DOMContentLoaded", loadLatestProducts);
+
+    </script>
+
+  </body>
+
+</html>
