@@ -114,10 +114,14 @@ async function loadProductDetails() {
   // ── 10. Add to Cart button handler ───────────────────────────────────────
   // For now this just logs to the console.
   // Later you can POST to /api/cart or store in localStorage.
+  // ── 10. Add to Cart button handler ───────────────────────────────────────
   document.getElementById("addToCartBtn").addEventListener("click", () => {
-    console.log("[CART] Added product:", product);
-    alert(`"${product.name}" has been added to your cart!`);
-    // Future: send to /api/cart with customer_id + product_id + quantity
+    try {
+      addToCart(product, 1);
+      alert(`"${product.name}" has been added to your cart!`);
+    } catch (err) {
+      alert(err.message);
+    }
   });
 }
 

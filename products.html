@@ -13,6 +13,37 @@
   <link rel="stylesheet" href="assets/css/fontawesome.css">
   <link rel="stylesheet" href="assets/css/templatemo-sixteen.css">
   <link rel="stylesheet" href="assets/css/owl.css">
+
+  <style>
+    /* ── Add to cart button (matches product_details.html) ───────────── */
+    .add-to-cart-btn {
+      background: linear-gradient(135deg, #6b3a1f 0%, #a0522d 60%, #c8844a 100%);
+      border: none;
+      border-radius: 4px;
+      color: #fdf6ed;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 13px 36px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 3px 12px rgba(107,58,31,0.3);
+    }
+
+    .add-to-cart-btn:hover {
+      background: linear-gradient(135deg, #3b1f0a 0%, #6b3a1f 60%, #a0522d 100%);
+      box-shadow: 0 5px 18px rgba(59,31,10,0.35);
+      transform: translateY(-1px);
+    }
+
+    .add-to-cart-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -32,15 +63,32 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
-            <li class="nav-item active"><a class="nav-link" href="/products">Our Products</a></li>
-            <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
-            <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
-            <li class="nav-item">
-              <!-- Logout: clears localStorage and goes back to login page -->
-              <a class="nav-link" href="#" onclick="logout()">Logout</a>
-            </li>
-          </ul>
+          <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
+          <li class="nav-item active"><a class="nav-link" href="/products">Our Products</a></li>
+          <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
+
+          <!-- ── Cart link with badge ──────────────────────────────────────────
+              The <span id="cartBadge"> is what cart.js's updateCartBadge()
+              function looks for. It will:
+                - set the number inside the span to the total qty in the cart
+                - show/hide the span depending on whether the cart has items
+              Clicking this link takes the user to /cart (cart.html below). -->
+          <li class="nav-item">
+            <a class="nav-link" href="/cart" style="position: relative;">
+              <i class="fa fa-shopping-cart"></i> Cart
+              <span id="cartBadge"
+                    style="display:none; position:absolute; top:-5px; right:-10px;
+                          background:#e74c3c; color:#fff; border-radius:50%;
+                          padding:2px 6px; font-size:11px;">0</span>
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <!-- Logout: clears localStorage and goes back to login page -->
+            <a class="nav-link" href="#" onclick="logout()">Logout</a>
+          </li>
+        </ul>
         </div>
       </div>
     </nav>
@@ -110,6 +158,8 @@
   <script src="assets/js/slick.js"></script>
   <script src="assets/js/isotope.js"></script>
   <script src="assets/js/accordions.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/purchase.js"></script>
 
 
   <!-- ── Product loading + logout script ─────────────────────────────── -->
@@ -172,18 +222,29 @@
             <div class="col-lg-4 col-md-4 ${filterClass}">
               <div class="product-item">
                 <a href="/product_details?product_id=${product.product_id}">
-                <img src="assets/images/${product.image}" alt="${product.name}">
-              </a>
-              <div class="down-content">
-                <a href="/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
-                  <h6>$${product.price.toFixed(2)}</h6>
+                  <img src="assets/images/${product.image}" alt="${product.name}">
+                </a>
+                <div class="down-content">
+                  <a href="/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
+                  <h6>$${(product.price ?? 0).toFixed(2)}</h6>
                   <p>${product.description}</p>
                   <ul class="stars">${stars}</ul>
                   <span>Stock: ${product.stock} units</span>
+                  <button class="btn btn-primary add-to-cart-btn" data-id="${product.product_id}">
+                    Add to Cart
+                  </button>
                 </div>
               </div>
             </div>
           `;
+
+          grid.insertAdjacentHTML("beforeend", cardHTML);
+
+          // Wire up the button after inserting (since cardHTML is a string, not yet in DOM-aware scope)
+          const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
+          newCard.addEventListener("click", () => {
+            addToCart(product, 1); // product object already has product_id, name, price, image
+          });
 
           // Insert the card HTML into the grid
           // insertAdjacentHTML is faster than innerHTML += because it doesn't
@@ -207,6 +268,29 @@
           "Failed to load products. Is the server running?";
         console.error("Products fetch error:", err);
       }
+
+      // Wire up the button after inserting (since cardHTML is a string, not yet in DOM-aware scope)
+      const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
+
+      // ── Disable the button up front if there's no stock ───────────
+      // Mirrors product_details.html, which disables #addToCartBtn
+      // when product.stock <= 0.
+      if ((product.stock ?? 0) <= 0) {
+        newCard.disabled = true;
+        newCard.textContent = "Out of Stock";
+      }
+
+      newCard.addEventListener("click", () => {
+        // addToCart() now throws if the product is out of stock, or if
+        // adding 1 more would exceed available stock - catch that here
+        // so the page doesn't break with an uncaught error.
+        try {
+          addToCart(product, 1);
+          alert(`${product.name} added to cart.`);
+        } catch (err) {
+          alert(err.message);
+        }
+      });
     }
 
 
