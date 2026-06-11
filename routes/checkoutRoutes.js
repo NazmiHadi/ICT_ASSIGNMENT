@@ -12,18 +12,16 @@ router.post("/checkout", async (req, res) => {
   }
 
   const custId = req.session?.custId || 1;
-  const workId = req.session?.workId || 1;
 
   try {
     conn = await getConnection();
 
     const orderResult = await conn.execute(
-      `INSERT INTO ORDERS (CustID, WorkID)
-       VALUES (:custId, :workId)
+      `INSERT INTO ORDERS (CustID)
+       VALUES (:custId)
        RETURNING OrderID INTO :orderId`,
       {
         custId,
-        workId,
         orderId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
       },
       { autoCommit: false }

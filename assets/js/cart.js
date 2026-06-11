@@ -1,36 +1,53 @@
 // =====================================
 // /assets/js/cart.js
 // Cart is stored in localStorage as an array of {product_id, name, price, image, qty}
+// Cart is now scoped PER USER via a dynamic key, so different accounts
+// on the same browser don't see each other's carts.
 // =====================================
 
-const CART_KEY = "cart";
+// ── Get the localStorage key for the CURRENT user's cart ─────────────
+// "customer" is set on login (and removed on logout - see logout()
+// in products.html etc). We read its customer_id (or email/username,
+// whichever your login stores) and build a unique key per user.
+//
+// If no one is logged in, fall back to "cart_guest" so the page
+// doesn't crash - though in practice this page should only be
+// reachable while logged in.
+function getCartKey() {
+  const raw = localStorage.getItem("customer");
+
+  if (!raw) {
+    return "cart_guest";
+  }
+
+  try {
+    const customer = JSON.parse(raw);
+    // Adjust this to whatever unique field your "customer" object
+    // actually has - customer_id, email, username, etc.
+    const id = customer.customer_id ?? customer.email ?? customer.username;
+    return `cart_${id}`;
+  } catch (err) {
+    // "customer" wasn't valid JSON for some reason
+    console.error("[CART] Could not parse customer from localStorage:", err);
+    return "cart_guest";
+  }
+}
 
 // ── Get cart from localStorage ──────────────────────────────
 function getCart() {
-  const raw = localStorage.getItem(CART_KEY);
+  const raw = localStorage.getItem(getCartKey());
   return raw ? JSON.parse(raw) : [];
 }
 
 // ── Save cart back to localStorage ──────────────────────────
 function saveCart(cart) {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
+  localStorage.setItem(getCartKey(), JSON.stringify(cart));
   updateCartBadge();
 }
 
 // ── Add a product to the cart (or increment qty if already in cart) ──
-//
-// Throws an Error if:
-//   - the product has 0 (or less) stock available, OR
-//   - adding `qty` would push the cart quantity for this item past
-//     the available stock.
-//
-// product.stock must be present on the product object passed in
-// (it already is, since loadProducts() includes it on every card,
-// and product_details.js fetches the full product record).
 function addToCart(product, qty = 1) {
 
-  // ── Stock guard ────────────────────────────────────────────
-  // Reject outright if there's no stock at all.
   const stock = Number(product.stock) || 0;
   if (stock <= 0) {
     throw new Error(`"${product.name}" is out of stock.`);
@@ -39,11 +56,9 @@ function addToCart(product, qty = 1) {
   const cart = getCart();
   const existing = cart.find(item => item.product_id === product.product_id);
 
-  // How many of this item would be in the cart AFTER this add?
   const currentQty = existing ? existing.qty : 0;
   const newQty = currentQty + qty;
 
-  // Don't let the cart hold more than what's actually in stock.
   if (newQty > stock) {
     throw new Error(
       `Only ${stock} unit(s) of "${product.name}" available ` +
@@ -89,7 +104,7 @@ function updateQty(productId, qty) {
 
 // ── Clear the entire cart (after successful checkout) ─────────
 function clearCart() {
-  localStorage.removeItem(CART_KEY);
+  localStorage.removeItem(getCartKey());
   updateCartBadge();
 }
 
@@ -99,7 +114,6 @@ function getCartTotal() {
 }
 
 // ── Update the little number badge on the cart icon in the navbar ──
-// Looks for an element with id="cartBadge" - add this to your nav HTML
 function updateCartBadge() {
   const badge = document.getElementById("cartBadge");
   if (!badge) return;
