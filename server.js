@@ -27,8 +27,8 @@ app.use("/admin/assets", express.static(path.join(__dirname, "admin", "assets"))
 // You can find them in SQL Developer under:
 //   View → Connections → right-click your connection → Properties
 const DB_CONFIG = {
-  user:          "node_test",           // the Oracle user we created earlier
-  password:      "node_test123",        // password for that user
+  user:          "KurmaAjwa",           // the Oracle user we created earlier
+  password:      "oracle",        // password for that user
   connectString: "localhost:1521/FREEPDB1"    // host:port/service_name
   //                                    ↑ change XE to your service name if different
   //                                      (common ones: XE, ORCL, XEPDB1, FREEPDB1)
@@ -55,7 +55,7 @@ async function getConnection() {
 // ── POST /api/register ─────────────────────────────────────────────────────
 app.post("/api/register", async (req, res) => {
 
-  const { name, email, phone, username, password, confirmPassword } = req.body;
+  const { name, email, address, phone, username, password, confirmPassword } = req.body;
 
   // Basic validation
   if (!name || !email || !username || !password || !confirmPassword) {
@@ -74,7 +74,7 @@ app.post("/api/register", async (req, res) => {
     // :username is a "bind variable" — Oracle safely substitutes the value
     // without risk of SQL injection (never use string concatenation for this!)
     const checkUser = await conn.execute(
-      `SELECT customer_id FROM customers WHERE username = :username`,
+      `SELECT custid FROM customers WHERE username = :username`,
       { username }
     );
 
@@ -85,7 +85,7 @@ app.post("/api/register", async (req, res) => {
 
     // ── Check if email already exists ─────────────────────────────────────
     const checkEmail = await conn.execute(
-      `SELECT customer_id FROM customers WHERE email = :email`,
+      `SELECT custid FROM customers WHERE custemail = :email`,
       { email }
     );
     if (checkEmail.rows.length > 0) {
@@ -96,9 +96,9 @@ app.post("/api/register", async (req, res) => {
     // customer_id uses GENERATED ALWAYS AS IDENTITY so we don't provide it.
     // :autoCommit true saves the change immediately (like typing COMMIT; in SQL Developer)
     await conn.execute(
-      `INSERT INTO customers (name, email, phone, username, password)
-       VALUES (:name, :email, :phone, :username, :password)`,
-      { name, email, phone: phone || null, username, password },
+      `INSERT INTO customers (custname, custemail, custaddress, custphonenum, username, password)
+       VALUES (:name, :email, :address, :phone, :username, :password)`,
+      { name, email, address: address || null, phone: phone || null, username, password },
       { autoCommit: true }   // commit the transaction so the row is permanently saved
     );
 
@@ -136,6 +136,7 @@ app.post("/api/login", async (req, res) => {
     return res.json({ success: true, role: "admin", redirect: "/admin/dashboard" });
   }
 
+  /*
   // Customer: hardcoded mock data
   if (username === "cust" && password === "cust123") {
     return res.json({ 
@@ -150,15 +151,12 @@ app.post("/api/login", async (req, res) => {
       }
     });
   }
-
-  /* ===========================================================================
-    ORACLE DATABASE LOGIN BLOCK (Temporarily Disabled)
-    ===========================================================================
+  */
     let conn;
     try {
       conn = await getConnection();
       const result = await conn.execute(
-        `SELECT customer_id, name, email, username
+        `SELECT custid, custname, custemail, username
          FROM customers
          WHERE username = :username AND password = :password`,
         { username, password }
@@ -175,9 +173,9 @@ app.post("/api/login", async (req, res) => {
         role: "customer",
         redirect: "/home",
         customer: {
-          customer_id: customer.CUSTOMER_ID,
-          name:        customer.NAME,
-          email:       customer.EMAIL,
+          customer_id: customer.CUSTID,
+          name:        customer.CUSTNAME,
+          email:       customer.CUSTEMAIL,
           username:    customer.USERNAME
         }
       });
@@ -187,7 +185,7 @@ app.post("/api/login", async (req, res) => {
     } finally {
       if (conn) await conn.close();
     }
-  */
+  
 
   // Fallback if credentials don't match either hardcoded profile
   return res.status(401).json({ success: false, message: "Invalid username or password." });
@@ -202,33 +200,49 @@ app.get("/api/products", async (req, res) => {
   try {
     conn = await getConnection();
 
-    // Fetch all products from Oracle
-    // ORDER BY product_id keeps the display order consistent
+    // Get each product joined with its container (via PRODUCTS.ContID)
+    // and the stock quantity for that specific product+container pair from INVENTORY.
+    // LEFT JOINs are used so products without a container or inventory row still show up.
     const result = await conn.execute(
-      `SELECT product_id, name, description, price, stock
-       FROM products
-       ORDER BY product_id`
+      `SELECT p.ProdID, p.ProdName, p.ProdDesc, p.SalesPrice, p.ProdType,
+              c.ContID, c.ContName,
+              i.Qty
+       FROM PRODUCTS p
+       LEFT JOIN CONTAINERS c ON p.ContID = c.ContID
+       LEFT JOIN INVENTORY i ON i.ProdID = p.ProdID AND i.ContID = c.ContID
+       ORDER BY p.ProdID`
     );
 
     // Map each Oracle row to a friendlier camelCase object for the frontend.
     // Oracle returns column names in ALL CAPS, so we rename them here.
     const products = result.rows.map(row => ({
-      product_id:  row.PRODUCT_ID,
-      name:        row.NAME,
-      description: row.DESCRIPTION,
-      price:       row.PRICE,
-      stock:       row.STOCK,
-      // Image filename is derived from the product_id (product_01.jpg, etc.)
-      image:       `product_0${row.PRODUCT_ID}.jpg`
+      product_id:    row.PRODID,
+      name:          row.PRODNAME,
+      description:   row.PRODDESC,
+      price:         row.SALESPRICE,
+      type:          row.PRODTYPE,
+
+      // Container this product belongs to (from PRODUCTS.ContID)
+      container_id:  row.CONTID,
+      container:     row.CONTNAME,
+
+      // Stock available in that container; if no INVENTORY row exists, default to 0
+      stock:         row.QTY ?? 0,
+
+      // Image filename is derived from the product_id, padded to 2 digits
+      // e.g. ProdID 1 -> product_01.jpg, ProdID 12 -> product_12.jpg
+      image:         `product_${String(row.PRODID).padStart(2, '0')}.jpg`
     }));
 
     return res.json({ success: true, products });
 
   } catch (err) {
+    // Log full error server-side for debugging, but don't leak details to the client
     console.error("[PRODUCTS ERROR]", err);
     return res.status(500).json({ success: false, message: "Could not load products." });
 
   } finally {
+    // Always release the connection back to the pool, even if an error occurred
     if (conn) await conn.close();
   }
 });

@@ -80,6 +80,11 @@
           placeholder="Email Address"
           required>
 
+        <input
+          type="tel"
+          id="address"
+          placeholder="Address (optional)">
+
         <!-- Phone (optional) -->
         <input
           type="tel"
@@ -149,6 +154,7 @@
       // Read the values the user typed into each field
       const name            = document.getElementById("name").value.trim();
       const email           = document.getElementById("email").value.trim();
+      const address         = document.getElementById("address").value.trim();
       const phone           = document.getElementById("phone").value.trim();
       const username        = document.getElementById("username").value.trim();
       const password        = document.getElementById("password").value;
@@ -172,7 +178,7 @@
         const response = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },  // tell server we're sending JSON
-          body: JSON.stringify({ name, email, phone, username, password, confirmPassword })
+          body: JSON.stringify({ name, email, address, phone, username, password, confirmPassword })
         });
 
         // Parse the JSON response that came back from server.js

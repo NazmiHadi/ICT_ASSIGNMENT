@@ -1,7 +1,7 @@
 # TODO
 
 ## ADMIN
-- 
+- Buat dashboard untuk insert worker dlm table worker
 - 
 
 
