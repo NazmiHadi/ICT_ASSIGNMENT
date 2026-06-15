@@ -208,49 +208,47 @@
 
         // Loop through each product and build an HTML card for it
         data.products.forEach((product, index) => {
+        const filterClass = filterClasses[index % filterClasses.length];
+        const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
 
-          // Pick a filter class based on the product's position in the list
-          const filterClass = filterClasses[index % filterClasses.length];
-
-          // Build the star rating HTML.
-          // For simplicity we show 5 stars; a real app would use product.rating
-          const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
-
-          // Build the complete HTML for one product card.
-          // Template literals (backtick strings) let us embed variables with ${}
-          const cardHTML = `
-            <div class="col-lg-4 col-md-4 ${filterClass}">
-              <div class="product-item">
-                <a href="/product_details?product_id=${product.product_id}">
-                  <img src="assets/images/${product.image}" alt="${product.name}">
-                </a>
-                <div class="down-content">
-                  <a href="/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
-                  <h6>$${(product.price ?? 0).toFixed(2)}</h6>
-                  <p>${product.description}</p>
-                  <ul class="stars">${stars}</ul>
-                  <span>Stock: ${product.stock} units</span>
-                  <button class="btn btn-primary add-to-cart-btn" data-id="${product.product_id}">
-                    Add to Cart
-                  </button>
-                </div>
+        const cardHTML = `
+          <div class="col-lg-4 col-md-4 ${filterClass}">
+            <div class="product-item">
+              <a href="/product_details?product_id=${product.product_id}">
+                <img src="assets/images/${product.image}" alt="${product.name}">
+              </a>
+              <div class="down-content">
+                <a href="/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
+                <h6>$${(product.price ?? 0).toFixed(2)}</h6>
+                <p>${product.description}</p>
+                <ul class="stars">${stars}</ul>
+                <span>Stock: ${product.stock} units</span>
+                <button class="btn btn-primary add-to-cart-btn" data-id="${product.product_id}">
+                  Add to Cart
+                </button>
               </div>
             </div>
-          `;
+          </div>
+        `;
 
-          grid.insertAdjacentHTML("beforeend", cardHTML);
+        grid.insertAdjacentHTML("beforeend", cardHTML);
 
-          // Wire up the button after inserting (since cardHTML is a string, not yet in DOM-aware scope)
-          const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
-          newCard.addEventListener("click", () => {
-            addToCart(product, 1); // product object already has product_id, name, price, image
-          });
+        const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
 
-          // Insert the card HTML into the grid
-          // insertAdjacentHTML is faster than innerHTML += because it doesn't
-          // re-parse the entire grid every time
-          grid.insertAdjacentHTML("beforeend", cardHTML);
+        if ((product.stock ?? 0) <= 0) {
+          newCard.disabled = true;
+          newCard.textContent = "Out of Stock";
+        }
+
+        newCard.addEventListener("click", () => {
+          try {
+            addToCart(product, 1);
+            alert(`${product.name} added to cart.`);
+          } catch (err) {
+            alert(err.message);
+          }
         });
+      });
 
         // Re-initialise Isotope after adding dynamic content.
         // Isotope needs to know about the new cards so its filter/sort works.
