@@ -15,235 +15,400 @@ if (role !== "admin") {
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
 
-    <title>KURMA AJWA ENTERPRISE</title>
+    <title>KURMA AJWA ENTERPRISE | Admin Dashboard</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-<!--
-
--->
 
     <!-- Additional CSS Files -->
     <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
-    <link rel="stylesheet" href="/admin/assets/css/templatemo-sixteen.css">
-    <link rel="stylesheet" href="/admin/assets/css/owl.css">
+
+    <style>
+      :root {
+        --bg:        #FAF7F2;
+        --sidebar:   #2B2118;
+        --sidebar-hover: #3B2E22;
+        --accent:    #A8333D;
+        --accent-soft: #F3E3DD;
+        --ink:       #2B2118;
+        --ink-soft:  #8A7B6C;
+        --line:      #E8E1D8;
+        --card:      #FFFFFF;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      /* ---------- Layout shell ---------- */
+      .shell {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* ---------- Sidebar ---------- */
+      .sidebar {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--sidebar);
+        color: #EDE6DC;
+        display: flex;
+        flex-direction: column;
+        padding: 28px 0;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+
+      .sidebar-brand {
+        padding: 0 28px 28px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        margin-bottom: 20px;
+      }
+
+      .sidebar-brand .mark {
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #C9A98A;
+        margin: 0 0 4px;
+      }
+
+      .sidebar-brand h2 {
+        font-size: 21px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.25;
+      }
+
+      .sidebar-brand h2 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+
+      .sidebar-nav {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        flex: 1;
+      }
+
+      .sidebar-nav li a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 28px;
+        color: #C9BFB2;
+        text-decoration: none;
+        font-size: 14.5px;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+
+      .sidebar-nav li a i {
+        width: 18px;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .sidebar-nav li a:hover {
+        background: var(--sidebar-hover);
+        color: #fff;
+      }
+
+      .sidebar-nav li a.active {
+        background: var(--sidebar-hover);
+        color: #fff;
+        border-left-color: var(--accent);
+      }
+
+      .sidebar-footer {
+        padding: 0 28px;
+        margin-top: 12px;
+      }
+
+      .sidebar-footer a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #C9BFB2;
+        text-decoration: none;
+        font-size: 14px;
+        padding: 10px 0;
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+
+      .sidebar-footer a:hover { color: #fff; }
+
+      /* ---------- Main content ---------- */
+      .main {
+        flex: 1;
+        padding: 40px 48px 60px;
+        max-width: 1200px;
+      }
+
+      .page-head {
+        margin-bottom: 36px;
+      }
+
+      .page-head .eyebrow {
+        font-size: 12px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+
+      .page-head h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 6px;
+        color: var(--ink);
+      }
+
+      .page-head p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 14.5px;
+      }
+
+      /* ---------- Stat cards ---------- */
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 18px;
+        margin-bottom: 40px;
+      }
+
+      .stat-card {
+        background: var(--card);
+        border-radius: 10px;
+        border-left: 4px solid var(--accent);
+        padding: 22px 22px 20px;
+        box-shadow: 0 1px 3px rgba(43,33,24,0.06);
+      }
+
+      .stat-card .stat-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        margin-bottom: 14px;
+      }
+
+      .stat-card .stat-value {
+        font-size: 30px;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+
+      .stat-card .stat-label {
+        font-size: 13px;
+        color: var(--ink-soft);
+        font-weight: 500;
+      }
+
+      /* ---------- Quick actions ---------- */
+      .section-label {
+        font-size: 13px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        font-weight: 600;
+        margin: 0 0 16px;
+      }
+
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+        margin-bottom: 8px;
+      }
+
+      .action-card {
+        background: var(--card);
+        border-radius: 10px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(43,33,24,0.06);
+        text-decoration: none;
+        color: var(--ink);
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        transition: box-shadow 0.15s ease, transform 0.15s ease;
+      }
+
+      .action-card:hover {
+        box-shadow: 0 6px 16px rgba(43,33,24,0.10);
+        transform: translateY(-2px);
+        color: var(--ink);
+      }
+
+      .action-card .action-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+      }
+
+      .action-card h4 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+
+      .action-card p {
+        font-size: 13.5px;
+        color: var(--ink-soft);
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .action-card .go {
+        margin-left: auto;
+        color: var(--ink-soft);
+        font-size: 14px;
+        align-self: center;
+      }
+
+      /* ---------- Mobile ---------- */
+      @media (max-width: 860px) {
+        .shell { flex-direction: column; }
+        .sidebar {
+          width: 100%;
+          height: auto;
+          position: relative;
+          flex-direction: row;
+          align-items: center;
+          padding: 14px 20px;
+          overflow-x: auto;
+        }
+        .sidebar-brand { display: none; }
+        .sidebar-nav { display: flex; flex: none; }
+        .sidebar-nav li a { padding: 8px 16px; border-left: none; border-bottom: 3px solid transparent; }
+        .sidebar-nav li a.active { border-left: none; border-bottom-color: var(--accent); }
+        .sidebar-footer { display: none; }
+        .main { padding: 28px 20px 40px; }
+      }
+    </style>
 
   </head>
 
   <body>
 
-    <!-- ***** Preloader Start ***** -->
-    <div id="preloader">
-        <div class="jumper">
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-    </div>  
-    <!-- ***** Preloader End ***** -->
+    <div class="shell">
 
-    <!-- Header -->
-    <header class="">
-      <nav class="navbar navbar-expand-lg">
-        <div class="container">
-          <a class="navbar-brand" href="index.html"><h2>KURMA <em> AJWA</em>  ADMIN</h2></a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarResponsive">
-            <ul class="navbar-nav ml-auto">
-              <li class="nav-item active">
-                <a class="nav-link" href="index.html">Home
-                  <span class="sr-only">(current)</span>
-                </a>
-              </li> 
-              <li class="nav-item">
-                <a class="nav-link" href="products.html">Our Products</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="about.html">About Us</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="contact.html">Contact Us</a>
-              </li>
-               <li class="nav-item">
-                <a class="nav-link" href="#" onclick="logout()">Logout</a>
-                    <script>
-                    function logout() {
-                        localStorage.removeItem("role");
-                        window.location.href = "../login.html";
-                    }
-                    </script>
-               </li>
-            </ul>
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <p class="mark">Admin Panel</p>
+          <h2>KURMA <em>AJWA</em></h2>
+        </div>
+
+        <ul class="sidebar-nav">
+          <li><a href="dashboard" class="active"><i class="fa fa-th-large"></i> Dashboard</a></li>
+          <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
+          <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+          <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <main class="main">
+
+        <div class="page-head">
+          <p class="eyebrow">Overview</p>
+          <h1>Welcome back, Admin</h1>
+          <p>Here's what's happening with your workers and orders today.</p>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-users"></i></div>
+            <div class="stat-value">10</div>
+            <div class="stat-label">Total Workers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-clock-o"></i></div>
+            <div class="stat-value">15</div>
+            <div class="stat-label">Pending Orders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-user"></i></div>
+            <div class="stat-value">20</div>
+            <div class="stat-label">Assigned Orders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
+            <div class="stat-value">35</div>
+            <div class="stat-label">Completed Orders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-male"></i></div>
+            <div class="stat-value">50</div>
+            <div class="stat-label">Total Customers</div>
           </div>
         </div>
-      </nav>
-    </header>
 
-    <!-- Page Content -->
-    <div class="hero-banner">
-        <div class="hero-content">
-            <h1>Admin Dashboard</h1>
-            <p>Manage products, customers and orders.</p>
+        <p class="section-label">Quick Actions</p>
+        <div class="action-grid">
+          <a href="workers" class="action-card">
+            <div class="action-icon"><i class="fa fa-user-plus"></i></div>
+            <div>
+              <h4>Manage Workers</h4>
+              <p>Add new workers and view everyone currently registered.</p>
+            </div>
+            <i class="fa fa-angle-right go"></i>
+          </a>
+
+          <a href="orders" class="action-card">
+            <div class="action-icon"><i class="fa fa-cogs"></i></div>
+            <div>
+              <h4>Manage Orders</h4>
+              <p>Assign workers to pending orders and track progress.</p>
+            </div>
+            <i class="fa fa-angle-right go"></i>
+          </a>
         </div>
+
+      </main>
+
     </div>
-
-    <div class="latest-products">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-12">
-            <div class="section-heading">
-              <h2>Latest Products</h2>
-              <a href="products.html">view all products <i class="fa fa-angle-right"></i></a>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="product-item">
-              <a href="#"><img src="assets/images/product_01.jpg" alt=""></a>
-              <div class="down-content">
-                <a href="#"><h4>KURMA NAZMI</h4></a>
-                <h6>$100</h6>
-                <p>KURMA YANG PALING BESTSELLER DUE TO PRODUCT DARI NAZMI</p>
-                <ul class="stars">
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                </ul>
-                <span>Reviews (24)</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="product-item">
-              <a href="#"><img src="assets/images/product_02.jpg" alt=""></a>
-              <div class="down-content">
-                <a href="#"><h4>KURMA HARITH KOMANDER</h4></a>
-                <h6>$0.20</h6>
-                <p>KURMA YANG PALING ANNOYING. DO NOT RECOMMEND. BUT ITS A PRODUCT DUE TO SOME WEIRD PEOPLE PREFERRING IT.</p>
-                <ul class="stars">
-                  <li><i class="fa fa-star"></i></li>
-                </ul>
-                <span>Reviews (21)</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="product-item">
-              <a href="#"><img src="assets/images/product_03.jpg" alt=""></a>
-              <div class="down-content">
-                <a href="#"><h4>KURMA FAHIM</h4></a>
-                <h6>$20.45</h6>
-                <p>KURMA YANG PALING CUTE SEBAB FAHIM PALING CUTE. MASIH ANNOYING BUT NOT AS ANNOYING AS KURMA KOMANDER</p>
-                <ul class="stars">
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                </ul>
-                <span>Reviews (36)</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="product-item">
-              <a href="#"><img src="/admin/assets/images/product_04.jpg" alt=""></a>
-              <div class="down-content">
-                <a href="#"><h4>KURMA HAZMAN</h4></a>
-                <h6>$15.25</h6>
-                <p>KURMA YANG TAK SINGLE AND TERPALING HOT.</p>
-                <ul class="stars">
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                </ul>
-                <span>Reviews (48)</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="product-item">
-              <a href="#"><img src="/admin/assets/images/product_05.jpg" alt=""></a>
-              <div class="down-content">
-                <a href="#"><h4>KURMA TAMBAHAN</h4></a>
-                <h6>$999.99</h6>
-                <p>TO BE CONTINUED.</p>
-                <ul class="stars">
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                  <li><i class="fa fa-star"></i></li>
-                </ul>
-                <span>Reviews (16)</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="best-features">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-12">
-            <div class="section-heading">
-              <h2>About Kurma Ajwa</h2>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="left-content">
-              <h4>Something Something</h4>
-              <p><a rel="nofollow" href="https://templatemo.com/tm-546-sixteen-clothing" target="_parent"> link </a> more something something<ul class="featured-list">
-                <li><a href="#">Lorem ipsum dolor sit amet</a></li>
-                <li><a href="#">Consectetur an adipisicing elit</a></li>
-                <li><a href="#">It aquecorporis nulla aspernatur</a></li>
-                <li><a href="#">Corporis, omnis doloremque</a></li>
-                <li><a href="#">Non cum id reprehenderit</a></li>
-              </ul>
-              <a href="about.html" class="filled-button">Read More</a>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="right-image">
-              <img src="/admin/assets/images/feature-image.jpg" alt="">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
 
     <!-- Bootstrap core JavaScript -->
     <script src="/admin/vendor/jquery/jquery.min.js"></script>
     <script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-
-    <!-- Additional Scripts -->
-    <script src="/admin/assets/js/custom.js"></script>
-    <script src="/admin/assets/js/owl.js"></script>
-    <script src="/admin/assets/js/slick.js"></script>
-    <script src="/admin/assets/js/isotope.js"></script>
-    <script src="/admin/assets/js/accordions.js"></script>
-
-
-    <script language = "text/Javascript"> 
-      cleared[0] = cleared[1] = cleared[2] = 0; //set a cleared flag for each field
-      function clearField(t){                   //declaring the array outside of the
-      if(! cleared[t.id]){                      // function makes it static and global
-          cleared[t.id] = 1;  // you could use true and false, but that's more typing
-          t.value='';         // with more chance of typos
-          t.style.color='#fff';
-          }
+    <script>
+      function logout() {
+        localStorage.removeItem("role");
+        window.location.href = "../login.html";
       }
     </script>
-
 
   </body>
 
