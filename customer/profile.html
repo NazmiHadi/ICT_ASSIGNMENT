@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>My Profile - Kurma Ajwa</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+  <link href="/customer/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+
+  <style>
+    /* ── Profile info card ───────────────────────────── */
+    .profile-section {
+      padding: 60px 0 40px;
+    }
+
+    .profile-card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 32px;
+      margin-bottom: 40px;
+    }
+
+    .profile-card-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #A8333D;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .profile-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 4px;
+      color: #2B2118;
+    }
+
+    .profile-username {
+      font-size: 0.85rem;
+      color: #888;
+      margin: 0;
+    }
+
+    .profile-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .profile-field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #A8333D;
+      margin-bottom: 4px;
+    }
+
+    .profile-field p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #2B2118;
+    }
+
+    .profile-field p.empty {
+      color: #bbb;
+      font-style: italic;
+    }
+
+    /* ── Orders section ───────────────────────────────── */
+    .orders-section-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .orders-section-heading h4 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0;
+      color: #2B2118;
+    }
+
+    .orders-count-badge {
+      background: #F3E3DD;
+      color: #A8333D;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Order cards ──────────────────────────────────── */
+    .order-card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fff;
+    }
+
+    .order-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .order-id {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #2B2118;
+    }
+
+    .order-date {
+      color: #999;
+      font-size: 0.82rem;
+      margin-top: 2px;
+    }
+
+    .order-item-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f8f8f8;
+    }
+
+    .order-item-row:last-child {
+      border-bottom: none;
+    }
+
+    .order-item-img {
+      width: 54px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .order-item-info { flex: 1; }
+
+    .order-item-name {
+      margin: 0 0 2px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .order-item-meta {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .order-item-line-total {
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .order-card-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #eee;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #2B2118;
+    }
+
+    /* ── State messages ───────────────────────────────── */
+    .state-message {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+      font-size: 0.95rem;
+    }
+
+    .state-message.error { color: #c0392b; }
+  </style>
+</head>
+
+<body>
+
+  <div id="preloader">
+    <div class="jumper"><div></div><div></div><div></div></div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/customer/home"><h2>KURMA <em>AJWA</em></h2></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="/customer/cart" style="position:relative;">
+                <i class="fa fa-shopping-cart"></i> Cart
+                <span id="cartBadge"
+                style="display:none; position:absolute; top:-5px; right:-10px;
+                             background:#e74c3c; color:#fff; border-radius:50%;
+                             padding:2px 6px; font-size:11px;">0</span>
+              </a>
+            </li>
+            <li class="nav-item active"><a class="nav-link" href="/customer/profile">My Profile</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="logout()">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page heading banner -->
+  <div class="page-heading products-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Account</h4>
+            <h2>My Profile</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="profile-section">
+    <div class="container">
+
+      <!-- Profile details card -->
+      <div id="profileCard" class="profile-card" style="display:none;">
+        <div class="profile-card-header">
+          <div class="profile-avatar" id="profileAvatar">?</div>
+          <div>
+            <p class="profile-name" id="profileName"></p>
+            <p class="profile-username" id="profileUsernameDisplay"></p>
+          </div>
+        </div>
+        <div class="profile-details">
+          <div class="profile-field">
+            <label><i class="fa fa-envelope-o"></i> Email</label>
+            <p id="profileEmail"></p>
+          </div>
+          <div class="profile-field">
+            <label><i class="fa fa-phone"></i> Phone</label>
+            <p id="profilePhone"></p>
+          </div>
+          <div class="profile-field">
+            <label><i class="fa fa-map-marker"></i> Address</label>
+            <p id="profileAddress"></p>
+          </div>
+          <div class="profile-field">
+            <label><i class="fa fa-user"></i> Username</label>
+            <p id="profileUsername"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="profileStateMessage" class="state-message">
+        <p>Loading your profile...</p>
+      </div>
+
+      <!-- Orders section -->
+      <div id="ordersSection" style="display:none;">
+        <div class="orders-section-heading">
+          <h4>Order History</h4>
+          <span class="orders-count-badge" id="ordersCountBadge">0 orders</span>
+        </div>
+
+        <div id="stateMessage" class="state-message" style="display:none;">
+          <p>Loading your orders...</p>
+        </div>
+
+        <div id="ordersContainer"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Order card template -->
+  <template id="orderTemplate">
+    <div class="order-card">
+      <div class="order-card-header">
+        <div>
+          <span class="order-id"></span>
+          <div class="order-date"></div>
+        </div>
+      </div>
+      <div class="order-items"></div>
+      <div class="order-card-footer">
+        <span>Order Total:</span>
+        <span class="order-total"></span>
+      </div>
+    </div>
+  </template>
+
+  <!-- Order item row template -->
+  <template id="orderItemTemplate">
+    <div class="order-item-row">
+      <img class="order-item-img" src="" alt="">
+      <div class="order-item-info">
+        <p class="order-item-name"></p>
+        <span class="order-item-meta"></span>
+      </div>
+      <strong class="order-item-line-total"></strong>
+    </div>
+  </template>
+
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
+  <script src="/customer/assets/js/profile.js"></script>
+
+  <script>
+    function logout() {
+      localStorage.removeItem("role");
+      localStorage.removeItem("customer");
+      window.location.href = "/";
+    }
+  </script>
+
+</body>
+</html>

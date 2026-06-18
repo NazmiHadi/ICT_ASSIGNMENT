@@ -4,6 +4,7 @@ const path    = require("path");
 const authRoutes     = require("./routes/authRoutes");
 const productRoutes  = require("./routes/productRoutes");
 const checkoutRoutes = require("./routes/checkoutRoutes");
+const customerRoutes = require("./routes/customerRoutes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/admin/vendor", express.static(path.join(__dirname, "admin", "vendor"))
 app.use("/api", authRoutes);
 app.use("/api", productRoutes);
 app.use("/api", checkoutRoutes);
+app.use("/api", customerRoutes);
 
 // ── Page routes ──────────────────────────────────────────────
 // Login page — stays at root (unchanged)
