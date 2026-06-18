@@ -8,13 +8,13 @@
 
   <!-- Same stylesheets as products.html, so the page matches the rest of the site -->
   <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/fontawesome.css">
-  <link rel="stylesheet" href="assets/css/templatemo-sixteen.css">
-  <link rel="stylesheet" href="assets/css/owl.css">
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/js/custom.js"></script>
-  <script src="assets/js/cart.js"></script>
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
 
 </head>
 
@@ -31,18 +31,18 @@
   <header>
     <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <a class="navbar-brand" href="/home"><h2>KURMA <em>AJWA</em></h2></a>
+        <a class="navbar-brand" href="/customer/home"><h2>KURMA <em>AJWA</em></h2></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="/products">Our Products</a></li>
-            <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
-            <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
             <li class="nav-item active">
-              <a class="nav-link" href="/cart" style="position: relative;">
+              <a class="nav-link" href="/customer/cart" style="position: relative;">
                 <i class="fa fa-shopping-cart"></i> Cart
                 <span id="cartBadge"
                       style="display:none; position:absolute; top:-5px; right:-10px;
@@ -52,6 +52,13 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#" onclick="logout()">Logout</a>
+              <script>
+                function logout() {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('customer_id');
+                  window.location.href = "/";
+                }
+              </script>
             </li>
           </ul>
         </div>
@@ -89,7 +96,7 @@
             <!-- Shown only when the cart array is empty.
                  renderCart() toggles this with display:block / none. -->
             <p id="emptyCartMsg" style="display:none;">
-              Your cart is empty. <a href="/products">Browse products</a>
+              Your cart is empty. <a href="/customer/products">Browse products</a>
             </p>
 
             <!-- Cart item rows get inserted here by renderCart() -->
@@ -127,7 +134,7 @@
               Proceed to Checkout
             </button>
 
-            <a href="/products" class="btn btn-outline-secondary btn-block mt-2">Continue Shopping</a>
+            <a href="/customer/products" class="btn btn-outline-secondary btn-block mt-2">Continue Shopping</a>
           </div>
         </div>
 
@@ -186,13 +193,13 @@
   </template>
 
   <!-- JS libraries -->
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
   <!-- cart.js gives us getCart(), saveCart(), updateQty(), removeFromCart(),
        updateCartBadge(), etc. - all the cart logic lives there so both
        cart.html and purchase.html (and products.html) can share it. -->
-  <script src="assets/js/cart.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
 
 
   <!-- ── Page-specific script: render + manage the cart UI ────────────── -->
@@ -236,7 +243,7 @@
 
         // Fill in the image
         const img = node.querySelector(".cart-item-img");
-        img.src = `assets/images/${item.image}`;
+        img.src = `/customer/assets/images/${item.image}`;
         img.alt = item.name;
 
         // Fill in name + per-unit price
@@ -309,7 +316,7 @@
         alert("Your cart is empty.");
         return;
       }
-      window.location.href = "/purchase";
+      window.location.href = "/customer/purchase";
     }
 
 

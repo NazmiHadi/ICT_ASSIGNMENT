@@ -6,14 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Checkout - Kurma Ajwa</title>
 
-  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/fontawesome.css">
-  <link rel="stylesheet" href="assets/css/templatemo-sixteen.css">
-  <link rel="stylesheet" href="assets/css/owl.css">
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/js/custom.js"></script>
-  <script src="assets/js/cart.js"></script>
+  <link href="/customer/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
 </head>
 
 <body>
@@ -29,18 +29,18 @@
   <header>
     <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <a class="navbar-brand" href="/home"><h2>KURMA <em>AJWA</em></h2></a>
+        <a class="navbar-brand" href="/customer/home"><h2>KURMA <em>AJWA</em></h2></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-            <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="/products">Our Products</a></li>
-            <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
-            <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
             <li class="nav-item">
-              <a class="nav-link" href="/cart" style="position: relative;">
+              <a class="nav-link" href="/customer/cart" style="position: relative;">
                 <i class="fa fa-shopping-cart"></i> Cart
                 <span id="cartBadge"
                       style="display:none; position:absolute; top:-5px; right:-10px;
@@ -50,6 +50,13 @@
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#" onclick="logout()">Logout</a>
+              <script>
+                function logout() {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('customer_id');
+                  window.location.href = "/";
+                }
+              </script>
             </li>
           </ul>
         </div>
@@ -116,7 +123,7 @@
               Checkout
             </button>
 
-            <a href="/cart" class="btn btn-outline-secondary btn-block mt-2">Back to Cart</a>
+            <a href="/customer/cart" class="btn btn-outline-secondary btn-block mt-2">Back to Cart</a>
           </div>
         </div>
 
@@ -151,18 +158,18 @@
   </template>
 
   <!-- JS libraries -->
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
   <!-- cart.js: needed for getCart(), clearCart(), updateCartBadge() -->
-  <script src="assets/js/cart.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
 
   <!-- purchase.js: contains checkout(), which:
          1. reads the cart via getCart()
          2. POSTs it to /api/checkout
          3. on success: clearCart() + redirect to /orders
          4. on failure: shows an alert, re-enables the button -->
-  <script src="assets/js/purchase.js"></script>
+  <script src="/customer/assets/js/purchase.js"></script>
 
 
   <!-- ── Page-specific script: render the read-only order review ──────── -->
@@ -187,7 +194,7 @@
       // (e.g. via browser back button after a successful order),
       // show a message and disable the checkout button.
       if (!cart.length) {
-        container.innerHTML = "<p>Your cart is empty. <a href='/products'>Browse products</a></p>";
+        container.innerHTML = "<p>Your cart is empty. <a href='/customer/products'>Browse products</a></p>";
         if (checkoutBtn) checkoutBtn.disabled = true;
         updateCheckoutSummary(cart);
         return;
@@ -198,7 +205,7 @@
         const node = template.content.cloneNode(true);
 
         const img = node.querySelector(".checkout-item-img");
-        img.src = `assets/images/${item.image}`;
+        img.src = `/customer/assets/images/${item.image}`;
         img.alt = item.name;
 
         node.querySelector(".checkout-item-name").textContent  = item.name;

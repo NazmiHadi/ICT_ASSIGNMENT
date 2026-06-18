@@ -11,12 +11,12 @@
     <title>KURMA AJWA ENTERPRISE</title>
 
     <!-- Bootstrap core CSS -->
-    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/customer/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Additional CSS Files -->
-    <link rel="stylesheet" href="css/fontawesome.css">
-    <link rel="stylesheet" href="css/templatemo-sixteen.css">
-    <link rel="stylesheet" href="css/owl.css">
+    <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+    <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+    <link rel="stylesheet" href="/customer/assets/css/owl.css">
   </head>
 
   <body>
@@ -32,7 +32,7 @@
     <header class="">
       <nav class="navbar navbar-expand-lg">
         <div class="container">
-          <a class="navbar-brand" href="/home"><h2>KURMA <em>AJWA</em></h2></a>
+          <a class="navbar-brand" href="/customer/home"><h2>KURMA <em>AJWA</em></h2></a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
             aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -40,19 +40,19 @@
           <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
               <li class="nav-item active">
-                <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="/customer/home">Home <span class="sr-only">(current)</span></a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/products">Our Products</a>
+                <a class="nav-link" href="/customer/products">Our Products</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/about">About Us</a>
+                <a class="nav-link" href="/customer/about">About Us</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/contact">Contact Us</a>
+                <a class="nav-link" href="/customer/contact">Contact Us</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/orders">Your Orders</a>
+                <a class="nav-link" href="/customer/orders">Your Orders</a>
               </li>
               <li class="nav-item">
                 <!-- Logout: clears saved role + customer info, returns to login -->
@@ -99,7 +99,7 @@
           <div class="col-md-12">
             <div class="section-heading">
               <h2>Latest Products</h2>
-              <a href="/products">view all products <i class="fa fa-angle-right"></i></a>
+              <a href="/customer/products">view all products <i class="fa fa-angle-right"></i></a>
             </div>
           </div>
 
@@ -138,12 +138,12 @@
                 <li><a href="#">Corporis, omnis doloremque</a></li>
                 <li><a href="#">Non cum id reprehenderit</a></li>
               </ul>
-              <a href="/about" class="filled-button">Read More</a>
+              <a href="/customer/about" class="filled-button">Read More</a>
             </div>
           </div>
           <div class="col-md-6">
             <div class="right-image">
-              <img src="assets/images/feature-image.jpg" alt="">
+              <img src="/customer/assets/images/feature-image.jpg" alt="">
             </div>
           </div>
         </div>
@@ -152,13 +152,13 @@
 
 
     <!-- JavaScript libraries (must load in this order) -->
-    <script src="./vendor/jquery/jquery.min.js"></script>
-    <script src="./vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/js/custom.js"></script>
-    <script src="./assets/js/owl.js"></script>
-    <script src="./assets/js/slick.js"></script>
-    <script src="./assets/js/isotope.js"></script>
-    <script src="./assets/js/accordions.js"></script>
+    <script src="/customer/vendor/jquery/jquery.min.js"></script>
+    <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="/customer/assets/js/custom.js"></script>
+    <script src="/customer/assets/js/owl.js"></script>
+    <script src="/customer/assets/js/slick.js"></script>
+    <script src="/customer/assets/js/isotope.js"></script>
+    <script src="/customer/assets/js/accordions.js"></script>
 
 
     <!-- ── Home page script ──────────────────────────────────────────────── -->
@@ -215,11 +215,11 @@
             const cardHTML = `
               <div class="col-md-4">
                 <div class="product-item">
-                  <a href="/products">
-                    <img src="assets/images/${product.image}" alt="${product.name}">
+                  <a href="/customer/products">
+                    <img src="/customer/assets/images/${product.image}" alt="${product.name}">
                   </a>
                   <div class="down-content">
-                    <a href="/products"><h4>${product.name}</h4></a>
+                    <a href="/customer/products"><h4>${product.name}</h4></a>
                     <h6>$${product.price.toFixed(2)}</h6>
                     <p>${product.description}</p>
                     <ul class="stars">${stars}</ul>

@@ -7,12 +7,12 @@
   <title>Kurma Ajwa Products</title>
 
   <!-- Bootstrap CSS -->
-  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/customer/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Custom CSS files -->
-  <link rel="stylesheet" href="assets/css/fontawesome.css">
-  <link rel="stylesheet" href="assets/css/templatemo-sixteen.css">
-  <link rel="stylesheet" href="assets/css/owl.css">
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
 
   <style>
     /* ── Add to cart button (matches product_details.html) ───────────── */
@@ -57,16 +57,16 @@
   <header>
     <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <a class="navbar-brand" href="/home"><h2>KURMA <em>AJWA</em></h2></a>
+        <a class="navbar-brand" href="/customer/home"><h2>KURMA <em>AJWA</em></h2></a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
-          <li class="nav-item"><a class="nav-link" href="/home">Home</a></li>
-          <li class="nav-item active"><a class="nav-link" href="/products">Our Products</a></li>
-          <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
-          <li class="nav-item"><a class="nav-link" href="/contact">Contact Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+          <li class="nav-item active"><a class="nav-link" href="/customer/products">Our Products</a></li>
+          <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
 
           <!-- ── Cart link with badge ──────────────────────────────────────────
               The <span id="cartBadge"> is what cart.js's updateCartBadge()
@@ -75,7 +75,7 @@
                 - show/hide the span depending on whether the cart has items
               Clicking this link takes the user to /cart (cart.html below). -->
           <li class="nav-item">
-            <a class="nav-link" href="/cart" style="position: relative;">
+            <a class="nav-link" href="/customer/cart" style="position: relative;">
               <i class="fa fa-shopping-cart"></i> Cart
               <span id="cartBadge"
                     style="display:none; position:absolute; top:-5px; right:-10px;
@@ -151,15 +151,15 @@
 
 
   <!-- JavaScript libraries (must be in this order) -->
-  <script src="vendor/jquery/jquery.min.js"></script>
-  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/js/custom.js"></script>
-  <script src="assets/js/owl.js"></script>
-  <script src="assets/js/slick.js"></script>
-  <script src="assets/js/isotope.js"></script>
-  <script src="assets/js/accordions.js"></script>
-  <script src="assets/js/cart.js"></script>
-  <script src="assets/js/purchase.js"></script>
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/owl.js"></script>
+  <script src="/customer/assets/js/slick.js"></script>
+  <script src="/customer/assets/js/isotope.js"></script>
+  <script src="/customer/assets/js/accordions.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
+  <script src="/customer/assets/js/purchase.js"></script>
 
 
   <!-- ── Product loading + logout script ─────────────────────────────── -->
@@ -214,11 +214,11 @@
         const cardHTML = `
           <div class="col-lg-4 col-md-4 ${filterClass}">
             <div class="product-item">
-              <a href="/product_details?product_id=${product.product_id}">
-                <img src="assets/images/${product.image}" alt="${product.name}">
+              <a href="/customer/product_details?product_id=${product.product_id}">
+                <img src="/customer/assets/images/${product.image}" alt="${product.name}">
               </a>
               <div class="down-content">
-                <a href="/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
+                <a href="/customer/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
                 <h6>$${(product.price ?? 0).toFixed(2)}</h6>
                 <p>${product.description}</p>
                 <ul class="stars">${stars}</ul>

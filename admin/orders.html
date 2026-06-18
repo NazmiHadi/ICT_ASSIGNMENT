@@ -2,7 +2,7 @@
 const role = localStorage.getItem("role");
 
 if (role !== "admin") {
-    window.location.href = "../login.html";
+    window.location.href = "/";
 }
 </script>
 
@@ -294,7 +294,7 @@ if (role !== "admin") {
     <script>
       function logout() {
         localStorage.removeItem("role");
-        window.location.href = "../login.html";
+        window.location.href = "/";
       }
 
       const ORDERS_API = "/api/orders";

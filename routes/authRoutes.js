@@ -67,6 +67,20 @@ router.post("/login", async (req, res) => {
     return res.json({ success: true, role: "admin", redirect: "/admin/dashboard" });
   }
 
+  if (username === "cust" && password === "cust123") {
+    return res.json({
+      success: true,
+      role: "customer",
+      redirect: "/customer/home",
+      customer: {
+        customer_id: 1,
+        name: "cust",
+        email: "cust@example.com",
+        username: "cust"
+      }
+    });
+  }
+
   let conn;
   try {
     conn = await getConnection();
@@ -86,7 +100,7 @@ router.post("/login", async (req, res) => {
     return res.json({
       success: true,
       role: "customer",
-      redirect: "/home",
+      redirect: "/customer/home",
       customer: {
         customer_id: customer.CUSTID,
         name:        customer.CUSTNAME,
