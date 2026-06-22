@@ -1,0 +1,412 @@
+<script>
+const role = localStorage.getItem("role");
+if (role !== "admin") {
+    window.location.href = "../login.html";
+}
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
+    <title>KURMA AJWA ENTERPRISE | Manage Purchases</title>
+    <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
+
+    <style>
+      :root {
+        --bg:            #FAF7F2;
+        --sidebar:       #2B2118;
+        --sidebar-hover: #3B2E22;
+        --accent:        #A8333D;
+        --accent-soft:   #F3E3DD;
+        --ink:           #2B2118;
+        --ink-soft:      #8A7B6C;
+        --line:          #E8E1D8;
+        --card:          #FFFFFF;
+      }
+
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--ink); }
+
+      .shell { display: flex; min-height: 100vh; }
+
+      /* Sidebar */
+      .sidebar {
+        width: 260px; flex-shrink: 0; background: var(--sidebar);
+        color: #EDE6DC; display: flex; flex-direction: column;
+        padding: 28px 0; position: sticky; top: 0; height: 100vh;
+      }
+      .sidebar-brand { padding: 0 28px 28px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px; }
+      .sidebar-brand .mark { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #C9A98A; margin: 0 0 4px; }
+      .sidebar-brand h2 { font-size: 21px; font-weight: 700; margin: 0; line-height: 1.25; }
+      .sidebar-brand h2 em { font-style: normal; color: var(--accent); }
+      .sidebar-nav { list-style: none; margin: 0; padding: 0; flex: 1; }
+      .sidebar-nav li a {
+        display: flex; align-items: center; gap: 12px;
+        padding: 13px 28px; color: #C9BFB2; text-decoration: none;
+        font-size: 14.5px; font-weight: 500; border-left: 3px solid transparent;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .sidebar-nav li a i { width: 18px; text-align: center; font-size: 14px; }
+      .sidebar-nav li a:hover { background: var(--sidebar-hover); color: #fff; }
+      .sidebar-nav li a.active { background: var(--sidebar-hover); color: #fff; border-left-color: var(--accent); }
+      .sidebar-footer { padding: 0 28px; margin-top: 12px; }
+      .sidebar-footer a {
+        display: flex; align-items: center; gap: 10px; color: #C9BFB2;
+        text-decoration: none; font-size: 14px; padding: 10px 0;
+        border-top: 1px solid rgba(255,255,255,0.08);
+      }
+      .sidebar-footer a:hover { color: #fff; }
+
+      /* Main */
+      .main { flex: 1; padding: 40px 48px 60px; max-width: 1200px; }
+      .page-head { margin-bottom: 32px; }
+      .page-head .eyebrow { font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); font-weight: 600; margin: 0 0 6px; }
+      .page-head h1 { font-size: 28px; font-weight: 700; margin: 0 0 6px; }
+      .page-head p { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+
+      /* Two-col grid */
+      .layout-grid { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: 24px; align-items: start; }
+
+      /* Panel */
+      .panel { background: var(--card); border-radius: 10px; padding: 28px; box-shadow: 0 1px 3px rgba(43,33,24,0.06); margin-bottom: 24px; }
+      .panel h3 { font-size: 16px; font-weight: 600; margin: 0 0 20px; }
+
+      /* Form */
+      .form-group { margin-bottom: 16px; }
+      .form-group label { display: block; font-weight: 500; font-size: 13.5px; margin-bottom: 6px; }
+      .form-control {
+        width: 100%; border: 1px solid var(--line); border-radius: 6px;
+        padding: 10px 12px; font-size: 14px; font-family: 'Poppins', sans-serif;
+        color: var(--ink); background: #fff;
+      }
+      .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+      /* Product rows */
+      .product-rows { margin-bottom: 12px; }
+      .product-row {
+        display: grid; grid-template-columns: 1fr 90px 36px;
+        gap: 8px; align-items: center; margin-bottom: 8px;
+      }
+      .product-row select,
+      .product-row input { height: 40px; }
+
+      .remove-btn {
+        width: 36px; height: 36px; border: none; background: var(--accent-soft);
+        color: var(--accent); border-radius: 6px; cursor: pointer;
+        font-size: 15px; display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s;
+      }
+      .remove-btn:hover { background: var(--accent); color: #fff; }
+
+      .add-product-btn {
+        background: none; border: 1px dashed var(--line); border-radius: 6px;
+        padding: 8px 14px; font-size: 13.5px; color: var(--ink-soft);
+        cursor: pointer; width: 100%; margin-bottom: 16px;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .add-product-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+      .btn-primary {
+        background: var(--accent); color: #fff; border: none; border-radius: 6px;
+        padding: 11px 22px; font-size: 14px; font-weight: 600; cursor: pointer;
+        transition: background 0.15s ease; width: 100%;
+      }
+      .btn-primary:hover { background: #8E2A33; }
+
+      /* Table */
+      .table-wrapper { overflow-x: auto; }
+      table.purch-table { width: 100%; border-collapse: collapse; }
+      table.purch-table th,
+      table.purch-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+      table.purch-table th { background: #FBF8F4; font-weight: 600; text-transform: uppercase; font-size: 11.5px; letter-spacing: 0.5px; color: var(--ink-soft); }
+      table.purch-table tbody tr:hover { background: #FBF8F4; }
+
+      .product-tag {
+        display: inline-block; background: var(--accent-soft); color: var(--accent);
+        border-radius: 4px; padding: 2px 8px; font-size: 12px; margin: 2px 2px 2px 0;
+      }
+
+      /* Alert */
+      #formAlert { display: none; margin-bottom: 20px; padding: 12px 16px; border-radius: 6px; font-size: 14px; }
+      #formAlert.success { background: #E8F5EA; color: #1C7A3D; border: 1px solid #BFE6C8; }
+      #formAlert.error   { background: #FBE9E7; color: #A8333D; border: 1px solid #EFC2BD; }
+
+      @media (max-width: 900px) { .layout-grid { grid-template-columns: 1fr; } }
+      @media (max-width: 860px) {
+        .shell { flex-direction: column; }
+        .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; align-items: center; padding: 14px 20px; overflow-x: auto; }
+        .sidebar-brand { display: none; }
+        .sidebar-nav { display: flex; flex: none; }
+        .sidebar-nav li a { padding: 8px 16px; border-left: none; border-bottom: 3px solid transparent; }
+        .sidebar-nav li a.active { border-left: none; border-bottom-color: var(--accent); }
+        .sidebar-footer { display: none; }
+        .main { padding: 28px 20px 40px; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="shell">
+
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <p class="mark">Admin Panel</p>
+          <h2>KURMA <em>AJWA</em></h2>
+        </div>
+        <ul class="sidebar-nav">
+          <li><a href="dashboard"><i class="fa fa-th-large"></i> Dashboard</a></li>
+          <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
+          <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
+          <li><a href="purchase" class="active"><i class="fa fa-shopping-cart"></i> Manage Purchases</a></li>
+        </ul>
+        <div class="sidebar-footer">
+          <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="page-head">
+          <p class="eyebrow">Procurement</p>
+          <h1>Manage Purchases</h1>
+          <p>Create purchase orders from vendors and view purchase history.</p>
+        </div>
+
+        <div id="formAlert"></div>
+
+        <div class="layout-grid">
+
+          <!-- Left: New Purchase Form -->
+          <div class="panel">
+            <h3>New Purchase Order</h3>
+            <form id="purchaseForm">
+              <div class="form-group">
+                <label for="workerId">Worker</label>
+                <select class="form-control" id="workerId" required>
+                  <option value="">Select a worker...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="vendorId">Vendor</label>
+                <select class="form-control" id="vendorId" required>
+                  <option value="">Select a vendor...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Products</label>
+                <div class="product-rows" id="productRows">
+                  <!-- Rows added dynamically -->
+                </div>
+                <button type="button" class="add-product-btn" onclick="addProductRow()">
+                  <i class="fa fa-plus"></i> Add Product
+                </button>
+              </div>
+
+              <button type="submit" class="btn-primary">Create Purchase</button>
+            </form>
+          </div>
+
+          <!-- Right: Purchase History -->
+          <div class="panel">
+            <h3>Purchase History</h3>
+            <div class="table-wrapper">
+              <table class="purch-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Date</th>
+                    <th>Worker</th>
+                    <th>Vendor</th>
+                    <th>Products</th>
+                  </tr>
+                </thead>
+                <tbody id="purchaseTableBody">
+                  <tr><td colspan="5">Loading purchases...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <script src="/admin/vendor/jquery/jquery.min.js"></script>
+    <script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      function logout() {
+        localStorage.removeItem("role");
+        window.location.href = "../login.html";
+      }
+
+      const API = "/api/purchases";
+      let productsCache = [];
+
+      function showAlert(message, type) {
+        const box = document.getElementById("formAlert");
+        box.textContent = message;
+        box.className = type;
+        box.style.display = "block";
+        setTimeout(() => { box.style.display = "none"; }, 5000);
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return "-";
+        const d = new Date(dateStr);
+        if (isNaN(d)) return dateStr;
+        return d.toLocaleDateString("en-MY", { day: "2-digit", month: "short", year: "numeric" });
+      }
+
+      function buildProductSelect(selectedId) {
+        let opts = '<option value="">Select product...</option>';
+        productsCache.forEach(p => {
+          const sel = String(p.product_id) === String(selectedId) ? "selected" : "";
+          opts += `<option value="${p.product_id}" ${sel}>${p.name}</option>`;
+        });
+        return opts;
+      }
+
+      function addProductRow(productId = "", qty = 1) {
+        const container = document.getElementById("productRows");
+        const row = document.createElement("div");
+        row.className = "product-row";
+        row.innerHTML = `
+          <select class="form-control prod-select">${buildProductSelect(productId)}</select>
+          <input type="number" class="form-control prod-qty" value="${qty}" min="1" placeholder="Qty">
+          <button type="button" class="remove-btn" onclick="this.parentElement.remove()">
+            <i class="fa fa-times"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      }
+
+      async function loadFormData() {
+        try {
+          const res  = await fetch(`${API}/form-data`);
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.message);
+
+          productsCache = data.products || [];
+
+          const workerSel = document.getElementById("workerId");
+          data.workers.forEach(w => {
+            workerSel.innerHTML += `<option value="${w.worker_id}">${w.name}</option>`;
+          });
+
+          const vendorSel = document.getElementById("vendorId");
+          data.vendors.forEach(v => {
+            vendorSel.innerHTML += `<option value="${v.vendor_id}">${v.name}</option>`;
+          });
+
+          // Add one empty product row to start
+          addProductRow();
+
+        } catch (err) {
+          console.error(err);
+          showAlert("Failed to load form data. Please refresh.", "error");
+        }
+      }
+
+      async function loadPurchases() {
+        const tableBody = document.getElementById("purchaseTableBody");
+        try {
+          const res  = await fetch(API);
+          const data = await res.json();
+          if (!res.ok || !data.success) throw new Error(data.message);
+
+          const purchases = data.purchases || [];
+
+          if (purchases.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="5">No purchases yet.</td></tr>';
+            return;
+          }
+
+          tableBody.innerHTML = purchases.map(p => {
+            const productTags = p.products.map(pr =>
+              `<span class="product-tag">${pr.product_name} x${pr.qty}</span>`
+            ).join("") || "-";
+
+            return `
+              <tr>
+                <td>${p.purchase_id}</td>
+                <td>${formatDate(p.purchase_date)}</td>
+                <td>${p.worker_name || "-"}</td>
+                <td>${p.vendor_name || "-"}</td>
+                <td>${productTags}</td>
+              </tr>
+            `;
+          }).join("");
+
+        } catch (err) {
+          console.error(err);
+          tableBody.innerHTML = '<tr><td colspan="5">Failed to load purchases. Please refresh.</td></tr>';
+        }
+      }
+
+      document.getElementById("purchaseForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const worker_id = document.getElementById("workerId").value;
+        const vendor_id = document.getElementById("vendorId").value;
+
+        // Collect product rows
+        const rows = document.querySelectorAll(".product-row");
+        const products = [];
+        let valid = true;
+
+        rows.forEach(row => {
+          const productId = row.querySelector(".prod-select").value;
+          const qty       = parseInt(row.querySelector(".prod-qty").value, 10);
+          if (!productId || !qty || qty < 1) { valid = false; return; }
+          products.push({ product_id: productId, qty });
+        });
+
+        if (!worker_id || !vendor_id) {
+          showAlert("Please select a worker and vendor.", "error");
+          return;
+        }
+        if (!valid || products.length === 0) {
+          showAlert("Please add at least one product with a valid quantity.", "error");
+          return;
+        }
+
+        try {
+          const res  = await fetch(API, {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ worker_id, vendor_id, products })
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            showAlert(data.message || "Failed to create purchase.", "error");
+            return;
+          }
+
+          showAlert(data.message || "Purchase created successfully.", "success");
+          document.getElementById("purchaseForm").reset();
+          document.getElementById("productRows").innerHTML = "";
+          addProductRow();
+          loadPurchases();
+
+        } catch (err) {
+          console.error(err);
+          showAlert("Something went wrong. Please try again.", "error");
+        }
+      });
+
+      // Init
+      loadFormData();
+      loadPurchases();
+    </script>
+
+  </body>
+</html>
