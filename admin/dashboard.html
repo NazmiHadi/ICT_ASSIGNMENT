@@ -65,6 +65,7 @@ if (role !== "admin") {
         position: sticky;
         top: 0;
         height: 100vh;
+        overflow-y: auto;
       }
 
       .sidebar-brand {
@@ -98,6 +99,15 @@ if (role !== "admin") {
         margin: 0;
         padding: 0;
         flex: 1;
+      }
+
+      .sidebar-nav .nav-group-label {
+        padding: 16px 28px 6px;
+        font-size: 10.5px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #8A7B6C;
+        font-weight: 600;
       }
 
       .sidebar-nav li a {
@@ -306,7 +316,8 @@ if (role !== "admin") {
         }
         .sidebar-brand { display: none; }
         .sidebar-nav { display: flex; flex: none; }
-        .sidebar-nav li a { padding: 8px 16px; border-left: none; border-bottom: 3px solid transparent; }
+        .sidebar-nav .nav-group-label { display: none; }
+        .sidebar-nav li a { padding: 8px 16px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
         .sidebar-nav li a.active { border-left: none; border-bottom-color: var(--accent); }
         .sidebar-footer { display: none; }
         .main { padding: 28px 20px 40px; }
@@ -328,7 +339,18 @@ if (role !== "admin") {
 
         <ul class="sidebar-nav">
           <li><a href="dashboard" class="active"><i class="fa fa-th-large"></i> Dashboard</a></li>
+
+          <li class="nav-group-label">People</li>
           <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
+          <li><a href="customers"><i class="fa fa-male"></i> Manage Customers</a></li>
+          <li><a href="vendors"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
+
+          <li class="nav-group-label">Catalog &amp; Stock</li>
+          <li><a href="products"><i class="fa fa-tags"></i> Manage Products</a></li>
+          <li><a href="containers"><i class="fa fa-archive"></i> Manage Containers</a></li>
+          <li><a href="inventory"><i class="fa fa-cubes"></i> Manage Inventory</a></li>
+
+          <li class="nav-group-label">Transactions</li>
           <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
           <li><a href="purchase"><i class="fa fa-shopping-cart"></i> Manage Purchases</a></li>
         </ul>
@@ -344,34 +366,42 @@ if (role !== "admin") {
         <div class="page-head">
           <p class="eyebrow">Overview</p>
           <h1>Welcome back, Admin</h1>
-          <p>Here's what's happening with your workers and orders today.</p>
+          <p>Here's a summary of your workers, customers, catalog and transactions.</p>
         </div>
 
+        <!--
+          NOTE for backend integration:
+          The values below should come from simple COUNT(*) queries against
+          the tables that actually exist in the schema. There is currently
+          no status/state column on ORDERS, so "pending/assigned/completed"
+          style breakdowns are NOT used here unless that column is added
+          (e.g. ALTER TABLE ORDERS ADD OrderStatus VARCHAR2(20)).
+        -->
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-icon"><i class="fa fa-users"></i></div>
-            <div class="stat-value">10</div>
+            <div class="stat-value" id="statWorkers">0</div>
             <div class="stat-label">Total Workers</div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-clock-o"></i></div>
-            <div class="stat-value">15</div>
-            <div class="stat-label">Pending Orders</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-user"></i></div>
-            <div class="stat-value">20</div>
-            <div class="stat-label">Assigned Orders</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-check-circle"></i></div>
-            <div class="stat-value">35</div>
-            <div class="stat-label">Completed Orders</div>
-          </div>
-          <div class="stat-card">
             <div class="stat-icon"><i class="fa fa-male"></i></div>
-            <div class="stat-value">50</div>
+            <div class="stat-value" id="statCustomers">0</div>
             <div class="stat-label">Total Customers</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-list-alt"></i></div>
+            <div class="stat-value" id="statOrders">0</div>
+            <div class="stat-label">Total Orders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-tags"></i></div>
+            <div class="stat-value" id="statProducts">0</div>
+            <div class="stat-label">Total Products</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fa fa-handshake-o"></i></div>
+            <div class="stat-value" id="statVendors">0</div>
+            <div class="stat-label">Total Vendors</div>
           </div>
         </div>
 
@@ -381,7 +411,7 @@ if (role !== "admin") {
             <div class="action-icon"><i class="fa fa-user-plus"></i></div>
             <div>
               <h4>Manage Workers</h4>
-              <p>Add new workers and view everyone currently registered.</p>
+              <p>Add workers, assign managers, set full-time/part-time pay.</p>
             </div>
             <i class="fa fa-angle-right go"></i>
           </a>
@@ -390,7 +420,43 @@ if (role !== "admin") {
             <div class="action-icon"><i class="fa fa-cogs"></i></div>
             <div>
               <h4>Manage Orders</h4>
-              <p>Assign workers to pending orders and track progress.</p>
+              <p>Assign workers to orders and view ordered products.</p>
+            </div>
+            <i class="fa fa-angle-right go"></i>
+          </a>
+
+          <a href="products" class="action-card">
+            <div class="action-icon"><i class="fa fa-tags"></i></div>
+            <div>
+              <h4>Manage Products</h4>
+              <p>Add products, set price/sales price, link to a container.</p>
+            </div>
+            <i class="fa fa-angle-right go"></i>
+          </a>
+
+          <a href="inventory" class="action-card">
+            <div class="action-icon"><i class="fa fa-cubes"></i></div>
+            <div>
+              <h4>Manage Inventory</h4>
+              <p>View and update stock quantity per product/container.</p>
+            </div>
+            <i class="fa fa-angle-right go"></i>
+          </a>
+
+          <a href="purchase" class="action-card">
+            <div class="action-icon"><i class="fa fa-shopping-cart"></i></div>
+            <div>
+              <h4>Manage Purchases</h4>
+              <p>Record purchases from vendors and the products bought.</p>
+            </div>
+            <i class="fa fa-angle-right go"></i>
+          </a>
+
+          <a href="customers" class="action-card">
+            <div class="action-icon"><i class="fa fa-male"></i></div>
+            <div>
+              <h4>Manage Customers</h4>
+              <p>View registered customers and their contact details.</p>
             </div>
             <i class="fa fa-angle-right go"></i>
           </a>
@@ -409,6 +475,19 @@ if (role !== "admin") {
         localStorage.removeItem("role");
         window.location.href = "../login.html";
       }
+
+      // Example of how to wire real numbers in once you have an API endpoint
+      // that runs COUNT(*) on each table. Replace the URL with your own.
+      //
+      // fetch('/admin/api/dashboard-stats')
+      //   .then(res => res.json())
+      //   .then(data => {
+      //     document.getElementById('statWorkers').textContent   = data.totalWorkers;
+      //     document.getElementById('statCustomers').textContent = data.totalCustomers;
+      //     document.getElementById('statOrders').textContent    = data.totalOrders;
+      //     document.getElementById('statProducts').textContent  = data.totalProducts;
+      //     document.getElementById('statVendors').textContent   = data.totalVendors;
+      //   });
     </script>
 
   </body>
