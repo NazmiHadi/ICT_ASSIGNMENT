@@ -1,0 +1,246 @@
+<script>
+const role = localStorage.getItem("role");
+if (role !== "admin") { window.location.href = "../login.html"; }
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
+  <title>KURMA AJWA ENTERPRISE | Manage Inventory</title>
+  <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
+  <style>
+    :root { --bg:#FAF7F2; --sidebar:#2B2118; --sidebar-hover:#3B2E22; --accent:#A8333D; --accent-soft:#F3E3DD; --ink:#2B2118; --ink-soft:#8A7B6C; --line:#E8E1D8; --card:#FFFFFF; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var(--ink); }
+    .shell { display:flex; min-height:100vh; }
+    .sidebar { width:260px; flex-shrink:0; background:var(--sidebar); color:#EDE6DC; display:flex; flex-direction:column; padding:28px 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sidebar-brand { padding:0 28px 28px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px; }
+    .sidebar-brand .mark { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#C9A98A; margin:0 0 4px; }
+    .sidebar-brand h2 { font-size:21px; font-weight:700; margin:0; line-height:1.25; }
+    .sidebar-brand h2 em { font-style:normal; color:var(--accent); }
+    .sidebar-nav { list-style:none; margin:0; padding:0; flex:1; }
+    .sidebar-nav .nav-group-label { padding:16px 28px 6px; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#8A7B6C; font-weight:600; }
+    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; }
+    .sidebar-nav li a i { width:18px; text-align:center; font-size:14px; }
+    .sidebar-nav li a:hover { background:var(--sidebar-hover); color:#fff; }
+    .sidebar-nav li a.active { background:var(--sidebar-hover); color:#fff; border-left-color:var(--accent); }
+    .sidebar-footer { padding:0 28px; margin-top:12px; }
+    .sidebar-footer a { display:flex; align-items:center; gap:10px; color:#C9BFB2; text-decoration:none; font-size:14px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer a:hover { color:#fff; }
+    .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
+    .page-head { margin-bottom:32px; }
+    .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
+    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
+    .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+    .two-col { display:grid; grid-template-columns:minmax(280px,360px) 1fr; gap:24px; align-items:start; }
+    .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
+    .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:5px; }
+    .form-control { width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:14px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
+    .form-control:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+    .btn-primary { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; width:100%; font-family:'Poppins',sans-serif; margin-top:6px; }
+    .btn-primary:hover { background:#8E2A33; }
+    .table-wrapper { overflow-x:auto; }
+    table.inv-table { width:100%; border-collapse:collapse; }
+    table.inv-table th, table.inv-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:14px; vertical-align:middle; }
+    table.inv-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.inv-table tbody tr:hover { background:#FBF8F4; }
+    .qty-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12.5px; font-weight:600; }
+    .qty-ok  { background:#E8F5EA; color:#1C7A3D; }
+    .qty-low { background:#FBF1DC; color:#91701C; }
+    .qty-out { background:#FBE9E7; color:#A8333D; }
+    #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
+    #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
+    #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+    @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
+    @media (max-width:860px) {
+      .shell { flex-direction:column; }
+      .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
+      .sidebar-brand { display:none; }
+      .sidebar-nav .nav-group-label { display: none; }
+      .sidebar-nav { display:flex; flex:none; }
+      .sidebar-nav li a { padding:8px 16px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
+      .sidebar-nav li a.active { border-left:none; border-bottom-color:var(--accent); }
+      .sidebar-footer { display:none; }
+      .main { padding:28px 20px 40px; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <p class="mark">Admin Panel</p>
+      <h2>KURMA <em>AJWA</em></h2>
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="dashboard"><i class="fa fa-th-large"></i> Dashboard</a></li>
+
+      <li class="nav-group-label">People</li>
+      <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
+      <li><a href="customers"><i class="fa fa-male"></i> Manage Customers</a></li>
+      <li><a href="vendors"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
+
+      <li class="nav-group-label">Catalog &amp; Stock</li>
+      <li><a href="products"><i class="fa fa-tags"></i> Manage Products</a></li>
+      <li><a href="containers"><i class="fa fa-archive"></i> Manage Containers</a></li>
+      <li><a href="inventory" class="active"><i class="fa fa-cubes"></i> Manage Inventory</a></li>
+
+      <li class="nav-group-label">Transactions</li>
+      <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
+      <li><a href="purchase"><i class="fa fa-shopping-cart"></i> Manage Purchases</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <p class="eyebrow">Catalog &amp; Stock</p>
+      <h1>Manage Inventory</h1>
+      <p>Set how much stock (quantity) of a product sits in each container.</p>
+    </div>
+
+    <div id="formAlert"></div>
+
+    <div class="two-col">
+      <div class="panel">
+        <h3>Set / Update Stock</h3>
+        <form id="inventoryForm">
+          <div class="form-group">
+            <label>Product</label>
+            <select class="form-control" id="prodId" required>
+              <option value="">-- Select product --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Container</label>
+            <select class="form-control" id="contId" required>
+              <option value="">-- Select container --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quantity</label>
+            <input type="number" class="form-control" id="qty" placeholder="e.g. 100" min="0" required>
+          </div>
+          <button type="submit" class="btn-primary">Save Stock</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h3>Current Inventory</h3>
+        <div class="table-wrapper">
+          <table class="inv-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Container</th>
+                <th>Quantity</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+              <tr><td colspan="3">Loading inventory...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/admin/vendor/jquery/jquery.min.js"></script>
+<script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+  function logout() { localStorage.removeItem("role"); window.location.href = "../login.html"; }
+
+  function showAlert(msg, type) {
+    const box = document.getElementById("formAlert");
+    box.textContent = msg; box.className = type; box.style.display = "block";
+    setTimeout(() => { box.style.display = "none"; }, 4000);
+  }
+
+  function qtyBadge(qty) {
+    qty = Number(qty);
+    let cls = "qty-ok";
+    if (qty === 0) cls = "qty-out";
+    else if (qty <= 10) cls = "qty-low";
+    return `<span class="qty-badge ${cls}">${qty}</span>`;
+  }
+
+  async function loadDropdowns() {
+    try {
+      const [prodRes, contRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/containers")
+      ]);
+      const prodData = await prodRes.json();
+      const contData = await contRes.json();
+
+      const prodSel = document.getElementById("prodId");
+      const contSel = document.getElementById("contId");
+
+      if (prodRes.ok && prodData.success) {
+        prodSel.innerHTML = '<option value="">-- Select product --</option>' +
+          (prodData.products || []).map(p => `<option value="${p.product_id}">${p.name}</option>`).join("");
+      }
+      if (contRes.ok && contData.success) {
+        contSel.innerHTML = '<option value="">-- Select container --</option>' +
+          (contData.containers || []).map(c => `<option value="${c.container_id}">${c.name}</option>`).join("");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  // Maps to INVENTORY junction table: ProdID (FK), ContID (FK), Qty
+  async function loadInventory() {
+    const tbody = document.getElementById("inventoryTableBody");
+    try {
+      const res  = await fetch("/api/inventory");
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message);
+      const inventory = data.inventory || [];
+      tbody.innerHTML = inventory.length === 0
+        ? '<tr><td colspan="3">No inventory records yet.</td></tr>'
+        : inventory.map(i => `
+            <tr>
+              <td>${i.product_name}</td>
+              <td>${i.container_name}</td>
+              <td>${qtyBadge(i.qty)}</td>
+            </tr>`).join("");
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="3">Failed to load inventory. Please refresh.</td></tr>';
+    }
+  }
+
+  document.getElementById("inventoryForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+      product_id:   document.getElementById("prodId").value,
+      container_id: document.getElementById("contId").value,
+      qty:          document.getElementById("qty").value
+    };
+    try {
+      const res  = await fetch("/api/inventory", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to save stock.", "error"); return; }
+      showAlert(data.message || "Inventory saved successfully.", "success");
+      document.getElementById("inventoryForm").reset();
+      loadInventory();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  });
+
+  loadDropdowns();
+  loadInventory();
+</script>
+</body>
+</html>
