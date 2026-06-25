@@ -7,6 +7,7 @@ const checkoutRoutes = require("./routes/checkoutRoutes");
 const workerRoutes   = require("./routes/workerRoutes");
 const orderRoutes    = require("./routes/orderRoutes");
 const purchaseRoutes = require("./routes/purchaseRoutes");
+const vendorRoutes   = require("./routes/vendorRoutes");
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api", checkoutRoutes);
 app.use("/api", workerRoutes);
 app.use("/api", orderRoutes);
 app.use("/api", purchaseRoutes);
+app.use("/api", vendorRoutes);
 
 // ── Page routes ──────────────────────────────────────────────
 app.get("/", (req, res) => {
