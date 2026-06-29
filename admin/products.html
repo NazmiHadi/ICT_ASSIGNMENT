@@ -179,11 +179,11 @@ if (role !== "admin") { window.location.href = "../login.html"; }
   }
 
   function priceDisplay(p) {
-    const price = Number(p.price || 0).toFixed(2);
-    if (p.sales_price && Number(p.sales_price) > 0 && Number(p.sales_price) < Number(p.price)) {
-      return `<span class="price-original">RM ${price}</span><span class="price-sale">RM ${Number(p.sales_price).toFixed(2)}</span>`;
+    const original = Number(p.list_price || 0).toFixed(2);
+    if (p.sales_price && Number(p.sales_price) > 0 && Number(p.sales_price) < Number(p.list_price)) {
+      return `<span class="price-original">RM ${original}</span><span class="price-sale">RM ${Number(p.sales_price).toFixed(2)}</span>`;
     }
-    return `RM ${price}`;
+    return `RM ${original}`;
   }
 
   // Maps to PRODUCTS table: ProdID, ProdName, Price, ProdType, SalesPrice, ProdDesc, ContID (FK -> CONTAINERS)
