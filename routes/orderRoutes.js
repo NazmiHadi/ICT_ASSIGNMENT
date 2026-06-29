@@ -6,7 +6,7 @@ const { getConnection } = require("../config/db");
 // ── GET /api/orders/workers ───────────────────────────────────
 // Returns workers list for the assign-worker dropdown.
 // Must be declared BEFORE /api/orders/:orderId to avoid route conflict.
-router.get("/orders/workers", async (req, res) => {
+router.get("/admin/orders/workers", async (req, res) => {
   let conn;
   try {
     conn = await getConnection();
@@ -33,7 +33,7 @@ router.get("/orders/workers", async (req, res) => {
 
 // ── GET /api/orders ───────────────────────────────────────────
 // Returns all orders joined with customer name and assigned worker name.
-router.get("/orders", async (req, res) => {
+router.get("/admin/orders", async (req, res) => {
   let conn;
   try {
     conn = await getConnection();
@@ -74,7 +74,7 @@ router.get("/orders", async (req, res) => {
 // ── PUT /api/orders/:orderId/assign ──────────────────────────
 // Assign (or unassign) a single worker to an order.
 // Body: { worker_id }  -- pass null/empty string to unassign
-router.put("/orders/:orderId/assign", async (req, res) => {
+router.put("/admin/orders/:orderId/assign", async (req, res) => {
   const orderId  = Number(req.params.orderId);
   const workerId = req.body.worker_id || null;
 
