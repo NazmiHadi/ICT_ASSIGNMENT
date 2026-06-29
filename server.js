@@ -17,12 +17,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ── Static files ─────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "assets")));
-app.use("/vendor",       express.static(path.join(__dirname, "vendor")));
-app.use("/css",          express.static(path.join(__dirname, "css")));
-app.use("/assets",       express.static(path.join(__dirname, "assets")));
-app.use("/admin/vendor", express.static(path.join(__dirname, "admin", "vendor")));
-app.use("/admin/assets", express.static(path.join(__dirname, "admin", "assets")));
+app.use("/assets",          express.static(path.join(__dirname, "assets")));
+app.use("/vendor",          express.static(path.join(__dirname, "vendor")));
+app.use("/css",             express.static(path.join(__dirname, "css")));
+app.use("/customer/assets", express.static(path.join(__dirname, "customer", "assets")));
+app.use("/customer/vendor", express.static(path.join(__dirname, "customer", "vendor")));
+app.use("/admin/assets",    express.static(path.join(__dirname, "admin", "assets")));
+app.use("/admin/vendor",    express.static(path.join(__dirname, "admin", "vendor")));
 
 // ── API routes ───────────────────────────────────────────────
 app.use("/api", authRoutes);
@@ -41,13 +44,13 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get("/admin/:page", (req, res) => {
-  const filePath = path.join(__dirname, "admin", `${req.params.page}.html`);
+app.get("/customer/:page", (req, res) => {
+  const filePath = path.join(__dirname, "customer", `${req.params.page}.html`);
   res.sendFile(filePath, err => { if (err) res.status(404).send("Page not found"); });
 });
 
-app.get("/:page", (req, res) => {
-  const filePath = path.join(__dirname, `${req.params.page}.html`);
+app.get("/admin/:page", (req, res) => {
+  const filePath = path.join(__dirname, "admin", `${req.params.page}.html`);
   res.sendFile(filePath, err => { if (err) res.status(404).send("Page not found"); });
 });
 
