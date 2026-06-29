@@ -2,6 +2,43 @@ const express = require("express");
 const router  = express.Router();
 const { getConnection } = require("../config/db");
 
+// ── GET /api/customers ──────────────────────────────────────────────────────
+//
+// Returns ALL customers (read-only directory for the admin "Manage Customers"
+// page). Password is intentionally NEVER selected/returned here — customers
+// manage their own credentials via sign-up/login, admin should never see it.
+//
+router.get("/customers", async (req, res) => {
+  let conn;
+  try {
+    conn = await getConnection();
+
+    const result = await conn.execute(
+      `SELECT CustID, CustName, CustEmail, CustPhoneNum, CustAddress, username
+       FROM   CUSTOMERS
+       ORDER  BY CustID`
+    );
+
+    const customers = result.rows.map(row => ({
+      customer_id: row.CUSTID,
+      name:        row.CUSTNAME,
+      email:       row.CUSTEMAIL,
+      phone:       row.CUSTPHONENUM,
+      address:     row.CUSTADDRESS,
+      username:    row.USERNAME
+    }));
+
+    return res.json({ success: true, customers });
+
+  } catch (err) {
+    console.error("[CUSTOMERS LIST ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not load customers." });
+
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 // ── GET /api/customer/profile?customer_id=... ─────────────────────────────────
 //
 // Returns the full customer record for the given customer_id.

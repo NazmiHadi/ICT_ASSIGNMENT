@@ -1,13 +1,16 @@
 const express = require("express");
 const path    = require("path");
 
-const authRoutes     = require("./routes/authRoutes");
-const productRoutes  = require("./routes/productRoutes");
-const checkoutRoutes = require("./routes/checkoutRoutes");
-const workerRoutes   = require("./routes/workerRoutes");
-const orderRoutes    = require("./routes/orderRoutes");
-const purchaseRoutes = require("./routes/purchaseRoutes");
-const vendorRoutes   = require("./routes/vendorRoutes");
+const authRoutes      = require("./routes/authRoutes");
+const productRoutes   = require("./routes/productRoutes");
+const checkoutRoutes  = require("./routes/checkoutRoutes");
+const workerRoutes    = require("./routes/workerRoutes");
+const orderRoutes     = require("./routes/orderRoutes");
+const purchaseRoutes  = require("./routes/purchaseRoutes");
+const vendorRoutes    = require("./routes/vendorRoutes");
+const customerRoutes  = require("./routes/customerRoutes");
+const containerRoutes = require("./routes/containerRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
 
 const app = express();
 
@@ -29,6 +32,9 @@ app.use("/api", workerRoutes);
 app.use("/api", orderRoutes);
 app.use("/api", purchaseRoutes);
 app.use("/api", vendorRoutes);
+app.use("/api", customerRoutes);
+app.use("/api", containerRoutes);
+app.use("/api", inventoryRoutes);
 
 // ── Page routes ──────────────────────────────────────────────
 app.get("/", (req, res) => {
