@@ -19,12 +19,17 @@ CREATE TABLE WORKERS (
     WorkName VARCHAR2(100) NOT NULL,
     WorkPhoneNum VARCHAR2(20),
     username VARCHAR2(20) NOT NULL,
-    password VARCHAR2(20) NOT NULL, 
+    password VARCHAR2(20) NOT NULL,
+
+    -- Indicates whether this worker is a manager/admin
+    IsManager NUMBER(1) DEFAULT 0 NOT NULL
+        CHECK (IsManager IN (0,1)),
+
     ManagerID NUMBER,
+
     CONSTRAINT FK_WORKER_MANAGER
         FOREIGN KEY (ManagerID)
         REFERENCES WORKERS(WorkID)
-    
 );
 
 -- =====================================
@@ -34,6 +39,7 @@ CREATE TABLE FULL_TIME_WORKERS (
     WorkID NUMBER PRIMARY KEY,
     Salary NUMBER(10,2),
     Bonus_Salary NUMBER(10,2),
+
     CONSTRAINT FK_FULLTIME_WORKER
         FOREIGN KEY (WorkID)
         REFERENCES WORKERS(WorkID)
@@ -45,6 +51,7 @@ CREATE TABLE FULL_TIME_WORKERS (
 CREATE TABLE PART_TIME_WORKERS (
     WorkID NUMBER PRIMARY KEY,
     SalaryPerHr NUMBER(10,2),
+
     CONSTRAINT FK_PARTTIME_WORKER
         FOREIGN KEY (WorkID)
         REFERENCES WORKERS(WorkID)
@@ -57,7 +64,11 @@ CREATE TABLE VENDORS (
     VendID NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     VendName VARCHAR2(100) NOT NULL,
     VendAddress VARCHAR2(200),
-    VendPhoneNum VARCHAR2(20)
+    VendPhoneNum VARCHAR2(20),
+
+    -- Vendor login credentials
+    username VARCHAR2(20),
+    password VARCHAR2(20)
 );
 
 -- =====================================
@@ -81,6 +92,7 @@ CREATE TABLE PRODUCTS (
     SalesPrice NUMBER(10,2),
     ProdDesc VARCHAR2(50),
     ContID NUMBER,
+
     CONSTRAINT FK_PRODUCT_CONTAINER
         FOREIGN KEY (ContID)
         REFERENCES CONTAINERS(ContID)

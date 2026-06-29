@@ -1,11 +1,3 @@
-<script>
-const role = localStorage.getItem("role");
-
-if (role !== "admin") {
-    window.location.href = "../login.html";
-}
-</script>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,7 +9,7 @@ if (role !== "admin") {
     <meta name="author" content="">
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
 
-    <title>KURMA AJWA ENTERPRISE | Admin Dashboard</title>
+    <title>KURMA AJWA ENTERPRISE | Dashboard</title>
 
     <!-- Bootstrap core CSS -->
     <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -92,6 +84,20 @@ if (role !== "admin") {
       .sidebar-brand h2 em {
         font-style: normal;
         color: var(--accent);
+      }
+
+      .sidebar-brand .role-pill {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 4px 10px;
+        font-size: 10.5px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: #EDE6DC;
+        background: rgba(168,51,61,0.35);
+        border: 1px solid rgba(168,51,61,0.6);
+        border-radius: 20px;
       }
 
       .sidebar-nav {
@@ -302,6 +308,17 @@ if (role !== "admin") {
         align-self: center;
       }
 
+      /* ---------- Empty / no-access notice ---------- */
+      .notice-card {
+        background: var(--card);
+        border-radius: 10px;
+        border-left: 4px solid var(--ink-soft);
+        padding: 20px 22px;
+        color: var(--ink-soft);
+        font-size: 14px;
+        box-shadow: 0 1px 3px rgba(43,33,24,0.06);
+      }
+
       /* ---------- Mobile ---------- */
       @media (max-width: 860px) {
         .shell { flex-direction: column; }
@@ -333,30 +350,17 @@ if (role !== "admin") {
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-brand">
-          <p class="mark">Admin Panel</p>
+          <p class="mark">Dashboard</p>
           <h2>KURMA <em>AJWA</em></h2>
+          <span class="role-pill" id="rolePill">—</span>
         </div>
 
-        <ul class="sidebar-nav">
-      <li><a href="dashboard" class="active"><i class="fa fa-th-large"></i> Dashboard</a></li>
-
-      <li class="nav-group-label">People</li>
-      <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
-      <li><a href="customers"><i class="fa fa-male"></i> Manage Customers</a></li>
-      <li><a href="vendors"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
-
-      <li class="nav-group-label">Catalog &amp; Stock</li>
-      <li><a href="products"><i class="fa fa-tags"></i> Manage Products</a></li>
-      <li><a href="containers"><i class="fa fa-archive"></i> Manage Containers</a></li>
-      <li><a href="inventory"><i class="fa fa-cubes"></i> Manage Inventory</a></li>
-
-      <li class="nav-group-label">Transactions</li>
-      <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
-      <li><a href="purchase"><i class="fa fa-shopping-cart"></i> Manage Purchases</a></li>
-    </ul>
+        <ul class="sidebar-nav" id="sidebarNav">
+          <!-- populated by dashboard.js based on role -->
+        </ul>
 
         <div class="sidebar-footer">
-          <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
+          <a href="#" id="logoutLink"><i class="fa fa-sign-out"></i> Logout</a>
         </div>
       </aside>
 
@@ -365,101 +369,17 @@ if (role !== "admin") {
 
         <div class="page-head">
           <p class="eyebrow">Overview</p>
-          <h1>Welcome back, Admin</h1>
-          <p>Here's a summary of your workers, customers, catalog and transactions.</p>
+          <h1 id="welcomeHeading">Welcome back</h1>
+          <p id="welcomeSub">Here's your summary.</p>
         </div>
 
-        <!--
-          NOTE for backend integration:
-          The values below should come from simple COUNT(*) queries against
-          the tables that actually exist in the schema. There is currently
-          no status/state column on ORDERS, so "pending/assigned/completed"
-          style breakdowns are NOT used here unless that column is added
-          (e.g. ALTER TABLE ORDERS ADD OrderStatus VARCHAR2(20)).
-        -->
-        <div class="stat-grid">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-users"></i></div>
-            <div class="stat-value" id="statWorkers">0</div>
-            <div class="stat-label">Total Workers</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-male"></i></div>
-            <div class="stat-value" id="statCustomers">0</div>
-            <div class="stat-label">Total Customers</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-list-alt"></i></div>
-            <div class="stat-value" id="statOrders">0</div>
-            <div class="stat-label">Total Orders</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-tags"></i></div>
-            <div class="stat-value" id="statProducts">0</div>
-            <div class="stat-label">Total Products</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fa fa-handshake-o"></i></div>
-            <div class="stat-value" id="statVendors">0</div>
-            <div class="stat-label">Total Vendors</div>
-          </div>
+        <div class="stat-grid" id="statGrid">
+          <!-- populated by dashboard.js based on role -->
         </div>
 
         <p class="section-label">Quick Actions</p>
-        <div class="action-grid">
-          <a href="workers" class="action-card">
-            <div class="action-icon"><i class="fa fa-user-plus"></i></div>
-            <div>
-              <h4>Manage Workers</h4>
-              <p>Add workers, assign managers, set full-time/part-time pay.</p>
-            </div>
-            <i class="fa fa-angle-right go"></i>
-          </a>
-
-          <a href="orders" class="action-card">
-            <div class="action-icon"><i class="fa fa-cogs"></i></div>
-            <div>
-              <h4>Manage Orders</h4>
-              <p>Assign workers to orders and view ordered products.</p>
-            </div>
-            <i class="fa fa-angle-right go"></i>
-          </a>
-
-          <a href="products" class="action-card">
-            <div class="action-icon"><i class="fa fa-tags"></i></div>
-            <div>
-              <h4>Manage Products</h4>
-              <p>Add products, set price/sales price, link to a container.</p>
-            </div>
-            <i class="fa fa-angle-right go"></i>
-          </a>
-
-          <a href="inventory" class="action-card">
-            <div class="action-icon"><i class="fa fa-cubes"></i></div>
-            <div>
-              <h4>Manage Inventory</h4>
-              <p>View and update stock quantity per product/container.</p>
-            </div>
-            <i class="fa fa-angle-right go"></i>
-          </a>
-
-          <a href="purchase" class="action-card">
-            <div class="action-icon"><i class="fa fa-shopping-cart"></i></div>
-            <div>
-              <h4>Manage Purchases</h4>
-              <p>Record purchases from vendors and the products bought.</p>
-            </div>
-            <i class="fa fa-angle-right go"></i>
-          </a>
-
-          <a href="customers" class="action-card">
-            <div class="action-icon"><i class="fa fa-male"></i></div>
-            <div>
-              <h4>Manage Customers</h4>
-              <p>View registered customers and their contact details.</p>
-            </div>
-            <i class="fa fa-angle-right go"></i>
-          </a>
+        <div class="action-grid" id="actionGrid">
+          <!-- populated by dashboard.js based on role -->
         </div>
 
       </main>
@@ -470,25 +390,8 @@ if (role !== "admin") {
     <script src="/admin/vendor/jquery/jquery.min.js"></script>
     <script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-      function logout() {
-        localStorage.removeItem("role");
-        window.location.href = "../login.html";
-      }
-
-      // Example of how to wire real numbers in once you have an API endpoint
-      // that runs COUNT(*) on each table. Replace the URL with your own.
-      //
-      // fetch('/admin/api/dashboard-stats')
-      //   .then(res => res.json())
-      //   .then(data => {
-      //     document.getElementById('statWorkers').textContent   = data.totalWorkers;
-      //     document.getElementById('statCustomers').textContent = data.totalCustomers;
-      //     document.getElementById('statOrders').textContent    = data.totalOrders;
-      //     document.getElementById('statProducts').textContent  = data.totalProducts;
-      //     document.getElementById('statVendors').textContent   = data.totalVendors;
-      //   });
-    </script>
+    <!-- Role-based dashboard logic -->
+    <script src="/admin/assets/js/dashboard.js"></script>
 
   </body>
 
