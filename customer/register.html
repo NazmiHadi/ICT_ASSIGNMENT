@@ -4,124 +4,236 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register — Kurma Ajwa Enterprise</title>
+  <meta name="description" content="Create a Kurma Ajwa account">
 
+<<<<<<< HEAD
   <!-- Auth page styling (centered card layout) -->
-  <link rel="stylesheet" href="/customer//assets/css/auth.css">
+  <link rel="stylesheet" href="/customer/assets/css/auth.css">
+=======
+  <!-- Same style.css as the login page -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+>>>>>>> 998997ae72776cbf92817a4665dcd4ce4e275005
 
   <style>
-    /* ── Extra styles for the registration card ── */
+    /* ── Extra styles only needed for the register page ── */
 
-    /* Give inputs a visible border so they look like proper fields */
-    input {
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 14px;
-      box-sizing: border-box;
+    /* The register card is taller so allow it to grow */
+    .login-card { max-width: 460px; }
+
+    /* Stack all fields with consistent spacing */
+    .form-group { margin-bottom: 20px; }
+
+    /* Two-column row for name + phone on wider screens */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
 
-    /* Style the register button like the login button */
-    button {
-      background: #a0522d;
-      color: white;
+    @media (max-width: 520px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Divider line between sections */
+    .form-divider {
       border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.2s;
+      border-top: 1px solid #e8d8c4;
+      margin: 8px 0 24px;
     }
-    button:hover { background: #7a3f20; }
 
-    /* The message area shown below the form (success or error) */
+    .form-section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #c8844a;
+      margin-bottom: 14px;
+    }
+
+    /* Message area (success / error) */
     #message {
-      margin-top: 12px;
+      display: none;
+      margin-top: 4px;
+      margin-bottom: 12px;
       padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 14px;
-      display: none;     /* hidden by default; shown by JavaScript */
+      border-radius: 4px;
+      font-size: 0.83rem;
+      font-weight: 500;
+      text-align: center;
     }
-    #message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    #message.error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-    /* Link at the bottom back to login */
-    .login-link { text-align: center; margin-top: 15px; font-size: 14px; }
-    .login-link a { color: #a0522d; text-decoration: none; font-weight: bold; }
+    #message.success {
+      background: #e6f4e6;
+      color: #2e7d32;
+      border: 1px solid #c3e6cb;
+    }
+
+    #message.error {
+      background: #fdecea;
+      color: #c62828;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Optional badge on optional fields */
+    .optional-badge {
+      font-size: 0.68rem;
+      color: #b0906a;
+      font-weight: 400;
+      margin-left: 4px;
+      letter-spacing: 0.02em;
+    }
   </style>
 </head>
 <body>
 
-  <div class="auth-container">
-    <div class="card">
+  <!-- Same grain overlay as login -->
+  <div class="grain"></div>
 
-      <!-- Page heading -->
-      <h1 style="text-align:center; color:#a0522d; margin-bottom:20px;">
-        KURMA <em>AJWA</em>
-      </h1>
-      <h2 style="text-align:center; font-size:18px; margin-bottom:20px;">
-        Create an Account
-      </h2>
+  <div class="login-container" style="max-width:460px;">
+    <div class="login-card">
 
-      <!-- Registration form
-           id="registerForm" lets JavaScript find this form
-           novalidate stops the browser's default popup messages
-           so we can show our own styled errors instead -->
+      <!-- Same header style as login -->
+      <div class="login-header">
+        <h2>KURMA <em style="font-style:italic; color:#a0522d;">AJWA</em></h2>
+        <p>Create your account</p>
+      </div>
+
       <form id="registerForm" novalidate>
 
-        <!-- Full Name field -->
-        <input
-          type="text"
-          id="name"
-          placeholder="Full Name"
-          required>
+        <!-- ── Personal details ── -->
+        <p class="form-section-label">Personal Details</p>
 
-        <!-- Email field -->
-        <input
-          type="email"
-          id="email"
-          placeholder="Email Address"
-          required>
+        <!-- Full name + phone side by side -->
+        <div class="form-row">
 
-        <input
-          type="tel"
-          id="address"
-          placeholder="Address (optional)">
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                autocomplete="name">
+              <label for="name">Full Name</label>
+            </div>
+            <span class="error-message"></span>
+          </div>
 
-        <!-- Phone (optional) -->
-        <input
-          type="tel"
-          id="phone"
-          placeholder="Phone Number (optional)">
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                autocomplete="tel">
+              <label for="phone">Phone <span class="optional-badge">(optional)</span></label>
+            </div>
+            <span class="error-message"></span>
+          </div>
 
-        <!-- Username – used to log in -->
-        <input
-          type="text"
-          id="username"
-          placeholder="Username"
-          required>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email">
+            <label for="email">Email Address</label>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <!-- Address -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="address"
+              name="address"
+              autocomplete="street-address">
+            <label for="address">Address <span class="optional-badge">(optional)</span></label>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- ── Login credentials ── -->
+        <p class="form-section-label">Login Credentials</p>
+
+        <!-- Username -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              required
+              autocomplete="username">
+            <label for="username">Username</label>
+          </div>
+          <span class="error-message"></span>
+        </div>
 
         <!-- Password -->
-        <input
-          type="password"
-          id="password"
-          placeholder="Password"
-          required>
+        <div class="form-group">
+          <div class="input-wrapper password-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="new-password">
+            <label for="password">Password</label>
+            <button
+              type="button"
+              class="password-toggle"
+              id="passwordToggle"
+              aria-label="Toggle password visibility">
+              <span class="eye-icon" id="eyeIcon1"></span>
+            </button>
+          </div>
+          <span class="error-message"></span>
+        </div>
 
-        <!-- Confirm Password – must match the field above -->
-        <input
-          type="password"
-          id="confirmPassword"
-          placeholder="Confirm Password"
-          required>
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <div class="input-wrapper password-wrapper">
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              required
+              autocomplete="new-password">
+            <label for="confirmPassword">Confirm Password</label>
+            <button
+              type="button"
+              class="password-toggle"
+              id="confirmToggle"
+              aria-label="Toggle confirm password visibility">
+              <span class="eye-icon" id="eyeIcon2"></span>
+            </button>
+          </div>
+          <span class="error-message"></span>
+        </div>
 
-        <!-- Submit button -->
-        <button type="submit">Register</button>
+        <!-- Message area -->
+        <div id="message"></div>
+
+        <!-- Submit — same class as login button -->
+        <button type="submit" class="login-btn">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-loader"></span>
+        </button>
 
       </form>
 
-      <!-- Message area – hidden until JavaScript sets a success or error class -->
-      <div id="message"></div>
-
-      <!-- Link back to the login page -->
-      <div class="login-link">
+      <!-- Link back to login — same style as login's signup-link -->
+      <div class="signup-link">
         <p>Already have an account? <a href="/">Sign in</a></p>
       </div>
 
@@ -129,29 +241,67 @@
   </div>
 
 
-  <!-- ── Registration JavaScript ──────────────────────────────────────── -->
+  <!-- ── Password toggle scripts ─────────────────────────────────────── -->
   <script>
-
-    // Get a reference to the registration form element
-    const form    = document.getElementById("registerForm");
-
-    // Get a reference to the message div where we show results
-    const msgDiv  = document.getElementById("message");
-
-    // Helper function: show a styled message (type = "success" or "error")
-    function showMessage(text, type) {
-      msgDiv.textContent = text;        // set the text inside the div
-      msgDiv.className   = type;        // set the CSS class (success or error)
-      msgDiv.style.display = "block";   // make the div visible
+    function makeToggle(btnId, inputId, iconId) {
+      const btn   = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      const icon  = document.getElementById(iconId);
+      btn.addEventListener("click", () => {
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.add("show-password");
+        } else {
+          input.type = "password";
+          icon.classList.remove("show-password");
+        }
+      });
     }
 
-    // Listen for the form's "submit" event (fires when user clicks Register)
+    makeToggle("passwordToggle", "password",        "eyeIcon1");
+    makeToggle("confirmToggle",  "confirmPassword",  "eyeIcon2");
+  </script>
+
+
+  <!-- ── Registration logic ──────────────────────────────────────────── -->
+  <script>
+
+    const form   = document.getElementById("registerForm");
+    const msgDiv = document.getElementById("message");
+
+    function showMessage(text, type) {
+      msgDiv.textContent   = text;
+      msgDiv.className     = type;
+      msgDiv.style.display = "block";
+    }
+
+    function hideMessage() {
+      msgDiv.style.display = "none";
+    }
+
+    // Show error under a specific field
+    function fieldError(inputId, text) {
+      const group = document.getElementById(inputId).closest(".form-group");
+      if (!group) return;
+      group.classList.add("error");
+      const span = group.querySelector(".error-message");
+      if (span) { span.textContent = text; span.classList.add("show"); }
+    }
+
+    // Clear all field errors
+    function clearErrors() {
+      document.querySelectorAll(".form-group.error").forEach(g => {
+        g.classList.remove("error");
+        const span = g.querySelector(".error-message");
+        if (span) { span.textContent = ""; span.classList.remove("show"); }
+      });
+    }
+
     form.addEventListener("submit", async function (e) {
-
-      // Prevent the browser from refreshing the page (default form behaviour)
       e.preventDefault();
+      clearErrors();
+      hideMessage();
 
-      // Read the values the user typed into each field
       const name            = document.getElementById("name").value.trim();
       const email           = document.getElementById("email").value.trim();
       const address         = document.getElementById("address").value.trim();
@@ -160,45 +310,57 @@
       const password        = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirmPassword").value;
 
-      // ── Client-side validation (quick check before sending to server) ──
-      if (!name || !email || !username || !password || !confirmPassword) {
-        return showMessage("Please fill in all required fields.", "error");
+      // Client-side validation — mirrors the field error style from login
+      let hasError = false;
+
+      if (!name) {
+        fieldError("name", "Full name is required."); hasError = true;
       }
-      if (password !== confirmPassword) {
-        return showMessage("Passwords do not match.", "error");
+      if (!email) {
+        fieldError("email", "Email address is required."); hasError = true;
       }
-      if (password.length < 6) {
-        return showMessage("Password must be at least 6 characters.", "error");
+      if (!username) {
+        fieldError("username", "Username is required."); hasError = true;
+      }
+      if (!password) {
+        fieldError("password", "Password is required."); hasError = true;
+      } else if (password.length < 6) {
+        fieldError("password", "Password must be at least 6 characters."); hasError = true;
+      }
+      if (!confirmPassword) {
+        fieldError("confirmPassword", "Please confirm your password."); hasError = true;
+      } else if (password !== confirmPassword) {
+        fieldError("confirmPassword", "Passwords do not match."); hasError = true;
       }
 
-      // ── Send data to the server via fetch (AJAX POST request) ──────────
-      // fetch() sends an HTTP request without refreshing the page.
-      // We send the form data as JSON in the request body.
+      if (hasError) return;
+
+      // Disable button while request is in flight
+      const btn = form.querySelector(".login-btn");
+      btn.classList.add("loading");
+
       try {
         const response = await fetch("/api/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },  // tell server we're sending JSON
-          body: JSON.stringify({ name, email, address, phone, username, password, confirmPassword })
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ name, email, address, phone, username, password, confirmPassword })
         });
 
-        // Parse the JSON response that came back from server.js
         const data = await response.json();
 
         if (data.success) {
-          // Registration worked! Show success and redirect to login after 2 seconds
           showMessage("Account created! Redirecting to login...", "success");
-          form.reset();  // clear all the form fields
+          form.reset();
           setTimeout(() => { window.location.href = "/"; }, 2000);
         } else {
-          // Server returned an error (e.g. username taken)
           showMessage(data.message, "error");
+          btn.classList.remove("loading");
         }
 
       } catch (err) {
-        // Network error or server crashed – very unlikely but handle it gracefully
         showMessage("Could not connect to server. Please try again.", "error");
+        btn.classList.remove("loading");
       }
-
     });
 
   </script>

@@ -1,13 +1,11 @@
 # TODO
 
 ## ADMIN
-- Buat dashboard untuk insert worker dlm table worker
-- Buat dashboard untuk insert worker yang akan manage order. coth ada 3 order, dgn 2 worker. kita kena assign 2 worker ni dekat orders.
-
+dekat add new product tu takyah ada container. sbb kita add new product mcm letak barang baru utk dijual dalam "menu"
+inventory tu baru real world application kita yang dah ada container dengan amount. inventory dan ok dah.
 
 
 ## CUSTOMER
-- total dekat checkout salah kalau 2x benda sama
 
 ## DATABASE
 - insert dlm customer data utk matching dlm api

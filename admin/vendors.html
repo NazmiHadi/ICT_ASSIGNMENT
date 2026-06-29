@@ -8,7 +8,7 @@ if (role !== "admin") { window.location.href = "../login.html"; }
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
-  <title>KURMA AJWA ENTERPRISE | Manage Orders</title>
+  <title>KURMA AJWA ENTERPRISE | Manage Vendors</title>
   <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
   <style>
@@ -35,24 +35,24 @@ if (role !== "admin") { window.location.href = "../login.html"; }
     .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
     .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+    .two-col { display:grid; grid-template-columns:minmax(280px,360px) 1fr; gap:24px; align-items:start; }
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:5px; }
+    .form-control { width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:14px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
+    .form-control:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+    .btn-primary { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; width:100%; font-family:'Poppins',sans-serif; margin-top:6px; }
+    .btn-primary:hover { background:#8E2A33; }
     .table-wrapper { overflow-x:auto; }
-    table.order-table { width:100%; border-collapse:collapse; }
-    table.order-table th, table.order-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
-    table.order-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
-    table.order-table tbody tr:hover { background:#FBF8F4; }
-    .status-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
-    .status-pending  { background:#FBF1DC; color:#91701C; }
-    .status-assigned { background:#E8F5EA; color:#1C7A3D; }
-    .product-tag { display:inline-block; background:var(--accent-soft); color:var(--accent); border-radius:4px; padding:2px 8px; font-size:12px; margin:2px 2px 2px 0; }
-    .assign-select { min-width:160px; border:1px solid var(--line); border-radius:6px; padding:7px 10px; font-size:13px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
-    .assign-select:focus { outline:none; border-color:var(--accent); }
-    .save-btn { background:var(--accent); color:#fff; border:none; border-radius:6px; cursor:pointer; padding:7px 14px; font-size:13px; font-weight:600; margin-left:6px; transition:background .15s; }
-    .save-btn:hover { background:#8E2A33; }
-    #pageAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
-    #pageAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
-    #pageAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+    table.vendor-table { width:100%; border-collapse:collapse; }
+    table.vendor-table th, table.vendor-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:14px; }
+    table.vendor-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.vendor-table tbody tr:hover { background:#FBF8F4; }
+    #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
+    #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
+    #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+    @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
     @media (max-width:860px) {
       .shell { flex-direction:column; }
       .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
@@ -78,7 +78,7 @@ if (role !== "admin") { window.location.href = "../login.html"; }
       <li class="nav-group-label">People</li>
       <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
       <li><a href="customers"><i class="fa fa-male"></i> Manage Customers</a></li>
-      <li><a href="vendors"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
+      <li><a href="vendors" class="active"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
 
       <li class="nav-group-label">Catalog &amp; Stock</li>
       <li><a href="products"><i class="fa fa-tags"></i> Manage Products</a></li>
@@ -86,7 +86,7 @@ if (role !== "admin") { window.location.href = "../login.html"; }
       <li><a href="inventory"><i class="fa fa-cubes"></i> Manage Inventory</a></li>
 
       <li class="nav-group-label">Transactions</li>
-      <li><a href="orders" class="active"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
+      <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
       <li><a href="purchase"><i class="fa fa-shopping-cart"></i> Manage Purchases</a></li>
     </ul>
     <div class="sidebar-footer">
@@ -96,31 +96,50 @@ if (role !== "admin") { window.location.href = "../login.html"; }
 
   <main class="main">
     <div class="page-head">
-      <p class="eyebrow">Operations</p>
-      <h1>Manage Orders</h1>
-      <p>View customer orders, assigned products, and assign workers.</p>
+      <p class="eyebrow">Suppliers</p>
+      <h1>Manage Vendors</h1>
+      <p>Add new vendors and view all registered suppliers.</p>
     </div>
 
-    <div id="pageAlert"></div>
+    <div id="formAlert"></div>
 
-    <div class="panel">
-      <h3>All Orders</h3>
-      <div class="table-wrapper">
-        <table class="order-table">
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Products Ordered</th>
-              <th>Status</th>
-              <th>Assign Worker</th>
-            </tr>
-          </thead>
-          <tbody id="orderTableBody">
-            <tr><td colspan="6">Loading orders...</td></tr>
-          </tbody>
-        </table>
+    <div class="two-col">
+      <div class="panel">
+        <h3>Add New Vendor</h3>
+        <form id="vendorForm">
+          <div class="form-group">
+            <label>Vendor Name</label>
+            <input type="text" class="form-control" id="vendName" placeholder="e.g. Ajwa Supplier Sdn Bhd" required>
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" class="form-control" id="vendPhone" placeholder="e.g. 03-12345678">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <textarea class="form-control" id="vendAddress" placeholder="e.g. No 1, Jalan Kurma, 40000 Shah Alam" rows="3" style="resize:vertical;"></textarea>
+          </div>
+          <button type="submit" class="btn-primary">Add Vendor</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <h3>Registered Vendors</h3>
+        <div class="table-wrapper">
+          <table class="vendor-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Address</th>
+              </tr>
+            </thead>
+            <tbody id="vendorTableBody">
+              <tr><td colspan="4">Loading vendors...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -131,92 +150,55 @@ if (role !== "admin") { window.location.href = "../login.html"; }
 <script>
   function logout() { localStorage.removeItem("role"); window.location.href = "../login.html"; }
 
-  let workersCache = [];
-
   function showAlert(msg, type) {
-    const box = document.getElementById("pageAlert");
+    const box = document.getElementById("formAlert");
     box.textContent = msg; box.className = type; box.style.display = "block";
     setTimeout(() => { box.style.display = "none"; }, 4000);
   }
 
-  function formatDate(d) {
-    if (!d) return "-";
-    const dt = new Date(d);
-    return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
-  }
-
-  function buildWorkerOptions(selectedId) {
-    let html = '<option value="">-- Unassigned --</option>';
-    workersCache.forEach(w => {
-      const sel = String(w.worker_id) === String(selectedId) ? "selected" : "";
-      html += `<option value="${w.worker_id}" ${sel}>${w.name}</option>`;
-    });
-    return html;
-  }
-
-  async function loadOrders() {
-    const tbody = document.getElementById("orderTableBody");
+  async function loadVendors() {
+    const tbody = document.getElementById("vendorTableBody");
     try {
-      // Load workers for dropdown
-      const wRes  = await fetch("/api/orders/workers");
-      const wData = await wRes.json();
-      if (wRes.ok && wData.success) workersCache = wData.workers || [];
-
-      const res  = await fetch("/api/orders");
+      const res  = await fetch("/api/vendors");
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
-
-      const orders = data.orders || [];
-      if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">No orders found.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = orders.map(o => {
-        const isAssigned = o.worker_id !== null && o.worker_id !== undefined;
-        const statusClass = isAssigned ? "status-assigned" : "status-pending";
-        const statusText  = isAssigned ? "Assigned" : "Pending";
-        const productTags = o.products && o.products.length > 0
-          ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
-          : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
-
-        return `
-          <tr>
-            <td>#${o.order_id}</td>
-            <td>${formatDate(o.order_date)}</td>
-            <td>${o.customer_name || "Customer #" + o.customer_id}</td>
-            <td>${productTags}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td>
-              <select class="assign-select" id="select-${o.order_id}">${buildWorkerOptions(o.worker_id)}</select>
-              <button class="save-btn" onclick="assignWorker(${o.order_id})">Save</button>
-            </td>
-          </tr>`;
-      }).join("");
-
+      const vendors = data.vendors || [];
+      tbody.innerHTML = vendors.length === 0
+        ? '<tr><td colspan="4">No vendors registered yet.</td></tr>'
+        : vendors.map(v => `
+            <tr>
+              <td>${v.vendor_id}</td>
+              <td>${v.name}</td>
+              <td>${v.phone || "-"}</td>
+              <td>${v.address || "-"}</td>
+            </tr>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="6">Failed to load orders. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="4">Failed to load vendors. Please refresh.</td></tr>';
     }
   }
 
-  async function assignWorker(orderId) {
-    const workerId = document.getElementById(`select-${orderId}`).value || null;
+  document.getElementById("vendorForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+      name:    document.getElementById("vendName").value.trim(),
+      phone:   document.getElementById("vendPhone").value.trim(),
+      address: document.getElementById("vendAddress").value.trim()
+    };
     try {
-      const res  = await fetch(`/api/orders/${orderId}/assign`, {
-        method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ worker_id: workerId })
-      });
+      const res  = await fetch("/api/vendors", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
       const data = await res.json();
-      if (!res.ok || !data.success) { showAlert(data.message || "Failed to assign worker.", "error"); return; }
-      showAlert(data.message || `Order #${orderId} updated.`, "success");
-      loadOrders();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to add vendor.", "error"); return; }
+      showAlert(data.message || "Vendor added successfully.", "success");
+      document.getElementById("vendorForm").reset();
+      loadVendors();
     } catch (err) {
       console.error(err);
-      showAlert("Something went wrong.", "error");
+      showAlert("Something went wrong. Please try again.", "error");
     }
-  }
+  });
 
-  loadOrders();
+  loadVendors();
 </script>
 </body>
 </html>

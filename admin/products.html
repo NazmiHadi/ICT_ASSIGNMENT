@@ -8,7 +8,7 @@ if (role !== "admin") { window.location.href = "../login.html"; }
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
-  <title>KURMA AJWA ENTERPRISE | Manage Workers</title>
+  <title>KURMA AJWA ENTERPRISE | Manage Products</title>
   <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
   <style>
@@ -35,28 +35,23 @@ if (role !== "admin") { window.location.href = "../login.html"; }
     .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
     .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
-    .two-col { display:grid; grid-template-columns:minmax(300px,400px) 1fr; gap:24px; align-items:start; }
-    .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); margin-bottom:24px; }
+    .two-col { display:grid; grid-template-columns:minmax(300px,380px) 1fr; gap:24px; align-items:start; }
+    .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
     .form-group { margin-bottom:14px; }
     .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:5px; }
     .form-control { width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:14px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
     .form-control:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .salary-section { display:none; background:#FBF8F4; border-radius:8px; padding:14px; margin-bottom:14px; }
-    .salary-section.show { display:block; }
-    .salary-section .section-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); margin:0 0 10px; }
-    .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
-    .badge-ft { background:#E8F5EA; color:#1C7A3D; }
-    .badge-pt { background:#FBF1DC; color:#91701C; }
-    .badge-na { background:#F0EDE8; color:#8A7B6C; }
     .btn-primary { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; width:100%; font-family:'Poppins',sans-serif; margin-top:6px; }
     .btn-primary:hover { background:#8E2A33; }
     .table-wrapper { overflow-x:auto; }
-    table.worker-table { width:100%; border-collapse:collapse; }
-    table.worker-table th, table.worker-table td { padding:11px 13px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
-    table.worker-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
-    table.worker-table tbody tr:hover { background:#FBF8F4; }
+    table.prod-table { width:100%; border-collapse:collapse; }
+    table.prod-table th, table.prod-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
+    table.prod-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.prod-table tbody tr:hover { background:#FBF8F4; }
+    .price-original { color:var(--ink-soft); text-decoration:line-through; font-size:12.5px; margin-right:6px; }
+    .price-sale { color:var(--accent); font-weight:600; }
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
@@ -65,6 +60,7 @@ if (role !== "admin") { window.location.href = "../login.html"; }
       .shell { flex-direction:column; }
       .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
       .sidebar-brand { display:none; }
+      .sidebar-nav .nav-group-label { display: none; }
       .sidebar-nav { display:flex; flex:none; }
       .sidebar-nav li a { padding:8px 16px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
       .sidebar-nav li a.active { border-left:none; border-bottom-color:var(--accent); }
@@ -84,12 +80,12 @@ if (role !== "admin") { window.location.href = "../login.html"; }
       <li><a href="dashboard"><i class="fa fa-th-large"></i> Dashboard</a></li>
 
       <li class="nav-group-label">People</li>
-      <li><a href="workers" class="active"><i class="fa fa-users"></i> Manage Workers</a></li>
+      <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
       <li><a href="customers"><i class="fa fa-male"></i> Manage Customers</a></li>
       <li><a href="vendors"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
 
       <li class="nav-group-label">Catalog &amp; Stock</li>
-      <li><a href="products"><i class="fa fa-tags"></i> Manage Products</a></li>
+      <li><a href="products" class="active"><i class="fa fa-tags"></i> Manage Products</a></li>
       <li><a href="containers"><i class="fa fa-archive"></i> Manage Containers</a></li>
       <li><a href="inventory"><i class="fa fa-cubes"></i> Manage Inventory</a></li>
 
@@ -104,95 +100,65 @@ if (role !== "admin") { window.location.href = "../login.html"; }
 
   <main class="main">
     <div class="page-head">
-      <p class="eyebrow">Team</p>
-      <h1>Manage Workers</h1>
-      <p>Add new workers and view everyone currently registered.</p>
+      <p class="eyebrow">Catalog &amp; Stock</p>
+      <h1>Manage Products</h1>
+      <p>Add products, set pricing, and link each product to a container.</p>
     </div>
 
     <div id="formAlert"></div>
 
     <div class="two-col">
       <div class="panel">
-        <h3>Add New Worker</h3>
-        <form id="workerForm">
+        <h3>Add New Product</h3>
+        <form id="productForm">
           <div class="form-group">
-            <label>Worker Name</label>
-            <input type="text" class="form-control" id="workName" placeholder="e.g. Ahmad bin Ismail" required>
+            <label>Product Name</label>
+            <input type="text" class="form-control" id="prodName" placeholder="e.g. Ajwa Dates Premium" required>
           </div>
           <div class="form-group">
-            <label>Phone Number</label>
-            <input type="text" class="form-control" id="workPhone" placeholder="e.g. 012-3456789">
+            <label>Product Type</label>
+            <input type="text" class="form-control" id="prodType" placeholder="e.g. Dates, Snack, Gift Set">
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Username</label>
-              <input type="text" class="form-control" id="username" placeholder="Login username" required>
+              <label>Price (RM)</label>
+              <input type="number" class="form-control" id="price" placeholder="e.g. 25.00" min="0" step="0.01" required>
             </div>
             <div class="form-group">
-              <label>Password</label>
-              <input type="password" class="form-control" id="password" placeholder="Password" required>
+              <label>Sales Price (RM)</label>
+              <input type="number" class="form-control" id="salesPrice" placeholder="e.g. 20.00" min="0" step="0.01">
             </div>
           </div>
           <div class="form-group">
-            <label>Manager (optional)</label>
-            <select class="form-control" id="managerId">
-              <option value="">No manager / Top level</option>
-            </select>
+            <label>Description</label>
+            <input type="text" class="form-control" id="prodDesc" placeholder="Short description" maxlength="50">
           </div>
           <div class="form-group">
-            <label>Worker Type</label>
-            <select class="form-control" id="workType" onchange="toggleSalaryFields()" required>
-              <option value="">Select type...</option>
-              <option value="Full Time">Full Time</option>
-              <option value="Part Time">Part Time</option>
+            <label>Container</label>
+            <select class="form-control" id="contId">
+              <option value="">-- No container --</option>
             </select>
           </div>
-
-          <!-- Full Time salary fields -->
-          <div class="salary-section" id="ftSection">
-            <p class="section-label">Full Time Details</p>
-            <div class="form-row">
-              <div class="form-group" style="margin-bottom:0">
-                <label>Salary (RM)</label>
-                <input type="number" class="form-control" id="salary" placeholder="e.g. 2500" min="0" step="0.01">
-              </div>
-              <div class="form-group" style="margin-bottom:0">
-                <label>Bonus Salary (RM)</label>
-                <input type="number" class="form-control" id="bonusSalary" placeholder="e.g. 500" min="0" step="0.01">
-              </div>
-            </div>
-          </div>
-
-          <!-- Part Time salary fields -->
-          <div class="salary-section" id="ptSection">
-            <p class="section-label">Part Time Details</p>
-            <div class="form-group" style="margin-bottom:0">
-              <label>Salary Per Hour (RM)</label>
-              <input type="number" class="form-control" id="salaryPerHr" placeholder="e.g. 8.50" min="0" step="0.01">
-            </div>
-          </div>
-
-          <button type="submit" class="btn-primary">Add Worker</button>
+          <button type="submit" class="btn-primary">Add Product</button>
         </form>
       </div>
 
       <div class="panel">
-        <h3>Registered Workers</h3>
+        <h3>All Products</h3>
         <div class="table-wrapper">
-          <table class="worker-table">
+          <table class="prod-table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Phone</th>
-                <th>Username</th>
                 <th>Type</th>
-                <th>Salary</th>
-                <th>Manager</th>
+                <th>Price</th>
+                <th>Description</th>
+                <th>Container</th>
               </tr>
             </thead>
-            <tbody id="workerTableBody">
-              <tr><td colspan="7">Loading workers...</td></tr>
+            <tbody id="productTableBody">
+              <tr><td colspan="6">Loading products...</td></tr>
             </tbody>
           </table>
         </div>
@@ -206,95 +172,84 @@ if (role !== "admin") { window.location.href = "../login.html"; }
 <script>
   function logout() { localStorage.removeItem("role"); window.location.href = "../login.html"; }
 
-  function toggleSalaryFields() {
-    const type = document.getElementById("workType").value;
-    document.getElementById("ftSection").classList.toggle("show", type === "Full Time");
-    document.getElementById("ptSection").classList.toggle("show", type === "Part Time");
-  }
-
   function showAlert(msg, type) {
     const box = document.getElementById("formAlert");
     box.textContent = msg; box.className = type; box.style.display = "block";
     setTimeout(() => { box.style.display = "none"; }, 4000);
   }
 
-  function salaryDisplay(w) {
-    if (w.work_type === "Full Time") {
-      let s = `RM ${Number(w.salary || 0).toFixed(2)}`;
-      if (w.bonus_salary) s += ` + Bonus RM ${Number(w.bonus_salary).toFixed(2)}`;
-      return s;
+  function priceDisplay(p) {
+    const original = Number(p.list_price || 0).toFixed(2);
+    if (p.sales_price && Number(p.sales_price) > 0 && Number(p.sales_price) < Number(p.list_price)) {
+      return `<span class="price-original">RM ${original}</span><span class="price-sale">RM ${Number(p.sales_price).toFixed(2)}</span>`;
     }
-    if (w.work_type === "Part Time") return `RM ${Number(w.salary_per_hr || 0).toFixed(2)}/hr`;
-    return "-";
+    return `RM ${original}`;
   }
 
-  function badgeHtml(type) {
-    if (type === "Full Time") return `<span class="badge badge-ft">Full Time</span>`;
-    if (type === "Part Time") return `<span class="badge badge-pt">Part Time</span>`;
-    return `<span class="badge badge-na">-</span>`;
-  }
-
-  async function loadWorkers() {
-    const tbody = document.getElementById("workerTableBody");
-    const mgSel = document.getElementById("managerId");
+  // Maps to PRODUCTS table: ProdID, ProdName, Price, ProdType, SalesPrice, ProdDesc, ContID (FK -> CONTAINERS)
+  async function loadContainerOptions() {
+    const sel = document.getElementById("contId");
     try {
-      const res  = await fetch("/api/workers");
+      const res  = await fetch("/api/containers");
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
-
-      const workers = data.workers || [];
-      tbody.innerHTML = workers.length === 0
-        ? '<tr><td colspan="7">No workers registered yet.</td></tr>'
-        : workers.map(w => `
-            <tr>
-              <td>${w.worker_id}</td>
-              <td>${w.name}</td>
-              <td>${w.phone || "-"}</td>
-              <td>${w.username}</td>
-              <td>${badgeHtml(w.work_type)}</td>
-              <td>${salaryDisplay(w)}</td>
-              <td>${w.manager_name || "-"}</td>
-            </tr>`).join("");
-
-      mgSel.innerHTML = '<option value="">No manager / Top level</option>' +
-        workers.map(w => `<option value="${w.worker_id}">${w.name}</option>`).join("");
-
+      const containers = data.containers || [];
+      sel.innerHTML = '<option value="">-- No container --</option>' +
+        containers.map(c => `<option value="${c.container_id}">${c.name}</option>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="7">Failed to load workers. Please refresh.</td></tr>';
     }
   }
 
-  document.getElementById("workerForm").addEventListener("submit", async function(e) {
-    e.preventDefault();
-    const work_type = document.getElementById("workType").value;
-    const payload = {
-      name:         document.getElementById("workName").value.trim(),
-      phone:        document.getElementById("workPhone").value.trim(),
-      username:     document.getElementById("username").value.trim(),
-      password:     document.getElementById("password").value,
-      manager_id:   document.getElementById("managerId").value || null,
-      work_type,
-      salary:       document.getElementById("salary").value || null,
-      bonus_salary: document.getElementById("bonusSalary").value || null,
-      salary_per_hr: document.getElementById("salaryPerHr").value || null,
-    };
-
+  async function loadProducts() {
+    const tbody = document.getElementById("productTableBody");
     try {
-      const res  = await fetch("/api/workers", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const res  = await fetch("/api/products");
       const data = await res.json();
-      if (!res.ok || !data.success) { showAlert(data.message || "Failed to add worker.", "error"); return; }
-      showAlert(data.message || "Worker added successfully.", "success");
-      document.getElementById("workerForm").reset();
-      toggleSalaryFields();
-      loadWorkers();
+      if (!res.ok || !data.success) throw new Error(data.message);
+      const products = data.products || [];
+      tbody.innerHTML = products.length === 0
+        ? '<tr><td colspan="6">No products added yet.</td></tr>'
+        : products.map(p => `
+            <tr>
+              <td>${p.product_id}</td>
+              <td>${p.name}</td>
+              <td>${p.type || "-"}</td>
+              <td>${priceDisplay(p)}</td>
+              <td>${p.description || "-"}</td>
+              <td>${p.container_name || "-"}</td>
+            </tr>`).join("");
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="6">Failed to load products. Please refresh.</td></tr>';
+    }
+  }
+
+  document.getElementById("productForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+      name:        document.getElementById("prodName").value.trim(),
+      type:        document.getElementById("prodType").value.trim(),
+      price:       document.getElementById("price").value,
+      sales_price: document.getElementById("salesPrice").value || null,
+      description: document.getElementById("prodDesc").value.trim(),
+      container_id: document.getElementById("contId").value || null
+    };
+    try {
+      const res  = await fetch("/api/products", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to add product.", "error"); return; }
+      showAlert(data.message || "Product added successfully.", "success");
+      document.getElementById("productForm").reset();
+      loadProducts();
     } catch (err) {
       console.error(err);
       showAlert("Something went wrong. Please try again.", "error");
     }
   });
 
-  loadWorkers();
+  loadContainerOptions();
+  loadProducts();
 </script>
 </body>
 </html>
