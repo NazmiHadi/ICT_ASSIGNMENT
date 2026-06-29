@@ -1,9 +1,3 @@
-// =====================================
-// CHECKOUT (mock transaction)
-// =====================================
-// Sends the cart to the server, server creates ORDERS + ORDER_PRODUCTS rows.
-// "Mock transaction" = no real payment gateway, we just simulate a delay
-// and pretend the payment always succeeds.
 async function checkout() {
 
   const cart = getCart();
@@ -12,8 +6,18 @@ async function checkout() {
     return;
   }
 
+  // ── Get logged-in customer ─────────────────────────────────
+  const raw = localStorage.getItem("customer");
+  if (!raw) {
+    alert("You must be logged in to checkout.");
+    window.location.href = "/";
+    return;
+  }
+  const customer = JSON.parse(raw);
+
   // Build the payload the server expects
   const payload = {
+    customer_id: customer.customer_id,   // ✅ added
     items: cart.map(item => ({
       product_id: item.product_id,
       qty:        item.qty
@@ -56,7 +60,7 @@ async function checkout() {
     // Success! Clear cart and show confirmation
     clearCart();
     alert(`Order placed successfully! Order ID: ${data.orderId}`);
-    window.location.href = "/customer/orders"; // or wherever your order history page is
+    window.location.href = "/customer/orders";
 
   } catch (err) {
     console.error("Checkout error:", err);
