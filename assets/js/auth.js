@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // e.preventDefault() stops the default browser behaviour of refreshing
     // the page when a form is submitted. We want to handle it with JavaScript.
     e.preventDefault();
-
+    
     // Read the values the user typed into the two input fields
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
@@ -56,9 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (data.success) {
 
         // ── Login succeeded ──
-        // Save the user's role ("admin" or "customer") in localStorage.
-        // localStorage persists across page refreshes, so other pages can
-        // read it to know who is logged in.
+        // Save the user's role ("admin", "fulltime", "parttime", "vendor"
+        // or "customer") in localStorage. localStorage persists across page
+        // refreshes, so other pages can read it to know who is logged in.
         localStorage.setItem("role", data.role);
 
         // If the server sent back customer details, save them too
@@ -67,12 +67,17 @@ document.addEventListener("DOMContentLoaded", function () {
           localStorage.setItem("customer", JSON.stringify(data.customer));
         }
 
+        // Same idea, but for vendors logging in
+        if (data.vendor) {
+          localStorage.setItem("vendor", JSON.stringify(data.vendor));
+        }
+
         // Show the success message div (defined in index.html)
         const successMsg = document.getElementById("successMessage");
         if (successMsg) successMsg.style.display = "block";
 
         // After a short delay, navigate to the page the server told us to go to
-        // (either /admin/dashboard or /home)
+        // (either /dashboard or /customer/home)
         setTimeout(() => {
           window.location.href = data.redirect;
         }, 1000);

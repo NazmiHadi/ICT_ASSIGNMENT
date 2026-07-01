@@ -63,10 +63,24 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ success: false, message: "Username and password are required." });
   }
 
+  // ╔═══════════════════════════════════════════════════════════════════╗
+  // ║  DEBUG / LOCAL HARDCODED CREDENTIALS                              ║
+  // ║  Delete or comment out this whole block before going to staging  ║
+  // ║  or production — these bypass the database entirely.             ║
+  // ╚═══════════════════════════════════════════════════════════════════╝
+  // -- DEBUG BLOCK START --
   if (username === "admin" && password === "admin123") {
     return res.json({ success: true, role: "admin", redirect: "/admin/dashboard" });
   }
-
+  if (username === "fulltime" && password === "full123") {
+    return res.json({ success: true, role: "fulltime", redirect: "/admin/dashboard" });
+  }
+  if (username === "parttime" && password === "part123") {
+    return res.json({ success: true, role: "parttime", redirect: "/admin/dashboard" });
+  }
+  if (username === "vendor" && password === "vendor123") {
+    return res.json({ success: true, role: "vendor", redirect: "/admin/dashboard" });
+  }
   if (username === "cust" && password === "cust123") {
     return res.json({
       success: true,
@@ -80,34 +94,99 @@ router.post("/login", async (req, res) => {
       }
     });
   }
+  // -- DEBUG BLOCK END --
 
   let conn;
   try {
     conn = await getConnection();
-    const result = await conn.execute(
+
+    // ── 1. Try WORKERS first (covers manager / full-time / part-time) ──
+    const workerResult = await conn.execute(
+      `SELECT w.WorkID, w.WorkName, w.username, w.IsManager,
+              ft.WorkID AS FT_ID,
+              pt.WorkID AS PT_ID
+       FROM WORKERS w
+       LEFT JOIN FULL_TIME_WORKERS ft ON ft.WorkID = w.WorkID
+       LEFT JOIN PART_TIME_WORKERS pt ON pt.WorkID = w.WorkID
+       WHERE w.username = :username AND w.password = :password`,
+      { username, password }
+    );
+
+    if (workerResult.rows.length > 0) {
+      const worker = workerResult.rows[0];
+
+      let role;
+      if (worker.ISMANAGER === 1) {
+        role = "admin";
+      } else if (worker.FT_ID !== null && worker.FT_ID !== undefined) {
+        role = "fulltime";
+      } else if (worker.PT_ID !== null && worker.PT_ID !== undefined) {
+        role = "parttime";
+      } else {
+        // Worker exists but isn't flagged as manager and has no
+        // full-time/part-time pay row. Misconfigured record — block login
+        // rather than guessing a role.
+        console.error(`[LOGIN] Worker ${username} has no role mapping (not manager, not in FT/PT tables).`);
+        return res.status(403).json({
+          success: false,
+          message: "Your account is missing an employment type. Contact an admin."
+        });
+      }
+
+      console.log(`[LOGIN] Worker logged in from Oracle: ${worker.USERNAME} (${role})`);
+      return res.json({ success: true, role, redirect: "/dashboard" });
+    }
+
+    // ── 2. Try VENDORS ──────────────────────────────────────────────────
+    const vendorResult = await conn.execute(
+      `SELECT VendID, VendName, username
+       FROM VENDORS
+       WHERE username = :username AND password = :password`,
+      { username, password }
+    );
+
+    if (vendorResult.rows.length > 0) {
+      const vendor = vendorResult.rows[0];
+      console.log(`[LOGIN] Vendor logged in from Oracle: ${vendor.USERNAME}`);
+      return res.json({
+        success: true,
+        role: "vendor",
+        redirect: "/dashboard",
+        vendor: {
+          vendor_id: vendor.VENDID,
+          name: vendor.VENDNAME,
+          username: vendor.USERNAME
+        }
+      });
+    }
+
+    // ── 3. Try CUSTOMERS ────────────────────────────────────────────────
+    const customerResult = await conn.execute(
       `SELECT custid, custname, custemail, username
        FROM customers
        WHERE username = :username AND password = :password`,
       { username, password }
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ success: false, message: "Invalid username or password." });
+    if (customerResult.rows.length > 0) {
+      const customer = customerResult.rows[0];
+      console.log(`[LOGIN] Customer logged in from Oracle: ${customer.USERNAME}`);
+      return res.json({
+        success: true,
+        role: "customer",
+        redirect: "/customer/home",
+        customer: {
+          customer_id: customer.CUSTID,
+          name:        customer.CUSTNAME,
+          email:       customer.CUSTEMAIL,
+          username:    customer.USERNAME
+        }
+      });
     }
 
-    const customer = result.rows[0];
-    console.log(`[LOGIN] Customer logged in from Oracle: ${customer.USERNAME}`);
-    return res.json({
-      success: true,
-      role: "customer",
-      redirect: "/customer/home",
-      customer: {
-        customer_id: customer.CUSTID,
-        name:        customer.CUSTNAME,
-        email:       customer.CUSTEMAIL,
-        username:    customer.USERNAME
-      }
-    });
+    // ── 4. Nothing matched ───────────────────────────────────────────────
+    return res.status(401).json({ success: false, message: "Invalid username or password." });
+
   } catch (err) {
     console.error("[LOGIN ERROR]", err);
     return res.status(500).json({ success: false, message: "Server error." });
