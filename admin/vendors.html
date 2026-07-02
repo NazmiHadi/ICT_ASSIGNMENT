@@ -1,7 +1,8 @@
-<script>
-const role = localStorage.getItem("role");
-if (role !== "admin") { window.location.href = "../login.html"; }
-</script>
+<script>window.PAGE_KEY = "vendors";</script>
+<script src="/admin/assets/js/role-config.js"></script>
+<script src="/admin/assets/js/page-guard.js"></script>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -72,23 +73,7 @@ if (role !== "admin") { window.location.href = "../login.html"; }
       <p class="mark">Admin Panel</p>
       <h2>KURMA <em>AJWA</em></h2>
     </div>
-    <ul class="sidebar-nav">
-      <li><a href="dashboard"><i class="fa fa-th-large"></i> Dashboard</a></li>
-
-      <li class="nav-group-label">People</li>
-      <li><a href="workers"><i class="fa fa-users"></i> Manage Workers</a></li>
-      <li><a href="customers"><i class="fa fa-male"></i> Manage Customers</a></li>
-      <li><a href="vendors" class="active"><i class="fa fa-handshake-o"></i> Manage Vendors</a></li>
-
-      <li class="nav-group-label">Catalog &amp; Stock</li>
-      <li><a href="products"><i class="fa fa-tags"></i> Manage Products</a></li>
-      <li><a href="containers"><i class="fa fa-archive"></i> Manage Containers</a></li>
-      <li><a href="inventory"><i class="fa fa-cubes"></i> Manage Inventory</a></li>
-
-      <li class="nav-group-label">Transactions</li>
-      <li><a href="orders"><i class="fa fa-list-alt"></i> Manage Orders</a></li>
-      <li><a href="purchase"><i class="fa fa-shopping-cart"></i> Manage Purchases</a></li>
-    </ul>
+      <ul class="sidebar-nav" id="sidebarNav"></ul>
     <div class="sidebar-footer">
       <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
     </div>

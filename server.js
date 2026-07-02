@@ -11,6 +11,7 @@ const vendorRoutes    = require("./routes/vendorRoutes");
 const customerRoutes  = require("./routes/customerRoutes");
 const containerRoutes = require("./routes/containerRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
+const profileRoutes   = require("./routes/profileRoutes");
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api", vendorRoutes);
 app.use("/api", customerRoutes);
 app.use("/api", containerRoutes);
 app.use("/api", inventoryRoutes);
+app.use("/api", profileRoutes);
 
 // ── Page routes ──────────────────────────────────────────────
 app.get("/", (req, res) => {

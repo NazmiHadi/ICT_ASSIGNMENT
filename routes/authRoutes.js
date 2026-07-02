@@ -67,19 +67,23 @@ router.post("/login", async (req, res) => {
   // ║  DEBUG / LOCAL HARDCODED CREDENTIALS                              ║
   // ║  Delete or comment out this whole block before going to staging  ║
   // ║  or production — these bypass the database entirely.             ║
+  // ║  NOTE: work_id/vendor_id values below are placeholders (1) so    ║
+  // ║  that /api/profile and /api/orders/mine have something to query  ║
+  // ║  against locally. They will only resolve to real rows if a       ║
+  // ║  WORKID=1 / VENDID=1 record actually exists in your dev DB.      ║
   // ╚═══════════════════════════════════════════════════════════════════╝
   // -- DEBUG BLOCK START --
   if (username === "admin" && password === "admin123") {
-    return res.json({ success: true, role: "admin", redirect: "/admin/dashboard" });
+    return res.json({ success: true, role: "admin", work_id: 1, redirect: "/admin/dashboard" });
   }
   if (username === "fulltime" && password === "full123") {
-    return res.json({ success: true, role: "fulltime", redirect: "/admin/dashboard" });
+    return res.json({ success: true, role: "fulltime", work_id: 1, redirect: "/admin/dashboard" });
   }
   if (username === "parttime" && password === "part123") {
-    return res.json({ success: true, role: "parttime", redirect: "/admin/dashboard" });
+    return res.json({ success: true, role: "parttime", work_id: 1, redirect: "/admin/dashboard" });
   }
   if (username === "vendor" && password === "vendor123") {
-    return res.json({ success: true, role: "vendor", redirect: "/admin/dashboard" });
+    return res.json({ success: true, role: "vendor", vendor_id: 1, redirect: "/admin/dashboard" });
   }
   if (username === "cust" && password === "cust123") {
     return res.json({
@@ -134,7 +138,14 @@ router.post("/login", async (req, res) => {
       }
 
       console.log(`[LOGIN] Worker logged in from Oracle: ${worker.USERNAME} (${role})`);
-      return res.json({ success: true, role, redirect: "/dashboard" });
+      return res.json({
+        success: true,
+        role,
+        work_id: worker.WORKID,
+        name: worker.WORKNAME,
+        username: worker.USERNAME,
+        redirect: "/admin/dashboard"
+      });
     }
 
     // ── 2. Try VENDORS ──────────────────────────────────────────────────
@@ -151,7 +162,8 @@ router.post("/login", async (req, res) => {
       return res.json({
         success: true,
         role: "vendor",
-        redirect: "/dashboard",
+        vendor_id: vendor.VENDID,
+        redirect: "/admin/dashboard",
         vendor: {
           vendor_id: vendor.VENDID,
           name: vendor.VENDNAME,
@@ -174,6 +186,7 @@ router.post("/login", async (req, res) => {
       return res.json({
         success: true,
         role: "customer",
+        customer_id: customer.CUSTID,
         redirect: "/customer/home",
         customer: {
           customer_id: customer.CUSTID,

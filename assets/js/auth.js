@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // e.preventDefault() stops the default browser behaviour of refreshing
     // the page when a form is submitted. We want to handle it with JavaScript.
     e.preventDefault();
-    
+
     // Read the values the user typed into the two input fields
     const username = document.getElementById("username").value.trim();
     const password = document.getElementById("password").value;
@@ -61,6 +61,15 @@ document.addEventListener("DOMContentLoaded", function () {
         // refreshes, so other pages can read it to know who is logged in.
         localStorage.setItem("role", data.role);
 
+        // Save whichever ID the server returned, so pages like Profile and
+        // Order Assignment know which record to fetch/update.
+        localStorage.setItem(
+          "userId",
+          data.work_id || data.vendor_id || data.customer_id ||
+          (data.customer && data.customer.customer_id) ||
+          (data.vendor && data.vendor.vendor_id)
+        );
+
         // If the server sent back customer details, save them too
         if (data.customer) {
           // JSON.stringify converts the object to a string for storage
@@ -72,12 +81,14 @@ document.addEventListener("DOMContentLoaded", function () {
           localStorage.setItem("vendor", JSON.stringify(data.vendor));
         }
 
-        // Show the success message div (defined in index.html)
+        // Show the success message div (defined in index.html), if present
         const successMsg = document.getElementById("successMessage");
         if (successMsg) successMsg.style.display = "block";
 
-        // After a short delay, navigate to the page the server told us to go to
-        // (either /dashboard or /customer/home)
+        // Give the success message a moment to be visible, then navigate to
+        // the page the server told us to go to. (Only ONE redirect — firing
+        // it twice risked navigating away before the localStorage writes
+        // above had a chance to complete.)
         setTimeout(() => {
           window.location.href = data.redirect;
         }, 1000);

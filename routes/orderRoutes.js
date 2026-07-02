@@ -21,6 +21,7 @@ router.get("/orders/workers", async (req, res) => {
 
 // ── GET /api/orders ───────────────────────────────────────────
 // Returns all orders with customer, worker, and ordered products.
+// Used by the Manage Orders page (admin/fulltime — can (re)assign workers).
 router.get("/orders", async (req, res) => {
   let conn;
   try {
@@ -67,6 +68,78 @@ router.get("/orders", async (req, res) => {
   } catch (err) {
     console.error("[ORDERS GET ERROR]", err);
     return res.status(500).json({ success: false, message: "Could not load orders." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+// ── GET /api/orders/mine?worker_id=123 ────────────────────────
+// Returns only the orders assigned to a specific worker.
+// Used by the Order Assignment page (fulltime/parttime — view-only).
+router.get("/orders/mine", async (req, res) => {
+  const workerId = Number(req.query.worker_id);
+
+  if (!workerId) {
+    return res.status(400).json({ success: false, message: "worker_id is required." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+
+    const orderResult = await conn.execute(
+      `SELECT o.OrderID, o.OrderDate, o.CustID, c.CustName
+         FROM ORDERS o
+         LEFT JOIN CUSTOMERS c ON o.CustID = c.CustID
+        WHERE o.WorkID = :workerId
+        ORDER BY o.OrderID DESC`,
+      { workerId }
+    );
+
+    if (orderResult.rows.length === 0) {
+      return res.json({ success: true, orders: [] });
+    }
+
+    const orderIds = orderResult.rows.map(r => r.ORDERID);
+
+    // Build a dynamic bind list for the IN clause
+    const binds = {};
+    const placeholders = orderIds.map((id, i) => {
+      binds[`id${i}`] = id;
+      return `:id${i}`;
+    }).join(",");
+
+    const prodResult = await conn.execute(
+      `SELECT op.OrderID, op.ProdID, p.ProdName, op.Qty
+         FROM ORDER_PRODUCTS op
+         LEFT JOIN PRODUCTS p ON op.ProdID = p.ProdID
+        WHERE op.OrderID IN (${placeholders})
+        ORDER BY op.OrderID`,
+      binds
+    );
+
+    const productsByOrder = {};
+    prodResult.rows.forEach(row => {
+      if (!productsByOrder[row.ORDERID]) productsByOrder[row.ORDERID] = [];
+      productsByOrder[row.ORDERID].push({
+        product_id:   row.PRODID,
+        product_name: row.PRODNAME,
+        qty:          row.QTY
+      });
+    });
+
+    const orders = orderResult.rows.map(row => ({
+      order_id:      row.ORDERID,
+      order_date:    row.ORDERDATE,
+      customer_id:   row.CUSTID,
+      customer_name: row.CUSTNAME,
+      products:      productsByOrder[row.ORDERID] || []
+    }));
+
+    return res.json({ success: true, orders });
+  } catch (err) {
+    console.error("[ORDERS MINE ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not load your orders." });
   } finally {
     if (conn) await conn.close();
   }
