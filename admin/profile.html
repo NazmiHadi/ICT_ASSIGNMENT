@@ -124,6 +124,9 @@
 <script src="/admin/vendor/jquery/jquery.min.js"></script>
 <script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
+  function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
+
+
   // Maps the app's localStorage "role" to the DB-facing role key
   // used by /api/profile (worker roles all read/write the WORKERS table,
   // but admin/fulltime/parttime differ in which extra fields they show).

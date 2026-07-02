@@ -362,6 +362,7 @@
           <div class="sidebar-footer">
             <a href="#" id="logoutLink"><i class="fa fa-sign-out"></i> Logout</a>
           </div>
+          
         </aside>
 
         <!-- Main content -->
@@ -397,3 +398,10 @@
     </body>
 
   </html>
+
+  <script>
+    function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
+  </script>
+
+
+  
