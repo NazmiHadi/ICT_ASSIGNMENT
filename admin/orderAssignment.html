@@ -23,7 +23,7 @@
     .sidebar-brand .role-pill { display:inline-block; margin-top:10px; padding:4px 10px; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; font-weight:600; color:#EDE6DC; background:rgba(168,51,61,0.35); border:1px solid rgba(168,51,61,0.6); border-radius:20px; }
     .sidebar-nav { list-style:none; margin:0; padding:0; flex:1; }
     .sidebar-nav .nav-group-label { padding:16px 28px 6px; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#8A7B6C; font-weight:600; }
-    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; }
+    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; position:relative; }
     .sidebar-nav li a i { width:18px; text-align:center; font-size:14px; }
     .sidebar-nav li a:hover { background:var(--sidebar-hover); color:#fff; }
     .sidebar-nav li a.active { background:var(--sidebar-hover); color:#fff; border-left-color:var(--accent); }
@@ -33,7 +33,7 @@
     .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
     .page-head { margin-bottom:32px; }
     .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
-    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
+    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
@@ -57,6 +57,19 @@
     #pageAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
     .empty-state { text-align:center; padding:40px 20px; color:var(--ink-soft); }
     .empty-state i { font-size:32px; margin-bottom:12px; display:block; color:var(--line); }
+
+    /* ── Notification badges ────────────────────────────────────
+       Red  = not shipped yet (OrderStatus = 'Processing')
+       Yellow = shipped but not delivered yet (OrderStatus = 'In Delivery') */
+    .nav-badge {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:20px; height:20px; padding:0 6px; border-radius:10px;
+      font-size:11px; font-weight:700; color:#fff; line-height:1;
+    }
+    .nav-badge.badge-red    { background:var(--accent); }
+    .nav-badge.badge-yellow { background:#C79A1E; }
+    .sidebar-nav li a .nav-badge { margin-left:auto; }
+
     @media (max-width:860px) {
       .shell { flex-direction:column; }
       .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
@@ -86,8 +99,12 @@
 
   <main class="main">
     <div class="page-head">
-      <p class="eyebrow">Daily Tasks</p>
-      <h1>My Assigned Orders</h1>
+      <h1>
+        My Assigned Orders
+        <span id="badgeNotShipped"   class="nav-badge badge-red"    style="display:none;" title="Not shipped yet"></span>
+        <span id="badgeNotDelivered" class="nav-badge badge-yellow" style="display:none;" title="Shipped, not delivered yet"></span>
+      </h1>
+      <p class="eyebrow" style="margin-top:4px;">Daily Tasks</p>
       <p>Orders that a manager or full-time worker has assigned to you. Ship an order once it's ready, then mark it delivered once it reaches the customer.</p>
     </div>
 
@@ -108,7 +125,7 @@
             </tr>
           </thead>
           <tbody id="assignTableBody">
-            <tr><td colspan="4">Loading your orders...</td></tr>
+            <tr><td colspan="6">Loading your orders...</td></tr>
           </tbody>
         </table>
       </div>
@@ -208,6 +225,63 @@
     }
   }
 
+  // ── Notification badges ────────────────────────────────────────────────
+  // Red    = orders still "Processing" (not shipped yet)
+  // Yellow = orders "In Delivery" (shipped, not delivered yet)
+  // Shown next to the page heading, and mirrored onto the active sidebar
+  // nav link (same pattern as the unassigned-count badge on Manage Orders).
+  async function loadPendingCounts() {
+    const workerId = localStorage.getItem("userId");
+    if (!workerId) return;
+
+    try {
+      const res  = await fetch(`/api/orders/pending-count?worker_id=${encodeURIComponent(workerId)}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) return;
+
+      renderBadge("badgeNotShipped",   data.not_shipped_count,   "badge-red");
+      renderBadge("badgeNotDelivered", data.not_delivered_count, "badge-yellow");
+      updateSidebarBadges(data.not_shipped_count, data.not_delivered_count);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderBadge(elId, count, cls) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count;
+      el.style.display = "inline-flex";
+    } else {
+      el.style.display = "none";
+    }
+  }
+
+  // Drops the same two badges onto whichever sidebar link is marked
+  // "active" for this page (role-config.js / page-guard.js build the nav
+  // and apply that class). If your nav marks the active link asynchronously
+  // after this script runs, call updateSidebarBadges() again once that's done.
+  function updateSidebarBadges(notShipped, notDelivered) {
+    const link = document.querySelector(".sidebar-nav li a.active");
+    if (!link) return;
+
+    link.querySelectorAll(".nav-badge").forEach(b => b.remove());
+
+    if (notShipped > 0) {
+      const r = document.createElement("span");
+      r.className = "nav-badge badge-red";
+      r.textContent = notShipped;
+      link.appendChild(r);
+    }
+    if (notDelivered > 0) {
+      const y = document.createElement("span");
+      y.className = "nav-badge badge-yellow";
+      y.textContent = notDelivered;
+      link.appendChild(y);
+    }
+  }
+
   // ── shipOrder(): worker presses "Ship" ─────────────────────────────────
   // Server auto-generates a tracking number and flips status to
   // "In Delivery" — nothing for the worker to type in.
@@ -223,6 +297,7 @@
       if (!res.ok || !data.success) { showAlert(data.message || "Failed to ship order.", "error"); return; }
       showAlert(`Order #${orderId} shipped. Tracking No: ${data.tracking_no}`, "success");
       loadMyOrders();
+      loadPendingCounts();
     } catch (err) {
       console.error(err);
       showAlert("Something went wrong. Please try again.", "error");
@@ -242,6 +317,7 @@
       if (!res.ok || !data.success) { showAlert(data.message || "Failed to update status.", "error"); return; }
       showAlert(`Order #${orderId} marked as delivered.`, "success");
       loadMyOrders();
+      loadPendingCounts();
     } catch (err) {
       console.error(err);
       showAlert("Something went wrong. Please try again.", "error");
@@ -249,6 +325,7 @@
   }
 
   loadMyOrders();
+  loadPendingCounts();
 </script>
 </body>
 </html>
