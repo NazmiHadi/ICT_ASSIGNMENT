@@ -145,6 +145,41 @@
       margin-top: 2px;
     }
 
+    /* Status badge */
+    .order-status-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .status-processing {
+      background: #F3E9D8;
+      color: #A87D0A;
+    }
+
+    .status-in-delivery {
+      background: #DCEBF9;
+      color: #2266A8;
+    }
+
+    .status-delivered {
+      background: #DFF3E3;
+      color: #237A3F;
+    }
+
+    /* Tracking number line */
+    .order-tracking {
+      font-size: 0.82rem;
+      color: #666;
+      margin-top: 6px;
+      font-family: monospace;
+    }
+
     .order-item-row {
       display: flex;
       align-items: center;
@@ -327,7 +362,9 @@
         <div>
           <span class="order-id"></span>
           <div class="order-date"></div>
+          <div class="order-tracking"></div>
         </div>
+        <span class="order-status-badge"></span>
       </div>
       <div class="order-items"></div>
       <div class="order-card-footer">

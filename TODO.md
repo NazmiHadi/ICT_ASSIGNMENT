@@ -1,11 +1,22 @@
 # TODO
+- tukar default value untuk semua primary key
+- 
 
 ## ADMIN
-dekat add new product tu takyah ada container. sbb kita add new product mcm letak barang baru utk dijual dalam "menu"
-inventory tu baru real world application kita yang dah ada container dengan amount. inventory dan ok dah.
+- letak gambar sekali waktu add product.
+- letak notification / unread waktu ada order baru. 
+- bole edit profile worker
+- staff boleh assign dekat tracking no. kalau barang dah sampai
+- add worker takbole add manager
+- manage vendor tak letak username dgn password.
+
 
 
 ## CUSTOMER
+- tambah tracking dekat customer order.
+
 
 ## DATABASE
 - insert dlm customer data utk matching dlm api
+
+NPM INSTALL MULTER

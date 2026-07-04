@@ -1,11 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // profile.js
 // Loads the logged-in customer's profile details via GET /api/customer/profile
-// then loads their order history via GET /api/orders.
-//
-// The /api/customer/profile route is defined in customerRoutes.js and accepts
-// ?customer_id=... so it can also be reused by the admin panel to look up any
-// customer by ID.
+// then loads their order history via GET /api/orders?customer_id=...
 // ─────────────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -24,8 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // ── loadProfile() ─────────────────────────────────────────────────────────────
-// Fetches customer details from /api/customer/profile?customer_id=<id>
-// and populates the profile card.
 async function loadProfile(customerId) {
   try {
     const res  = await fetch(`/api/customer/profile?customer_id=${encodeURIComponent(customerId)}`);
@@ -46,9 +40,7 @@ async function loadProfile(customerId) {
 
 
 // ── renderProfile() ───────────────────────────────────────────────────────────
-// Fills in the profile card DOM elements with the customer object.
 function renderProfile(c) {
-  // Avatar initials — first letter of name
   const initials = (c.name || c.username || "?").charAt(0).toUpperCase();
   document.getElementById("profileAvatar").textContent          = initials;
   document.getElementById("profileName").textContent            = c.name        || "—";
@@ -66,14 +58,16 @@ function renderProfile(c) {
 
 
 // ── loadOrders() ──────────────────────────────────────────────────────────────
-// Reuses the existing GET /api/orders?customer_id=... endpoint.
-// The same endpoint works for the admin page — just pass any customer_id.
+// Uses GET /api/orders?customer_id=... which now actually filters by
+// customer (previously this route ignored customer_id and returned every
+// order in the system — fixed in the updated orderRoutes.js).
 async function loadOrders(customerId) {
   const stateMsg  = document.getElementById("stateMessage");
   const container = document.getElementById("ordersContainer");
 
   stateMsg.style.display = "block";
   stateMsg.innerHTML     = "<p>Loading your orders...</p>";
+  container.innerHTML    = "";
 
   let data;
 
@@ -97,7 +91,6 @@ async function loadOrders(customerId) {
 
   const orders = data.orders || [];
 
-  // Update the badge count
   const badge = document.getElementById("ordersCountBadge");
   badge.textContent = orders.length === 1 ? "1 order" : `${orders.length} orders`;
 
@@ -106,7 +99,6 @@ async function loadOrders(customerId) {
     return;
   }
 
-  // Render each order card
   const orderTemplate = document.getElementById("orderTemplate");
   const itemTemplate  = document.getElementById("orderItemTemplate");
 
@@ -116,25 +108,44 @@ async function loadOrders(customerId) {
     node.querySelector(".order-id").textContent   = `Order #${order.order_id}`;
     node.querySelector(".order-date").textContent = formatDate(order.order_date);
 
+    // Status badge
+    const statusEl = node.querySelector(".order-status-badge");
+    statusEl.textContent = order.status || "Processing";
+    statusEl.className   = "order-status-badge " + statusClass(order.status);
+
+    // Tracking number (only shown once it exists)
+    const trackingEl = node.querySelector(".order-tracking");
+    if (order.tracking_no) {
+      trackingEl.textContent = `Tracking No: ${order.tracking_no}`;
+      trackingEl.style.display = "block";
+    } else {
+      trackingEl.style.display = "none";
+    }
+
     const itemsContainer = node.querySelector(".order-items");
 
-    (order.items || []).forEach(item => {
+    (order.products || []).forEach(item => {
       const itemNode = itemTemplate.content.cloneNode(true);
 
       const img = itemNode.querySelector(".order-item-img");
-      img.src = `/customer/assets/images/${item.image}`;
-      img.alt = item.name;
+      if (item.image_url) {
+        img.src = item.image_url;
+        img.alt = item.product_name;
+        img.style.display = "block";
+      } else {
+        img.style.display = "none"; // product was added without a picture
+      }
 
-      itemNode.querySelector(".order-item-name").textContent = item.name;
+      itemNode.querySelector(".order-item-name").textContent = item.product_name;
       itemNode.querySelector(".order-item-meta").textContent =
-        `Qty: ${item.qty} × $${Number(item.price).toFixed(2)}`;
+        `Qty: ${item.qty} × $${Number(item.price || 0).toFixed(2)}`;
       itemNode.querySelector(".order-item-line-total").textContent =
-        `$${Number(item.line_total).toFixed(2)}`;
+        `$${Number(item.line_total || 0).toFixed(2)}`;
 
       itemsContainer.appendChild(itemNode);
     });
 
-    node.querySelector(".order-total").textContent = `$${Number(order.total).toFixed(2)}`;
+    node.querySelector(".order-total").textContent = `$${Number(order.total || 0).toFixed(2)}`;
 
     container.appendChild(node);
   });
@@ -145,22 +156,25 @@ async function loadOrders(customerId) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Get the logged-in customer's ID from localStorage.
-// The login response stores the customer object under the "customer" key.
+function statusClass(status) {
+  switch (status) {
+    case "Delivered":   return "status-delivered";
+    case "In Delivery": return "status-in-delivery";
+    default:            return "status-processing";
+  }
+}
+
 function getCustomerId() {
   const raw = localStorage.getItem("customer");
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw);
-    // Support all the key names used across the codebase
     return parsed.customer_id ?? parsed.CustID ?? parsed.cust_id ?? parsed.id ?? null;
   } catch {
     return raw;
   }
 }
 
-
-// Set a profile field value; adds .empty class if blank.
 function setField(elementId, value) {
   const el = document.getElementById(elementId);
   if (value) {
@@ -172,24 +186,18 @@ function setField(elementId, value) {
   }
 }
 
-
-// Show an error in the profile state message area.
 function showProfileError(message) {
   const el = document.getElementById("profileStateMessage");
   el.innerHTML  = `<p>${message}</p>`;
   el.className  = "state-message error";
 }
 
-
-// Show a message inside the orders state element.
 function showOrdersState(element, html, isError = false) {
   element.innerHTML = `<p>${html}</p>`;
   element.className = isError ? "state-message error" : "state-message";
   element.style.display = "block";
 }
 
-
-// Format an ISO date string for display.
 function formatDate(isoString) {
   if (!isoString) return "";
   const d = new Date(isoString);

@@ -56,6 +56,51 @@
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+
+    /* Image upload + preview */
+    .image-drop {
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      background: #FBF8F4;
+    }
+    .image-drop:hover { border-color: var(--accent); }
+    .image-drop input[type="file"] { display: none; }
+    .image-preview {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin: 0 auto 8px;
+      display: none;
+      border: 1px solid var(--line);
+    }
+    .image-drop-label { font-size: 13px; color: var(--ink-soft); }
+
+    /* Product table thumbnail */
+    .prod-thumb {
+      width: 42px;
+      height: 42px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 1px solid var(--line);
+      background: #FBF8F4;
+    }
+    .prod-thumb-placeholder {
+      width: 42px;
+      height: 42px;
+      border-radius: 5px;
+      background: #FBF8F4;
+      border: 1px dashed var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-soft);
+      font-size: 15px;
+    }
+
     @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
     @media (max-width:860px) {
       .shell { flex-direction:column; }
@@ -87,7 +132,7 @@
     <div class="page-head">
       <p class="eyebrow">Catalog &amp; Stock</p>
       <h1>Manage Products</h1>
-      <p>Add products, set pricing, and link each product to a container.</p>
+      <p>Add products, set pricing, link each product to a container, and upload a picture.</p>
     </div>
 
     <div id="formAlert"></div>
@@ -96,6 +141,16 @@
       <div class="panel">
         <h3>Add New Product</h3>
         <form id="productForm">
+          <div class="form-group">
+            <label>Product Picture</label>
+            <label class="image-drop" for="prodImage">
+              <img id="imagePreview" class="image-preview" alt="Preview">
+              <div class="image-drop-label" id="imageDropLabel">
+                <i class="fa fa-camera"></i> Click to choose a photo (JPG, PNG, or WEBP, max 5MB)
+              </div>
+            </label>
+            <input type="file" id="prodImage" accept="image/jpeg,image/png,image/webp,image/gif">
+          </div>
           <div class="form-group">
             <label>Product Name</label>
             <input type="text" class="form-control" id="prodName" placeholder="e.g. Ajwa Dates Premium" required>
@@ -134,6 +189,7 @@
           <table class="prod-table">
             <thead>
               <tr>
+                <th>Photo</th>
                 <th>ID</th>
                 <th>Name</th>
                 <th>Type</th>
@@ -143,7 +199,7 @@
               </tr>
             </thead>
             <tbody id="productTableBody">
-              <tr><td colspan="6">Loading products...</td></tr>
+              <tr><td colspan="7">Loading products...</td></tr>
             </tbody>
           </table>
         </div>
@@ -171,7 +227,33 @@
     return `RM ${original}`;
   }
 
-  // Maps to PRODUCTS table: ProdID, ProdName, Price, ProdType, SalesPrice, ProdDesc, ContID (FK -> CONTAINERS)
+  function thumbCell(p) {
+    return p.image_url
+      ? `<img class="prod-thumb" src="${p.image_url}" alt="${p.name}">`
+      : `<div class="prod-thumb-placeholder"><i class="fa fa-image"></i></div>`;
+  }
+
+  // ── Live preview of the chosen file before upload ─────────────────────
+  const fileInput   = document.getElementById("prodImage");
+  const previewImg  = document.getElementById("imagePreview");
+  const dropLabel   = document.getElementById("imageDropLabel");
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      previewImg.style.display = "none";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewImg.style.display = "block";
+      dropLabel.textContent = file.name;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Maps to PRODUCTS table: ProdID, ProdName, Price, ProdType, SalesPrice, ProdDesc, ContID (FK -> CONTAINERS), ImageFileName
   async function loadContainerOptions() {
     const sel = document.getElementById("contId");
     try {
@@ -194,9 +276,10 @@
       if (!res.ok || !data.success) throw new Error(data.message);
       const products = data.products || [];
       tbody.innerHTML = products.length === 0
-        ? '<tr><td colspan="6">No products added yet.</td></tr>'
+        ? '<tr><td colspan="7">No products added yet.</td></tr>'
         : products.map(p => `
             <tr>
+              <td>${thumbCell(p)}</td>
               <td>${p.product_id}</td>
               <td>${p.name}</td>
               <td>${p.type || "-"}</td>
@@ -206,26 +289,36 @@
             </tr>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="6">Failed to load products. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">Failed to load products. Please refresh.</td></tr>';
     }
   }
 
+  // ── Submit: now sends FormData (multipart) instead of JSON, since it
+  // may include an image file. Don't set a Content-Type header manually —
+  // the browser sets the multipart boundary for you.
   document.getElementById("productForm").addEventListener("submit", async function(e) {
     e.preventDefault();
-    const payload = {
-      name:        document.getElementById("prodName").value.trim(),
-      type:        document.getElementById("prodType").value.trim(),
-      price:       document.getElementById("price").value,
-      sales_price: document.getElementById("salesPrice").value || null,
-      description: document.getElementById("prodDesc").value.trim(),
-      container_id: document.getElementById("contId").value || null
-    };
+
+    const formData = new FormData();
+    formData.append("name",         document.getElementById("prodName").value.trim());
+    formData.append("type",         document.getElementById("prodType").value.trim());
+    formData.append("price",        document.getElementById("price").value);
+    formData.append("sales_price",  document.getElementById("salesPrice").value || "");
+    formData.append("description",  document.getElementById("prodDesc").value.trim());
+    formData.append("container_id", document.getElementById("contId").value || "");
+
+    if (fileInput.files[0]) {
+      formData.append("image", fileInput.files[0]);
+    }
+
     try {
-      const res  = await fetch("/api/products", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const res  = await fetch("/api/products", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok || !data.success) { showAlert(data.message || "Failed to add product.", "error"); return; }
       showAlert(data.message || "Product added successfully.", "success");
       document.getElementById("productForm").reset();
+      previewImg.style.display = "none";
+      dropLabel.textContent = "Click to choose a photo (JPG, PNG, or WEBP, max 5MB)";
       loadProducts();
     } catch (err) {
       console.error(err);
