@@ -30,6 +30,52 @@ router.get("/orders/workers", async (req, res) => {
   }
 });
 
+// ── GET /api/orders/unassigned-count ──────────────────────────
+// Count of orders with no worker assigned yet. Powers the notification
+// badge on the "Manage Orders" nav item (admin/fulltime).
+router.get("/orders/unassigned-count", async (req, res) => {
+  let conn;
+  try {
+    conn = await getConnection();
+    const result = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM ORDERS WHERE WorkID IS NULL`
+    );
+    return res.json({ success: true, count: result.rows[0].CNT });
+  } catch (err) {
+    console.error("[ORDERS UNASSIGNED COUNT ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not load count." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+// ── GET /api/orders/pending-count?worker_id=123 ───────────────
+// Count of orders assigned to this worker that haven't been shipped yet
+// (status still "Processing"). Powers the notification badge on the
+// "My Assigned Orders" nav item (fulltime/parttime).
+router.get("/orders/pending-count", async (req, res) => {
+  const workerId = Number(req.query.worker_id);
+
+  if (!workerId) {
+    return res.status(400).json({ success: false, message: "worker_id is required." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+    const result = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM ORDERS WHERE WorkID = :workerId AND OrderStatus = 'Processing'`,
+      { workerId }
+    );
+    return res.json({ success: true, count: result.rows[0].CNT });
+  } catch (err) {
+    console.error("[ORDERS PENDING COUNT ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not load count." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 // ── GET /api/orders ───────────────────────────────────────────
 // Returns orders with customer, worker, tracking/status, and ordered products.
 // Used by the Manage Orders page (admin/fulltime — can (re)assign workers).

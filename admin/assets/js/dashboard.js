@@ -9,7 +9,7 @@
   const role = localStorage.getItem("role");
 
   if (!VALID_ROLES.includes(role)) {
-    window.location.href = "/";
+    window.location.href = "/login.html";
     return;
   }
 
@@ -34,8 +34,9 @@
     group.keys.forEach(key => {
       const item = NAV_ITEMS[key];
       if (!item) return;
-      navHtml += `<li><a href="${item.href}" class="${pageKey === key ? "active" : ""}">
+      navHtml += `<li><a href="${item.href}" id="nav-${key}" class="${pageKey === key ? "active" : ""}">
                     <i class="fa ${item.icon}"></i> ${item.label}
+                    <span id="badge-${key}" style="display:none; margin-left:auto; background:#e74c3c; color:#fff; border-radius:10px; padding:1px 8px; font-size:11px; font-weight:700; line-height:1.6;"></span>
                   </a></li>`;
     });
   });
@@ -87,8 +88,46 @@
     e.preventDefault();
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
-    window.location.href = "/";
+    window.location.href = "/login.html";
   });
+
+  /* ---------- Nav notification badges ----------
+     "Manage Orders"      -> orders with no worker assigned yet
+     "My Assigned Orders" -> my assigned orders that haven't shipped yet
+     Same logic as page-guard.js's loadNavBadges() — duplicated here since
+     the dashboard renders its sidebar via this separate script rather
+     than page-guard.js. */
+  (async function loadNavBadges() {
+    const ordersBadge = document.getElementById("badge-orders");
+    if (ordersBadge) {
+      try {
+        const res  = await fetch("/api/orders/unassigned-count");
+        const data = await res.json();
+        if (data.success && data.count > 0) {
+          ordersBadge.textContent   = data.count;
+          ordersBadge.style.display = "inline-block";
+        }
+      } catch (err) {
+        console.error("[NAV BADGE] Could not load unassigned order count:", err);
+      }
+    }
+
+    const assignBadge = document.getElementById("badge-orderAssignment");
+    if (assignBadge) {
+      const workerId = localStorage.getItem("userId");
+      if (!workerId) return;
+      try {
+        const res  = await fetch(`/api/orders/pending-count?worker_id=${encodeURIComponent(workerId)}`);
+        const data = await res.json();
+        if (data.success && data.count > 0) {
+          assignBadge.textContent   = data.count;
+          assignBadge.style.display = "inline-block";
+        }
+      } catch (err) {
+        console.error("[NAV BADGE] Could not load pending shipment count:", err);
+      }
+    }
+  })();
 
   /* ---------- Wire up real numbers ----------
      fetch('/api/dashboard-stats?role=' + role)
