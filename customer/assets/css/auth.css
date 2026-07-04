@@ -1,0 +1,5 @@
+/* Authentication pages */
+body{font-family:Arial;background:#f4f6f9;margin:0}
+.auth-container{display:flex;justify-content:center;align-items:center;height:100vh}
+.card{background:white;padding:30px;border-radius:12px;width:400px;box-shadow:0 5px 20px rgba(0,0,0,.1)}
+input,button{width:100%;padding:12px;margin:8px 0}

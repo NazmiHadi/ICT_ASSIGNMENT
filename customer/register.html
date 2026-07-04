@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Kurma Ajwa Enterprise</title>
+  <meta name="description" content="Create a Kurma Ajwa account">
+
+  <!-- Same style.css as the login page -->
+  <link rel="stylesheet" href="/assets/css/style.css">
+
+  <style>
+    /* ── Extra styles only needed for the register page ── */
+
+    /* The register card is taller so allow it to grow */
+    .login-card { max-width: 460px; }
+
+    /* Stack all fields with consistent spacing */
+    .form-group { margin-bottom: 20px; }
+
+    /* Two-column row for name + phone on wider screens */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 520px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* Divider line between sections */
+    .form-divider {
+      border: none;
+      border-top: 1px solid #e8d8c4;
+      margin: 8px 0 24px;
+    }
+
+    .form-section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #c8844a;
+      margin-bottom: 14px;
+    }
+
+    /* Message area (success / error) */
+    #message {
+      display: none;
+      margin-top: 4px;
+      margin-bottom: 12px;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 0.83rem;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    #message.success {
+      background: #e6f4e6;
+      color: #2e7d32;
+      border: 1px solid #c3e6cb;
+    }
+
+    #message.error {
+      background: #fdecea;
+      color: #c62828;
+      border: 1px solid #f5c6cb;
+    }
+
+    /* Optional badge on optional fields */
+    .optional-badge {
+      font-size: 0.68rem;
+      color: #b0906a;
+      font-weight: 400;
+      margin-left: 4px;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Same grain overlay as login -->
+  <div class="grain"></div>
+
+  <div class="login-container" style="max-width:460px;">
+    <div class="login-card">
+
+      <!-- Same header style as login -->
+      <div class="login-header">
+        <h2>KURMA <em style="font-style:italic; color:#a0522d;">AJWA</em></h2>
+        <p>Create your account</p>
+      </div>
+
+      <form id="registerForm" novalidate>
+
+        <!-- ── Personal details ── -->
+        <p class="form-section-label">Personal Details</p>
+
+        <!-- Full name + phone side by side -->
+        <div class="form-row">
+
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                autocomplete="name">
+              <label for="name">Full Name</label>
+            </div>
+            <span class="error-message"></span>
+          </div>
+
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                autocomplete="tel">
+              <label for="phone">Phone <span class="optional-badge">(optional)</span></label>
+            </div>
+            <span class="error-message"></span>
+          </div>
+
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email">
+            <label for="email">Email Address</label>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <!-- Address -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="address"
+              name="address"
+              autocomplete="street-address">
+            <label for="address">Address <span class="optional-badge">(optional)</span></label>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <hr class="form-divider">
+
+        <!-- ── Login credentials ── -->
+        <p class="form-section-label">Login Credentials</p>
+
+        <!-- Username -->
+        <div class="form-group">
+          <div class="input-wrapper">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              required
+              autocomplete="username">
+            <label for="username">Username</label>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <div class="input-wrapper password-wrapper">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              autocomplete="new-password">
+            <label for="password">Password</label>
+            <button
+              type="button"
+              class="password-toggle"
+              id="passwordToggle"
+              aria-label="Toggle password visibility">
+              <span class="eye-icon" id="eyeIcon1"></span>
+            </button>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="form-group">
+          <div class="input-wrapper password-wrapper">
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              required
+              autocomplete="new-password">
+            <label for="confirmPassword">Confirm Password</label>
+            <button
+              type="button"
+              class="password-toggle"
+              id="confirmToggle"
+              aria-label="Toggle confirm password visibility">
+              <span class="eye-icon" id="eyeIcon2"></span>
+            </button>
+          </div>
+          <span class="error-message"></span>
+        </div>
+
+        <!-- Message area -->
+        <div id="message"></div>
+
+        <!-- Submit — same class as login button -->
+        <button type="submit" class="login-btn">
+          <span class="btn-text">Create Account</span>
+          <span class="btn-loader"></span>
+        </button>
+
+      </form>
+
+      <!-- Link back to login — same style as login's signup-link -->
+      <div class="signup-link">
+        <p>Already have an account? <a href="/">Sign in</a></p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ── Password toggle scripts ─────────────────────────────────────── -->
+  <script>
+    function makeToggle(btnId, inputId, iconId) {
+      const btn   = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      const icon  = document.getElementById(iconId);
+      btn.addEventListener("click", () => {
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.add("show-password");
+        } else {
+          input.type = "password";
+          icon.classList.remove("show-password");
+        }
+      });
+    }
+
+    makeToggle("passwordToggle", "password",        "eyeIcon1");
+    makeToggle("confirmToggle",  "confirmPassword",  "eyeIcon2");
+  </script>
+
+
+  <!-- ── Registration logic ──────────────────────────────────────────── -->
+  <script>
+
+    const form   = document.getElementById("registerForm");
+    const msgDiv = document.getElementById("message");
+
+    function showMessage(text, type) {
+      msgDiv.textContent   = text;
+      msgDiv.className     = type;
+      msgDiv.style.display = "block";
+    }
+
+    function hideMessage() {
+      msgDiv.style.display = "none";
+    }
+
+    // Show error under a specific field
+    function fieldError(inputId, text) {
+      const group = document.getElementById(inputId).closest(".form-group");
+      if (!group) return;
+      group.classList.add("error");
+      const span = group.querySelector(".error-message");
+      if (span) { span.textContent = text; span.classList.add("show"); }
+    }
+
+    // Clear all field errors
+    function clearErrors() {
+      document.querySelectorAll(".form-group.error").forEach(g => {
+        g.classList.remove("error");
+        const span = g.querySelector(".error-message");
+        if (span) { span.textContent = ""; span.classList.remove("show"); }
+      });
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      clearErrors();
+      hideMessage();
+
+      const name            = document.getElementById("name").value.trim();
+      const email           = document.getElementById("email").value.trim();
+      const address         = document.getElementById("address").value.trim();
+      const phone           = document.getElementById("phone").value.trim();
+      const username        = document.getElementById("username").value.trim();
+      const password        = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      // Client-side validation — mirrors the field error style from login
+      let hasError = false;
+
+      if (!name) {
+        fieldError("name", "Full name is required."); hasError = true;
+      }
+      if (!email) {
+        fieldError("email", "Email address is required."); hasError = true;
+      }
+      if (!username) {
+        fieldError("username", "Username is required."); hasError = true;
+      }
+      if (!password) {
+        fieldError("password", "Password is required."); hasError = true;
+      } else if (password.length < 6) {
+        fieldError("password", "Password must be at least 6 characters."); hasError = true;
+      }
+      if (!confirmPassword) {
+        fieldError("confirmPassword", "Please confirm your password."); hasError = true;
+      } else if (password !== confirmPassword) {
+        fieldError("confirmPassword", "Passwords do not match."); hasError = true;
+      }
+
+      if (hasError) return;
+
+      // Disable button while request is in flight
+      const btn = form.querySelector(".login-btn");
+      btn.classList.add("loading");
+
+      try {
+        const response = await fetch("/api/register", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ name, email, address, phone, username, password, confirmPassword })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showMessage("Account created! Redirecting to login...", "success");
+          form.reset();
+          setTimeout(() => { window.location.href = "/"; }, 2000);
+        } else {
+          showMessage(data.message, "error");
+          btn.classList.remove("loading");
+        }
+
+      } catch (err) {
+        showMessage("Could not connect to server. Please try again.", "error");
+        btn.classList.remove("loading");
+      }
+    });
+
+  </script>
+
+</body>
+</html>

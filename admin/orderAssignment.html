@@ -1,0 +1,254 @@
+<script>window.PAGE_KEY = "orderAssignment";</script>
+<script src="/admin/assets/js/role-config.js"></script>
+<script src="/admin/assets/js/page-guard.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
+  <title>KURMA AJWA ENTERPRISE | My Assigned Orders</title>
+  <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
+  <style>
+    :root { --bg:#FAF7F2; --sidebar:#2B2118; --sidebar-hover:#3B2E22; --accent:#A8333D; --accent-soft:#F3E3DD; --ink:#2B2118; --ink-soft:#8A7B6C; --line:#E8E1D8; --card:#FFFFFF; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var(--ink); }
+    .shell { display:flex; min-height:100vh; }
+    .sidebar { width:260px; flex-shrink:0; background:var(--sidebar); color:#EDE6DC; display:flex; flex-direction:column; padding:28px 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sidebar-brand { padding:0 28px 28px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px; }
+    .sidebar-brand .mark { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#C9A98A; margin:0 0 4px; }
+    .sidebar-brand h2 { font-size:21px; font-weight:700; margin:0; line-height:1.25; }
+    .sidebar-brand h2 em { font-style:normal; color:var(--accent); }
+    .sidebar-brand .role-pill { display:inline-block; margin-top:10px; padding:4px 10px; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; font-weight:600; color:#EDE6DC; background:rgba(168,51,61,0.35); border:1px solid rgba(168,51,61,0.6); border-radius:20px; }
+    .sidebar-nav { list-style:none; margin:0; padding:0; flex:1; }
+    .sidebar-nav .nav-group-label { padding:16px 28px 6px; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#8A7B6C; font-weight:600; }
+    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; }
+    .sidebar-nav li a i { width:18px; text-align:center; font-size:14px; }
+    .sidebar-nav li a:hover { background:var(--sidebar-hover); color:#fff; }
+    .sidebar-nav li a.active { background:var(--sidebar-hover); color:#fff; border-left-color:var(--accent); }
+    .sidebar-footer { padding:0 28px; margin-top:12px; }
+    .sidebar-footer a { display:flex; align-items:center; gap:10px; color:#C9BFB2; text-decoration:none; font-size:14px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer a:hover { color:#fff; }
+    .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
+    .page-head { margin-bottom:32px; }
+    .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
+    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
+    .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+    .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
+    .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
+    .table-wrapper { overflow-x:auto; }
+    table.assign-table { width:100%; border-collapse:collapse; }
+    table.assign-table th, table.assign-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
+    table.assign-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.assign-table tbody tr:hover { background:#FBF8F4; }
+    .product-tag { display:inline-block; background:var(--accent-soft); color:var(--accent); border-radius:4px; padding:2px 8px; font-size:12px; margin:2px 2px 2px 0; }
+    .status-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; }
+    .status-processing { background:#F3E9D8; color:#A87D0A; }
+    .status-in-delivery { background:#DCEBF9; color:#2266A8; }
+    .status-delivered { background:#DFF3E3; color:#237A3F; }
+    .tracking-no { display:block; font-size:11px; color:var(--ink-soft); font-family:monospace; margin-top:4px; }
+    .action-btn { border:none; border-radius:6px; cursor:pointer; padding:7px 14px; font-size:13px; font-weight:600; transition:background .15s; font-family:'Poppins',sans-serif; white-space:nowrap; }
+    .ship-btn { background:var(--accent); color:#fff; }
+    .ship-btn:hover { background:#8E2A33; }
+    .deliver-btn { background:#2266A8; color:#fff; }
+    .deliver-btn:hover { background:#184E80; }
+    #pageAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
+    #pageAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+    .empty-state { text-align:center; padding:40px 20px; color:var(--ink-soft); }
+    .empty-state i { font-size:32px; margin-bottom:12px; display:block; color:var(--line); }
+    @media (max-width:860px) {
+      .shell { flex-direction:column; }
+      .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
+      .sidebar-brand { display:none; }
+      .sidebar-nav .nav-group-label { display:none; }
+      .sidebar-nav { display:flex; flex:none; }
+      .sidebar-nav li a { padding:8px 16px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
+      .sidebar-nav li a.active { border-left:none; border-bottom-color:var(--accent); }
+      .sidebar-footer { display:none; }
+      .main { padding:28px 20px 40px; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <p class="mark">Admin Panel</p>
+      <h2>KURMA <em>AJWA</em></h2>
+      <span class="role-pill" id="rolePill">—</span>
+    </div>
+    <ul class="sidebar-nav" id="sidebarNav"></ul>
+    <div class="sidebar-footer">
+      <a href="#" id="logoutLink"><i class="fa fa-sign-out"></i> Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <p class="eyebrow">Daily Tasks</p>
+      <h1>My Assigned Orders</h1>
+      <p>Orders that a manager or full-time worker has assigned to you. Ship an order once it's ready, then mark it delivered once it reaches the customer.</p>
+    </div>
+
+    <div id="pageAlert" style="display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px;"></div>
+
+    <div class="panel">
+      <h3>Assigned To Me</h3>
+      <div class="table-wrapper">
+        <table class="assign-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Products</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="assignTableBody">
+            <tr><td colspan="4">Loading your orders...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/admin/vendor/jquery/jquery.min.js"></script>
+<script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+  function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
+
+  function showAlert(msg, type) {
+    const box = document.getElementById("pageAlert");
+    box.textContent = msg; box.className = type; box.style.display = "block";
+    setTimeout(() => { box.style.display = "none"; }, 4000);
+  }
+
+  function formatDate(d) {
+    if (!d) return "-";
+    const dt = new Date(d);
+    return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
+  }
+
+  function statusClass(status) {
+    switch (status) {
+      case "Delivered":   return "status-delivered";
+      case "In Delivery": return "status-in-delivery";
+      default:            return "status-processing";
+    }
+  }
+
+  // ── actionCell(): decides which button (if any) a row gets ────────────
+  // Processing  -> "Ship" button (auto-generates tracking no, flips to
+  //                "In Delivery")
+  // In Delivery -> "Mark Delivered" button (manual, mocks the driver
+  //                confirming drop-off)
+  // Delivered   -> nothing left to do
+  function actionCell(order) {
+    const status = order.status || "Processing";
+    if (status === "Processing") {
+      return `<button class="action-btn ship-btn" onclick="shipOrder(${order.order_id})">Ship</button>`;
+    }
+    if (status === "In Delivery") {
+      return `<button class="action-btn deliver-btn" onclick="markDelivered(${order.order_id})">Mark Delivered</button>`;
+    }
+    return `<span style="color:var(--ink-soft);font-size:13px;">—</span>`;
+  }
+
+  async function loadMyOrders() {
+    const tbody = document.getElementById("assignTableBody");
+    const workerId = localStorage.getItem("userId");
+
+    if (!workerId) {
+      tbody.innerHTML = '<tr><td colspan="6">Could not identify your worker account. Please log in again.</td></tr>';
+      return;
+    }
+
+    try {
+      const res  = await fetch(`/api/orders/mine?worker_id=${encodeURIComponent(workerId)}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message);
+
+      const orders = data.orders || [];
+      if (orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+          <div class="empty-state">
+            <i class="fa fa-inbox"></i>
+            No orders have been assigned to you yet.
+          </div>
+        </td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = orders.map(o => {
+        const productTags = o.products && o.products.length > 0
+          ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
+          : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
+
+        const status = o.status || "Processing";
+        const trackingLine = o.tracking_no ? `<span class="tracking-no">${o.tracking_no}</span>` : "";
+
+        return `
+          <tr id="row-${o.order_id}">
+            <td>#${o.order_id}</td>
+            <td>${formatDate(o.order_date)}</td>
+            <td>${o.customer_name || "-"}</td>
+            <td>${productTags}</td>
+            <td><span class="status-badge ${statusClass(status)}">${status}</span>${trackingLine}</td>
+            <td>${actionCell(o)}</td>
+          </tr>`;
+      }).join("");
+
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="6">Failed to load your orders. Please refresh.</td></tr>';
+    }
+  }
+
+  // ── shipOrder(): worker presses "Ship" ─────────────────────────────────
+  // Server auto-generates a tracking number and flips status to
+  // "In Delivery" — nothing for the worker to type in.
+  async function shipOrder(orderId) {
+    const workerId = localStorage.getItem("userId");
+    try {
+      const res  = await fetch(`/api/orders/${orderId}/ship`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ worker_id: workerId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to ship order.", "error"); return; }
+      showAlert(`Order #${orderId} shipped. Tracking No: ${data.tracking_no}`, "success");
+      loadMyOrders();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  }
+
+  // ── markDelivered(): worker manually confirms drop-off (mock) ─────────
+  async function markDelivered(orderId) {
+    const workerId = localStorage.getItem("userId");
+    try {
+      const res  = await fetch(`/api/orders/${orderId}/status`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ status: "Delivered", worker_id: workerId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to update status.", "error"); return; }
+      showAlert(`Order #${orderId} marked as delivered.`, "success");
+      loadMyOrders();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  }
+
+  loadMyOrders();
+</script>
+</body>
+</html>

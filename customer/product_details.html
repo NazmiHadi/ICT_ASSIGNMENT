@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Product Details – Kurma Ajwa Enterprise</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="/customer//vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+
+  <style>
+    /* ── Product detail layout ───────────────────────────────────────── */
+
+    .product-detail-section {
+      padding: 80px 0 60px;
+    }
+
+    /* Left column: product image */
+    .product-detail-image {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      object-fit: cover;
+    }
+
+    /* Right column: product info */
+    .product-detail-info {
+      padding: 0 20px;
+    }
+
+    .product-detail-info h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #1e1e1e;
+      margin-bottom: 12px;
+    }
+
+    .product-detail-price {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #c8844a;       /* warm date brown from your login theme */
+      margin-bottom: 16px;
+    }
+
+    .product-detail-description {
+      font-size: 0.95rem;
+      color: #555;
+      line-height: 1.8;
+      margin-bottom: 24px;
+    }
+
+    /* Stock badge */
+    .stock-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+
+    .stock-badge.in-stock {
+      background: #e6f4e6;
+      color: #2e7d32;
+    }
+
+    .stock-badge.low-stock {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .stock-badge.out-of-stock {
+      background: #fdecea;
+      color: #c62828;
+    }
+
+    /* Stars */
+    .stars {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+
+    .stars li i {
+      color: #f4c430;
+      font-size: 1rem;
+    }
+
+    /* Divider line */
+    .product-divider {
+      border: none;
+      border-top: 1px solid #e8e0d5;
+      margin: 24px 0;
+    }
+
+    /* Back button */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 2px solid #a0522d;
+      color: #a0522d;
+      padding: 9px 22px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 32px;
+    }
+
+    .back-btn:hover {
+      background: #a0522d;
+      color: white;
+      text-decoration: none;
+    }
+
+    /* Add to cart button */
+    .add-to-cart-btn {
+      background: linear-gradient(135deg, #6b3a1f 0%, #a0522d 60%, #c8844a 100%);
+      border: none;
+      border-radius: 4px;
+      color: #fdf6ed;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 13px 36px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 3px 12px rgba(107,58,31,0.3);
+    }
+
+    .add-to-cart-btn:hover {
+      background: linear-gradient(135deg, #3b1f0a 0%, #6b3a1f 60%, #a0522d 100%);
+      box-shadow: 0 5px 18px rgba(59,31,10,0.35);
+      transform: translateY(-1px);
+    }
+
+    .add-to-cart-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Error / loading states */
+    .state-message {
+      text-align: center;
+      padding: 80px 20px;
+      color: #888;
+      font-size: 1rem;
+    }
+
+    .state-message.error {
+      color: #c0392b;
+    }
+
+    /* Product meta row (id, category etc.) */
+    .product-meta {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 12px;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="jumper"><div></div><div></div><div></div></div>
+  </div>
+
+  <!-- Navigation -->
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/customer/home" style="display: flex; align-items: center; gap: 15px;">
+          <img src="/customer/assets/images/logo_kurma_ajwa.png" alt="Kurma Ajwa Logo" style="height: 45px; width: auto; object-fit: contain;">
+          <h2>KURMA <em>AJWA</em></h2>
+          </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+          <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+          <li class="nav-item active"><a class="nav-link" href="/customer/products">Our Products</a></li>
+          <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="/customer/cart" style="position: relative;">
+              <i class="fa fa-shopping-cart"></i> Cart
+              <span id="cartBadge"
+                    style="display:none; position:absolute; top:-5px; right:-10px;
+                          background:#e74c3c; color:#fff; border-radius:50%;
+                          padding:2px 6px; font-size:11px;">0</span>
+            </a>
+          </li>
+          <li>
+            <a class="nav-link" href="/customer/profile">My Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="logout()">Logout</a>
+          </li>
+        </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page banner -->
+  <div class="page-heading products-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Explore</h4>
+            <h2>Product Details</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="product-detail-section">
+    <div class="container">
+
+      <!-- Back button -->
+      <a href="/customer/products" class="back-btn">
+        <i class="fa fa-angle-left"></i> Back to Products
+      </a>
+
+      <!-- Loading state — replaced by JS once data arrives -->
+      <div id="stateMessage" class="state-message">
+        <p>Loading product...</p>
+      </div>
+
+      <!-- Product detail layout — hidden until JS populates it -->
+      <div id="productDetail" class="row" style="display:none;">
+
+        <!-- Left: image -->
+        <div class="col-md-5">
+          <img
+            id="detail-image"
+            src=""
+            alt=""
+            class="product-detail-image">
+        </div>
+
+        <!-- Right: info -->
+        <div class="col-md-7">
+          <div class="product-detail-info">
+
+            <p class="product-meta" id="detail-meta"></p>
+
+            <h2 id="detail-name"></h2>
+
+            <!-- Star rating (static 5 stars for now) -->
+            <ul class="stars">
+              <li><i class="fa fa-star"></i></li>
+              <li><i class="fa fa-star"></i></li>
+              <li><i class="fa fa-star"></i></li>
+              <li><i class="fa fa-star"></i></li>
+              <li><i class="fa fa-star"></i></li>
+            </ul>
+
+            <p class="product-detail-price" id="detail-price"></p>
+
+            <span class="stock-badge" id="detail-stock-badge"></span>
+
+            <hr class="product-divider">
+
+            <p class="product-detail-description" id="detail-description"></p>
+
+            <button class="add-to-cart-btn" id="addToCartBtn">
+              Add to Cart
+            </button>
+
+          </div>
+        </div>
+
+      </div>
+      <!-- /row -->
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="inner-content">
+            <p>Copyright &copy; 2025 Kurma Ajwa Enterprise</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JS libraries -->
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/owl.js"></script>
+  <script src="/customer/assets/js/accordions.js"></script>
+
+  <script src="/customer/assets/js/cart.js"></script>
+
+
+  <!-- Product details logic -->
+  <script src="/customer/assets/js/product_details.js"></script>
+
+
+  <script>
+    function logout() {
+      localStorage.removeItem("role");
+      localStorage.removeItem("customer");
+      window.location.href = "/";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Checkout - Kurma Ajwa</title>
+
+  <link href="/customer/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
+</head>
+
+<body>
+
+  <!-- Preloader spinner shown while the page is loading -->
+  <div id="preloader">
+    <div class="jumper"><div></div><div></div><div></div></div>
+  </div>
+
+  <!-- ── Navigation bar ────────────────────────────────────────────────
+       Same as cart.html, but no <li> is marked "active" since this is
+       a checkout step rather than a main nav destination. -->
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/customer/home" style="display: flex; align-items: center; gap: 15px;">
+          <img src="/customer/assets/images/logo_kurma_ajwa.png" alt="Kurma Ajwa Logo" style="height: 45px; width: auto; object-fit: contain;">
+          <h2>KURMA <em>AJWA</em></h2>
+          </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="/customer/cart" style="position: relative;">
+                <i class="fa fa-shopping-cart"></i> Cart
+                <span id="cartBadge"
+                      style="display:none; position:absolute; top:-5px; right:-10px;
+                             background:#e74c3c; color:#fff; border-radius:50%;
+                             padding:2px 6px; font-size:11px;">0</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="logout()">Logout</a>
+              <script>
+                function logout() {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('customer_id');
+                  window.location.href = "/";
+                }
+              </script>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page banner / hero section -->
+  <div class="page-heading products-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Almost there</h4>
+            <h2>Checkout</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Checkout section ─────────────────────────────────────────────── -->
+  <div class="products">
+    <div class="container">
+
+      <div class="row">
+
+        <!-- ── Left column: read-only order review ────────────────────
+             Same idea as cart.html's item list, but WITHOUT the
+             qty +/- or remove buttons - this page is for confirming
+             the order before payment, not editing it. -->
+        <div class="col-md-8">
+          <h4>Order Review</h4>
+          <hr>
+          <div id="checkoutItemsContainer">
+            <!-- Order items injected here by renderCheckout() -->
+          </div>
+        </div>
+
+        <!-- ── Right column: final total + the actual checkout button ── -->
+        <div class="col-md-4">
+          <div class="cart-summary" style="border:1px solid #eee; padding:20px; border-radius:6px;">
+            <h4>Order Total</h4>
+            <hr>
+
+            <div style="display:flex; justify-content:space-between;">
+              <span>Items (<span id="checkoutItemCount">0</span>)</span>
+              <span id="checkoutSubtotal">$0.00</span>
+            </div>
+
+            <hr>
+
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1em;">
+              <span>Total</span>
+              <span id="checkoutTotal">$0.00</span>
+            </div>
+
+            <!-- ── This button's id="checkoutBtn" matters! ──────────────
+                 purchase.js's checkout() function looks up this exact
+                 id to disable the button and change its text to
+                 "Processing payment..." while the mock payment runs.
+                 onclick="checkout()" calls that function directly. -->
+            <button class="btn btn-primary btn-block mt-3" id="checkoutBtn" onclick="checkout()">
+              Checkout
+            </button>
+
+            <a href="/customer/cart" class="btn btn-outline-secondary btn-block mt-2">Back to Cart</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Order item row template ──────────────────────────────────────
+       Simplified version of cart.html's template - read-only,
+       no quantity controls or remove button, just:
+       image | name + unit price | qty | line total -->
+  <template id="checkoutItemTemplate">
+    <div class="row checkout-item align-items-center" style="border-bottom:1px solid #eee; padding:15px 0;">
+
+      <div class="col-3 col-md-2">
+        <img class="checkout-item-img" src="" alt="" style="width:100%; max-width:80px; border-radius:4px;">
+      </div>
+
+      <div class="col-5 col-md-6">
+        <h6 class="checkout-item-name"></h6>
+        <span class="checkout-item-price text-muted"></span>
+      </div>
+
+      <div class="col-2 col-md-2 text-center">
+        <span>x <span class="checkout-item-qty"></span></span>
+      </div>
+
+      <div class="col-2 col-md-2 text-right">
+        <strong class="checkout-item-line-total"></strong>
+      </div>
+    </div>
+  </template>
+
+  <!-- JS libraries -->
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- cart.js: needed for getCart(), clearCart(), updateCartBadge() -->
+  <script src="/customer/assets/js/cart.js"></script>
+
+  <!-- purchase.js: contains checkout(), which:
+         1. reads the cart via getCart()
+         2. POSTs it to /api/checkout
+         3. on success: clearCart() + redirect to /orders
+         4. on failure: shows an alert, re-enables the button -->
+  <script src="/customer/assets/js/purchase.js"></script>
+
+
+  <!-- ── Page-specific script: render the read-only order review ──────── -->
+  <script>
+
+    // ── renderCheckout(): draw the order items + totals ─────────────────
+    // Runs once on page load. Unlike cart.html's renderCart(), this never
+    // needs to re-run after load, because nothing on this page changes
+    // the cart - it's just a final review before checkout() runs.
+    function renderCheckout() {
+
+      const cart = getCart(); // from cart.js
+
+      const container    = document.getElementById("checkoutItemsContainer");
+      const template     = document.getElementById("checkoutItemTemplate");
+      const checkoutBtn  = document.getElementById("checkoutBtn");
+
+      container.innerHTML = "";
+
+      // ── Empty cart guard ────────────────────────────────────────────
+      // If someone navigates here directly with an empty cart
+      // (e.g. via browser back button after a successful order),
+      // show a message and disable the checkout button.
+      if (!cart.length) {
+        container.innerHTML = "<p>Your cart is empty. <a href='/customer/products'>Browse products</a></p>";
+        if (checkoutBtn) checkoutBtn.disabled = true;
+        updateCheckoutSummary(cart);
+        return;
+      }
+
+      // ── Build one read-only row per cart item ───────────────────────
+      cart.forEach(item => {
+        const node = template.content.cloneNode(true);
+
+        const img = node.querySelector(".checkout-item-img");
+        img.src = item.image_url || "/customer/assets/images/product-placeholder.png";
+        img.alt = item.name;
+
+        node.querySelector(".checkout-item-name").textContent  = item.name;
+        node.querySelector(".checkout-item-price").textContent = `$${item.price.toFixed(2)} each`;
+        node.querySelector(".checkout-item-qty").textContent   = item.qty;
+        node.querySelector(".checkout-item-line-total").textContent =
+          `$${(item.price * item.qty).toFixed(2)}`;
+
+        container.appendChild(node);
+      });
+
+      updateCheckoutSummary(cart);
+    }
+
+
+    // ── updateCheckoutSummary(): fill in the totals box ──────────────────
+    // Same calculation as cart.html's updateSummary() - kept separate
+    // (rather than shared) so each page's script stays self-contained.
+    function updateCheckoutSummary(cart) {
+      const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+
+      document.getElementById("checkoutSubtotal").textContent  = `$${total.toFixed(2)}`;
+      document.getElementById("checkoutItemCount").textContent = count;
+      document.getElementById("checkoutTotal").textContent     = `$${total.toFixed(2)}`;
+    }
+
+
+    // ── Run on page load ──────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", renderCheckout);
+
+  </script>
+
+</body>
+</html>

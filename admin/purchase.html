@@ -1,0 +1,526 @@
+<script>window.PAGE_KEY = "purchase";</script>
+<script src="/admin/assets/js/role-config.js"></script>
+<script src="/admin/assets/js/page-guard.js"></script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
+  <title>KURMA AJWA ENTERPRISE | Manage Purchases</title>
+  <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
+  <style>
+    :root {
+      --bg:#FAF7F2; --sidebar:#2B2118; --sidebar-hover:#3B2E22;
+      --accent:#A8333D; --accent-soft:#F3E3DD;
+      --ink:#2B2118; --ink-soft:#8A7B6C; --line:#E8E1D8; --card:#FFFFFF;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var(--ink); }
+    .shell { display:flex; min-height:100vh; }
+
+    /* Sidebar */
+    .sidebar { width:260px; flex-shrink:0; background:var(--sidebar); color:#EDE6DC; display:flex; flex-direction:column; padding:28px 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sidebar-brand { padding:0 28px 28px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px; }
+    .sidebar-brand .mark { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#C9A98A; margin:0 0 4px; }
+    .sidebar-brand h2 { font-size:21px; font-weight:700; margin:0; line-height:1.25; }
+    .sidebar-brand h2 em { font-style:normal; color:var(--accent); }
+    .sidebar-nav { list-style:none; margin:0; padding:0; flex:1; }
+    .sidebar-nav .nav-group-label { padding:16px 28px 6px; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#8A7B6C; font-weight:600; }
+    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; }
+    .sidebar-nav li a i { width:18px; text-align:center; font-size:14px; }
+    .sidebar-nav li a:hover { background:var(--sidebar-hover); color:#fff; }
+    .sidebar-nav li a.active { background:var(--sidebar-hover); color:#fff; border-left-color:var(--accent); }
+    .sidebar-footer { padding:0 28px; margin-top:12px; }
+    .sidebar-footer a { display:flex; align-items:center; gap:10px; color:#C9BFB2; text-decoration:none; font-size:14px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer a:hover { color:#fff; }
+
+    /* Main */
+    .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
+    .page-head { margin-bottom:32px; }
+    .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
+    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
+    .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+
+    /* Tabs */
+    .tabs { display:flex; gap:4px; margin-bottom:28px; border-bottom:2px solid var(--line); }
+    .tab-btn { background:none; border:none; padding:10px 22px; font-size:14px; font-weight:500; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s; font-family:'Poppins',sans-serif; }
+    .tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+    .tab-btn:hover { color:var(--ink); }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    /* Layout grids */
+    .two-col { display:grid; grid-template-columns:minmax(300px,420px) 1fr; gap:24px; align-items:start; }
+
+    /* Panel */
+    .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); margin-bottom:24px; }
+    .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
+
+    /* Form */
+    .form-group { margin-bottom:16px; }
+    .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:6px; }
+    .form-control { width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:14px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
+    .form-control:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+
+    /* Product rows (new purchase) */
+    .product-row { display:grid; grid-template-columns:1fr 90px 36px; gap:8px; align-items:center; margin-bottom:8px; }
+    .product-row select, .product-row input { height:40px; }
+    .remove-btn { width:36px; height:36px; border:none; background:var(--accent-soft); color:var(--accent); border-radius:6px; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:background .15s; }
+    .remove-btn:hover { background:var(--accent); color:#fff; }
+    .add-row-btn { background:none; border:1px dashed var(--line); border-radius:6px; padding:8px 14px; font-size:13.5px; color:var(--ink-soft); cursor:pointer; width:100%; margin-bottom:16px; transition:border-color .15s,color .15s; }
+    .add-row-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+    /* Receive rows */
+    .receive-row { background:#FBF8F4; border-radius:8px; padding:14px 16px; margin-bottom:10px; }
+    .receive-row .prod-info { font-weight:600; font-size:14px; margin-bottom:8px; }
+    .receive-row .prod-info span { color:var(--ink-soft); font-weight:400; font-size:13px; margin-left:8px; }
+    .receive-cols { display:grid; grid-template-columns:1fr 100px; gap:10px; }
+
+    /* Buttons */
+    .btn-primary { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; width:100%; font-family:'Poppins',sans-serif; }
+    .btn-primary:hover { background:#8E2A33; }
+
+    /* Table */
+    .table-wrapper { overflow-x:auto; }
+    table.purch-table { width:100%; border-collapse:collapse; }
+    table.purch-table th, table.purch-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:14px; vertical-align:top; }
+    table.purch-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11.5px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.purch-table tbody tr:hover { background:#FBF8F4; }
+    .product-tag { display:inline-block; background:var(--accent-soft); color:var(--accent); border-radius:4px; padding:2px 8px; font-size:12px; margin:2px 2px 2px 0; }
+
+    /* Receive button in table */
+    .recv-btn { background:var(--accent); color:#fff; border:none; border-radius:5px; padding:5px 12px; font-size:12.5px; font-weight:600; cursor:pointer; transition:background .15s; white-space:nowrap; }
+    .recv-btn:hover { background:#8E2A33; }
+
+    /* Alert */
+    .alert-box { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
+    .alert-box.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
+    .alert-box.error   { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+
+    @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
+    @media (max-width:860px) {
+      .shell { flex-direction:column; }
+      .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
+      .sidebar-brand { display:none; }
+      .sidebar-nav { display:flex; flex:none; }
+      .sidebar-nav li a { padding:8px 16px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
+      .sidebar-nav li a.active { border-left:none; border-bottom-color:var(--accent); }
+      .sidebar-footer { display:none; }
+      .main { padding:28px 20px 40px; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <p class="mark">Admin Panel</p>
+      <h2>KURMA <em>AJWA</em></h2>
+    </div>
+      <ul class="sidebar-nav" id="sidebarNav"></ul>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <p class="eyebrow">Procurement</p>
+      <h1>Manage Purchases</h1>
+      <p>Create purchase orders from vendors and receive products into containers.</p>
+    </div>
+
+    <div id="globalAlert" class="alert-box"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('new')">
+        <i class="fa fa-plus-circle"></i> New Purchase
+      </button>
+      <button class="tab-btn" onclick="switchTab('receive')">
+        <i class="fa fa-inbox"></i> Receive Purchase
+      </button>
+      <button class="tab-btn" onclick="switchTab('history')">
+        <i class="fa fa-history"></i> Purchase History
+      </button>
+    </div>
+
+    <!-- Tab 1: New Purchase -->
+    <div id="tab-new" class="tab-panel active">
+      <div class="two-col">
+        <div class="panel">
+          <h3>New Purchase Order</h3>
+          <form id="purchaseForm">
+            <div class="form-group">
+              <label for="workerId">Worker</label>
+              <select class="form-control" id="workerId" required>
+                <option value="">Select a worker...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="vendorId">Vendor</label>
+              <select class="form-control" id="vendorId" required>
+                <option value="">Select a vendor...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Products to Purchase</label>
+              <div id="newProductRows"></div>
+              <button type="button" class="add-row-btn" onclick="addNewProductRow()">
+                <i class="fa fa-plus"></i> Add Product
+              </button>
+            </div>
+            <button type="submit" class="btn-primary">Create Purchase Order</button>
+          </form>
+        </div>
+        <div class="panel">
+          <h3>Tips</h3>
+          <p style="color:var(--ink-soft);font-size:14px;line-height:1.7;">
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            Select the worker handling this purchase and the vendor you are buying from.
+            Add all products and quantities you are ordering.
+            <br><br>
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            Once the products arrive, go to the <strong>Receive Purchase</strong> tab to add them into their containers.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Receive Purchase -->
+    <div id="tab-receive" class="tab-panel">
+      <div class="two-col">
+        <div class="panel">
+          <h3>Receive a Purchase</h3>
+          <div class="form-group">
+            <label for="receivePurchId">Select Purchase</label>
+            <select class="form-control" id="receivePurchId" onchange="loadReceiveItems()">
+              <option value="">-- Select a purchase to receive --</option>
+            </select>
+          </div>
+
+          <div id="receiveItems" style="display:none;">
+            <p style="font-size:13.5px;color:var(--ink-soft);margin:0 0 14px;">
+              Assign each product to a container. Qty will be added to existing inventory.
+            </p>
+            <div id="receiveRows"></div>
+            <button class="btn-primary" onclick="submitReceive()" style="margin-top:8px;">
+              Add to Inventory
+            </button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Tips</h3>
+          <p style="color:var(--ink-soft);font-size:14px;line-height:1.7;">
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            Select the purchase order that has arrived. Then assign each product to the correct container.
+            <br><br>
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            If the product already exists in the container, the quantity will be added on top of the existing stock.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: History -->
+    <div id="tab-history" class="tab-panel">
+      <div class="panel">
+        <h3>Purchase History</h3>
+        <div class="table-wrapper">
+          <table class="purch-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Worker</th>
+                <th>Vendor</th>
+                <th>Products</th>
+              </tr>
+            </thead>
+            <tbody id="purchaseTableBody">
+              <tr><td colspan="5">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/admin/vendor/jquery/jquery.min.js"></script>
+<script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+  function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
+
+  const API = "/api/purchases";
+  let productsCache   = [];
+  let containersCache = [];
+  let purchasesCache  = [];
+
+  // ── Tab switching ──────────────────────────────────────────
+  function switchTab(name) {
+    document.querySelectorAll(".tab-btn").forEach((b, i) => {
+      b.classList.toggle("active", ["new","receive","history"][i] === name);
+    });
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    document.getElementById("tab-" + name).classList.add("active");
+    if (name === "history") loadPurchases();
+  }
+
+  // ── Alert ──────────────────────────────────────────────────
+  function showAlert(message, type) {
+    const box = document.getElementById("globalAlert");
+    box.textContent = message;
+    box.className = "alert-box " + type;
+    box.style.display = "block";
+    setTimeout(() => { box.style.display = "none"; }, 5000);
+  }
+
+  function formatDate(d) {
+    if (!d) return "-";
+    const dt = new Date(d);
+    return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
+  }
+
+  // ── New Purchase: product rows ────────────────────────────
+  function buildProductOptions(selectedId) {
+    let html = '<option value="">Select product...</option>';
+    productsCache.forEach(p => {
+      const sel = String(p.product_id) === String(selectedId) ? "selected" : "";
+      html += `<option value="${p.product_id}" ${sel}>${p.name}</option>`;
+    });
+    return html;
+  }
+
+  function addNewProductRow(productId="", qty=1) {
+    const container = document.getElementById("newProductRows");
+    const row = document.createElement("div");
+    row.className = "product-row";
+    row.innerHTML = `
+      <select class="form-control prod-select">${buildProductOptions(productId)}</select>
+      <input type="number" class="form-control prod-qty" value="${qty}" min="1" placeholder="Qty">
+      <button type="button" class="remove-btn" onclick="this.parentElement.remove()">
+        <i class="fa fa-times"></i>
+      </button>`;
+    container.appendChild(row);
+  }
+
+  // ── Receive: load items for selected purchase ─────────────
+  async function loadReceiveItems() {
+    const purchId = document.getElementById("receivePurchId").value;
+    const section = document.getElementById("receiveItems");
+    const rows    = document.getElementById("receiveRows");
+
+    if (!purchId) { section.style.display = "none"; return; }
+
+    try {
+      const res  = await fetch(`${API}/${purchId}/products`);
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message);
+
+      const containerOpts = containersCache.map(c =>
+        `<option value="${c.container_id}">${c.container_name}</option>`
+      ).join("");
+
+      rows.innerHTML = data.products.map(p => `
+        <div class="receive-row" data-product-id="${p.product_id}">
+          <div class="prod-info">
+            ${p.product_name}
+            <span>Purchased qty: ${p.qty}</span>
+          </div>
+          <div class="receive-cols">
+            <select class="form-control recv-container">
+              <option value="">Select container...</option>
+              ${containerOpts}
+            </select>
+            <input type="number" class="form-control recv-qty" value="${p.qty}" min="1" placeholder="Qty">
+          </div>
+        </div>
+      `).join("");
+
+      section.style.display = "block";
+
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to load purchase products.", "error");
+    }
+  }
+
+  async function submitReceive() {
+    const purchId = document.getElementById("receivePurchId").value;
+    const receiveRows = document.querySelectorAll(".receive-row");
+
+    const items = [];
+    let valid = true;
+
+    receiveRows.forEach(row => {
+      const product_id   = row.dataset.productId;
+      const container_id = row.querySelector(".recv-container").value;
+      const qty          = parseInt(row.querySelector(".recv-qty").value, 10);
+
+      if (!container_id || !qty || qty < 1) { valid = false; return; }
+      items.push({ product_id, container_id, qty });
+    });
+
+    if (!valid || items.length === 0) {
+      showAlert("Please assign a container and quantity for every product.", "error");
+      return;
+    }
+
+    try {
+      const res  = await fetch(`${API}/${purchId}/receive`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ items })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        showAlert(data.message || "Failed to update inventory.", "error");
+        return;
+      }
+
+      showAlert(data.message || "Products added to inventory successfully.", "success");
+      document.getElementById("receivePurchId").value = "";
+      document.getElementById("receiveItems").style.display = "none";
+      document.getElementById("receiveRows").innerHTML = "";
+
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  }
+
+  // ── Purchase History ──────────────────────────────────────
+  async function loadPurchases() {
+    const tbody = document.getElementById("purchaseTableBody");
+    try {
+      const res  = await fetch(API);
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message);
+
+      purchasesCache = data.purchases || [];
+
+      if (purchasesCache.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5">No purchases yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = purchasesCache.map(p => {
+        const tags = p.products.map(pr =>
+          `<span class="product-tag">${pr.product_name} x${pr.qty}</span>`
+        ).join("") || "-";
+        return `
+          <tr>
+            <td>${p.purchase_id}</td>
+            <td>${formatDate(p.purchase_date)}</td>
+            <td>${p.worker_name || "-"}</td>
+            <td>${p.vendor_name || "-"}</td>
+            <td>${tags}</td>
+          </tr>`;
+      }).join("");
+
+      // Also update receive dropdown
+      const sel = document.getElementById("receivePurchId");
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">-- Select a purchase to receive --</option>' +
+        purchasesCache.map(p =>
+          `<option value="${p.purchase_id}" ${String(p.purchase_id)===cur?"selected":""}>
+            #${p.purchase_id} — ${p.vendor_name} (${formatDate(p.purchase_date)})
+          </option>`
+        ).join("");
+
+    } catch (err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="5">Failed to load purchases. Please refresh.</td></tr>';
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────
+  async function init() {
+    try {
+      // Load form-data (workers, vendors, products)
+      const fdRes  = await fetch(`${API}/form-data`);
+      const fdData = await fdRes.json();
+      if (!fdRes.ok || !fdData.success) throw new Error(fdData.message);
+
+      productsCache = fdData.products || [];
+
+      fdData.workers.forEach(w => {
+        document.getElementById("workerId").innerHTML +=
+          `<option value="${w.worker_id}">${w.name}</option>`;
+      });
+      fdData.vendors.forEach(v => {
+        document.getElementById("vendorId").innerHTML +=
+          `<option value="${v.vendor_id}">${v.name}</option>`;
+      });
+
+      // Load containers
+      const cRes  = await fetch(`${API}/containers`);
+      const cData = await cRes.json();
+      if (cRes.ok && cData.success) containersCache = cData.containers || [];
+
+      // Add first empty product row
+      addNewProductRow();
+
+      // Load purchases (for history tab + receive dropdown)
+      await loadPurchases();
+
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to load page data. Please refresh.", "error");
+    }
+  }
+
+  // ── New Purchase form submit ──────────────────────────────
+  document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const worker_id = document.getElementById("workerId").value;
+    const vendor_id = document.getElementById("vendorId").value;
+
+    const productRows = document.querySelectorAll("#newProductRows .product-row");
+    const products = [];
+    let valid = true;
+
+    productRows.forEach(row => {
+      const product_id = row.querySelector(".prod-select").value;
+      const qty        = parseInt(row.querySelector(".prod-qty").value, 10);
+      if (!product_id || !qty || qty < 1) { valid = false; return; }
+      products.push({ product_id, qty });
+    });
+
+    if (!worker_id || !vendor_id) { showAlert("Please select a worker and vendor.", "error"); return; }
+    if (!valid || products.length === 0) { showAlert("Please add at least one product with a valid quantity.", "error"); return; }
+
+    try {
+      const res  = await fetch(API, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ worker_id, vendor_id, products })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to create purchase.", "error"); return; }
+
+      showAlert(data.message || "Purchase created successfully.", "success");
+      document.getElementById("purchaseForm").reset();
+      document.getElementById("newProductRows").innerHTML = "";
+      addNewProductRow();
+      await loadPurchases();
+
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

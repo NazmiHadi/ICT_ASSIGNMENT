@@ -1,0 +1,255 @@
+<script>
+const role = localStorage.getItem("role");
+if (role !== "vendor") { window.location.href = "../login.html"; }
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
+  <title>KURMA AJWA ENTERPRISE | Vendor Portal</title>
+  <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
+  <style>
+    :root { --bg:#FAF7F2; --sidebar:#1E2B3A; --sidebar-hover:#2A3C50; --accent:#1C6EA4; --accent-soft:#DAE9F5; --ink:#1A2634; --ink-soft:#6B7F90; --line:#DDE6EE; --card:#FFFFFF; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:'Poppins',sans-serif; background:var(--bg); color:var(--ink); }
+    .shell { display:flex; min-height:100vh; }
+    .sidebar { width:260px; flex-shrink:0; background:var(--sidebar); color:#C8D8E4; display:flex; flex-direction:column; padding:28px 0; position:sticky; top:0; height:100vh; overflow-y:auto; }
+    .sidebar-brand { padding:0 28px 28px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:20px; }
+    .sidebar-brand .mark { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#7BAFC8; margin:0 0 4px; }
+    .sidebar-brand h2 { font-size:20px; font-weight:700; margin:0; line-height:1.3; color:#EAF2F8; }
+    .sidebar-brand h2 em { font-style:normal; color:#4DAADC; }
+    .sidebar-brand .vendor-name { font-size:13px; color:#7BAFC8; margin:8px 0 0; font-weight:400; }
+    .sidebar-nav { list-style:none; margin:0; padding:0; flex:1; }
+    .sidebar-nav .nav-group-label { padding:16px 28px 6px; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#5A7A8E; font-weight:600; }
+    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#A8C4D4; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; }
+    .sidebar-nav li a i { width:18px; text-align:center; font-size:14px; }
+    .sidebar-nav li a:hover { background:var(--sidebar-hover); color:#fff; }
+    .sidebar-nav li a.active { background:var(--sidebar-hover); color:#fff; border-left-color:#4DAADC; }
+    .sidebar-footer { padding:0 28px; margin-top:12px; }
+    .sidebar-footer a { display:flex; align-items:center; gap:10px; color:#A8C4D4; text-decoration:none; font-size:14px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
+    .sidebar-footer a:hover { color:#fff; }
+    .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
+    .page-head { margin-bottom:32px; }
+    .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
+    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
+    .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+    .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-bottom:28px; }
+    .stat-card { background:var(--card); border-radius:10px; padding:20px 24px; box-shadow:0 1px 3px rgba(30,43,58,0.07); border-left:4px solid var(--accent); }
+    .stat-card .stat-label { font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--ink-soft); font-weight:600; margin:0 0 6px; }
+    .stat-card .stat-value { font-size:26px; font-weight:700; color:var(--ink); margin:0; }
+    .stat-card .stat-sub { font-size:12px; color:var(--ink-soft); margin:4px 0 0; }
+    .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(30,43,58,0.07); margin-bottom:24px; }
+    .panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+    .panel-header h3 { font-size:16px; font-weight:600; margin:0; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .info-item { padding:14px 16px; background:#F4F8FB; border-radius:8px; }
+    .info-item .info-label { font-size:11px; letter-spacing:.8px; text-transform:uppercase; color:var(--ink-soft); font-weight:600; margin:0 0 5px; }
+    .info-item .info-value { font-size:14.5px; font-weight:500; color:var(--ink); margin:0; }
+    .table-wrapper { overflow-x:auto; }
+    table.purchase-table { width:100%; border-collapse:collapse; }
+    table.purchase-table th, table.purchase-table td { padding:11px 13px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
+    table.purchase-table th { background:#F4F8FB; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.purchase-table tbody tr:hover { background:#F4F8FB; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+    .badge-paid    { background:#E8F5EA; color:#1C7A3D; }
+    .badge-pending { background:#FBF1DC; color:#91701C; }
+    .badge-partial { background:#EAF0FF; color:#1C47A8; }
+    .empty-state { text-align:center; padding:48px 20px; color:var(--ink-soft); }
+    .empty-state i { font-size:36px; opacity:.3; display:block; margin-bottom:12px; }
+    @media (max-width:860px) {
+      .shell { flex-direction:column; }
+      .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
+      .sidebar-brand { display:none; }
+      .sidebar-nav { display:flex; flex:none; }
+      .sidebar-nav .nav-group-label { display:none; }
+      .sidebar-nav li a { padding:8px 16px; border-left:none; border-bottom:3px solid transparent; white-space:nowrap; }
+      .sidebar-nav li a.active { border-left:none; border-bottom-color:#4DAADC; }
+      .sidebar-footer { display:none; }
+      .main { padding:28px 20px 40px; }
+      .info-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <p class="mark">Vendor Portal</p>
+      <h2>KURMA <em>AJWA</em></h2>
+      <p class="vendor-name" id="sidebarVendorName">Loading…</p>
+    </div>
+    <ul class="sidebar-nav">
+      <li><a href="vendor-dashboard" class="active"><i class="fa fa-th-large"></i> Dashboard</a></li>
+      <li class="nav-group-label">My Account</li>
+      <li><a href="#" onclick="scrollTo(0,0)"><i class="fa fa-building"></i> Company Info</a></li>
+      <li><a href="#purchasesPanel"><i class="fa fa-shopping-cart"></i> Purchase Orders</a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <a href="#" onclick="logout()"><i class="fa fa-sign-out"></i> Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <p class="eyebrow">Vendor Portal</p>
+      <h1 id="pageTitle">Vendor Dashboard</h1>
+      <p>View your company details and purchase order history.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <p class="stat-label">Total Orders</p>
+        <p class="stat-value" id="statOrders">—</p>
+        <p class="stat-sub">All time purchases</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Total Value</p>
+        <p class="stat-value" id="statValue">—</p>
+        <p class="stat-sub">RM purchased from you</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Vendor ID</p>
+        <p class="stat-value" id="statId">—</p>
+        <p class="stat-sub">Your account ID</p>
+      </div>
+    </div>
+
+    <!-- Company Info -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Company Information</h3>
+      </div>
+      <div class="info-grid" id="vendorInfoGrid">
+        <div class="info-item"><p class="info-label">Company Name</p><p class="info-value" id="infoName">Loading…</p></div>
+        <div class="info-item"><p class="info-label">Vendor ID</p><p class="info-value" id="infoId">—</p></div>
+        <div class="info-item"><p class="info-label">Phone Number</p><p class="info-value" id="infoPhone">—</p></div>
+        <div class="info-item"><p class="info-label">Address</p><p class="info-value" id="infoAddress">—</p></div>
+      </div>
+    </div>
+
+    <!-- Purchase Orders -->
+    <div class="panel" id="purchasesPanel">
+      <div class="panel-header">
+        <h3>Purchase Orders</h3>
+      </div>
+      <div class="table-wrapper">
+        <table class="purchase-table">
+          <thead>
+            <tr>
+              <th>Purchase ID</th>
+              <th>Date</th>
+              <th>Product / Container</th>
+              <th>Qty</th>
+              <th>Total (RM)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="purchaseTableBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--ink-soft);padding:32px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // ── Load vendor data from localStorage (set by authRoutes on login) ──
+  const vendorData = JSON.parse(localStorage.getItem("vendor") || "null");
+
+  async function init() {
+    if (!vendorData) {
+      showError("No vendor session found. Please log in again.");
+      return;
+    }
+
+    const { vendor_id, name } = vendorData;
+
+    // Update sidebar + page header
+    document.getElementById("sidebarVendorName").textContent = name || "Vendor";
+    document.getElementById("pageTitle").textContent = name || "Vendor Dashboard";
+    document.getElementById("statId").textContent = vendor_id;
+
+    // Load vendor profile
+    try {
+      const res  = await fetch("/api/vendors");
+      const data = await res.json();
+      if (data.success) {
+        const me = data.vendors.find(v => v.vendor_id == vendor_id);
+        if (me) {
+          document.getElementById("infoName").textContent    = me.name    || "—";
+          document.getElementById("infoId").textContent      = me.vendor_id;
+          document.getElementById("infoPhone").textContent   = me.phone   || "—";
+          document.getElementById("infoAddress").textContent = me.address || "—";
+        }
+      }
+    } catch (_) {}
+
+    // Load purchases
+    await loadPurchases(vendor_id);
+  }
+
+  async function loadPurchases(vendorId) {
+    try {
+      const res  = await fetch(`/api/purchases?vendor_id=${vendorId}`);
+      const data = await res.json();
+      const purchases = data.purchases || data.data || [];
+
+      document.getElementById("statOrders").textContent = purchases.length;
+
+      const total = purchases.reduce((sum, p) => sum + (parseFloat(p.total_price || p.total || 0)), 0);
+      document.getElementById("statValue").textContent = purchases.length ? "RM " + total.toFixed(2) : "—";
+
+      renderPurchases(purchases);
+    } catch (err) {
+      renderPurchases([]);
+    }
+  }
+
+  function renderPurchases(purchases) {
+    const tbody = document.getElementById("purchaseTableBody");
+    if (!purchases.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa fa-shopping-cart"></i>No purchase orders found.</div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = purchases.map(p => {
+      const status = (p.status || "").toLowerCase();
+      const badgeClass = status === "paid" ? "badge-paid" : status === "partial" ? "badge-partial" : "badge-pending";
+      const label = p.status || "Pending";
+      const total = parseFloat(p.total_price || p.total || 0);
+      const date  = p.purchase_date || p.date || "—";
+      const item  = escHtml(p.product_name || p.container_name || p.item || "—");
+      return `
+        <tr>
+          <td>#${p.purchase_id || p.id}</td>
+          <td>${escHtml(String(date))}</td>
+          <td>${item}</td>
+          <td>${p.quantity || p.qty || "—"}</td>
+          <td>RM ${total.toFixed(2)}</td>
+          <td><span class="badge ${badgeClass}">${escHtml(label)}</span></td>
+        </tr>`;
+    }).join("");
+  }
+
+  function showError(msg) {
+    document.getElementById("purchaseTableBody").innerHTML =
+      `<tr><td colspan="6" style="text-align:center;color:#A8333D;padding:32px;">${msg}</td></tr>`;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function logout() {
+    localStorage.removeItem("role");
+    localStorage.removeItem("vendor");
+    window.location.href = "../login.html";
+  }
+
+  init();
+</script>
+</body>
+</html>

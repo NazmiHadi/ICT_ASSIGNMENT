@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Your Cart - Kurma Ajwa</title>
+
+  <!-- Same stylesheets as products.html, so the page matches the rest of the site -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
+
+</head>
+
+<body>
+
+  <!-- Preloader spinner shown while the page is loading -->
+  <div id="preloader">
+    <div class="jumper"><div></div><div></div><div></div></div>
+  </div>
+
+  <!-- ── Navigation bar ──────────────────────────────────────────────────
+       Identical to products.html except the Cart <li> has class="active"
+       to highlight it as the current page. -->
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/customer/home" style="display: flex; align-items: center; gap: 15px;">
+          <img src="/customer/assets/images/logo_kurma_ajwa.png" alt="Kurma Ajwa Logo" style="height: 45px; width: auto; object-fit: contain;">
+          <h2>KURMA <em>AJWA</em></h2>
+          </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
+            <li class="nav-item active">
+              <a class="nav-link" href="/customer/cart" style="position: relative;">
+                <i class="fa fa-shopping-cart"></i> Cart
+                <span id="cartBadge"
+                      style="display:none; position:absolute; top:-5px; right:-10px;
+                             background:#e74c3c; color:#fff; border-radius:50%;
+                             padding:2px 6px; font-size:11px;">0</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/customer/profile">My Profile</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="logout()">Logout</a>
+              <script>
+                function logout() {
+                  localStorage.removeItem('token');
+                  localStorage.removeItem('customer_id');
+                  window.location.href = "/";
+                }
+              </script>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page banner / hero section -->
+  <div class="page-heading products-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Review</h4>
+            <h2>Your Cart</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Cart section ─────────────────────────────────────────────────── -->
+  <div class="products">
+    <div class="container">
+
+      <div class="row">
+
+        <!-- ── Left column: list of cart items ───────────────────────────
+             #cartItemsContainer starts empty. renderCart() (below) reads
+             the cart from localStorage via getCart() and fills this div
+             with one row per item, cloned from #cartItemTemplate. -->
+        <div class="col-md-8">
+          <div id="cartItemsContainer">
+
+            <!-- Shown only when the cart array is empty.
+                 renderCart() toggles this with display:block / none. -->
+            <p id="emptyCartMsg" style="display:none;">
+              Your cart is empty. <a href="/customer/products">Browse products</a>
+            </p>
+
+            <!-- Cart item rows get inserted here by renderCart() -->
+          </div>
+        </div>
+
+        <!-- ── Right column: order summary box ──────────────────────────
+             These spans (#cartSubtotal, #cartItemCount, #cartTotal) are
+             filled in by updateSummary(), which is called every time
+             renderCart() runs (so it stays in sync with qty changes). -->
+        <div class="col-md-4">
+          <div class="cart-summary" style="border:1px solid #eee; padding:20px; border-radius:6px;">
+            <h4>Order Summary</h4>
+            <hr>
+
+            <div style="display:flex; justify-content:space-between;">
+              <span>Subtotal</span>
+              <span id="cartSubtotal">$0.00</span>
+            </div>
+
+            <div style="display:flex; justify-content:space-between;">
+              <span>Total Items</span>
+              <span id="cartItemCount">0</span>
+            </div>
+
+            <hr>
+
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1em;">
+              <span>Total</span>
+              <span id="cartTotal">$0.00</span>
+            </div>
+
+            <!-- Takes the user to purchase.html (only enabled if cart isn't empty) -->
+            <button class="btn btn-primary btn-block mt-3" id="proceedBtn" onclick="proceedToPurchase()">
+              Proceed to Checkout
+            </button>
+
+            <a href="/customer/products" class="btn btn-outline-secondary btn-block mt-2">Continue Shopping</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Cart item row template ────────────────────────────────────────
+       A <template> tag is never shown on the page by itself - browsers
+       skip rendering its contents. Instead, JS calls
+       template.content.cloneNode(true) to make a *copy* of this markup
+       for each item in the cart, fills in the real data, then appends
+       the copy into #cartItemsContainer.
+
+       This avoids building one giant HTML string with template literals
+       (like loadProducts() does in products.html) - instead we clone
+       real DOM nodes and just set their text/attributes, which makes it
+       easier to attach event listeners (qty buttons, remove button) to
+       each row individually. -->
+  <template id="cartItemTemplate">
+    <div class="row cart-item align-items-center" style="border-bottom:1px solid #eee; padding:15px 0;">
+
+      <!-- Product image -->
+      <div class="col-3 col-md-2">
+        <img class="cart-item-img" src="" alt="" style="width:100%; max-width:80px; border-radius:4px;">
+      </div>
+
+      <!-- Name + unit price -->
+      <div class="col-9 col-md-4">
+        <h6 class="cart-item-name"></h6>
+        <span class="cart-item-price text-muted"></span>
+      </div>
+
+      <!-- Quantity controls: -, input, + -->
+      <div class="col-6 col-md-3">
+        <div class="d-flex align-items-center">
+          <button class="btn btn-sm btn-outline-secondary qty-decrease">-</button>
+          <input type="number" class="form-control form-control-sm cart-item-qty mx-2"
+                 style="width:60px; text-align:center;" min="1" value="1">
+          <button class="btn btn-sm btn-outline-secondary qty-increase">+</button>
+        </div>
+      </div>
+
+      <!-- Line total = price * qty for this item -->
+      <div class="col-4 col-md-2 text-right">
+        <strong class="cart-item-line-total"></strong>
+      </div>
+
+      <!-- Remove button (trash icon) -->
+      <div class="col-2 col-md-1 text-right">
+        <button class="btn btn-sm btn-link text-danger cart-item-remove">
+          <i class="fa fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </template>
+
+  <!-- JS libraries -->
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- cart.js gives us getCart(), saveCart(), updateQty(), removeFromCart(),
+       updateCartBadge(), etc. - all the cart logic lives there so both
+       cart.html and purchase.html (and products.html) can share it. -->
+  <script src="/customer/assets/js/cart.js"></script>
+
+
+  <!-- ── Page-specific script: render + manage the cart UI ────────────── -->
+  <script>
+
+    // ── renderCart(): draw the cart items + summary ─────────────────────
+    // Called once on page load, and again every time the cart changes
+    // (qty +/-, remove, etc.) so the page always reflects localStorage.
+    function renderCart() {
+
+      // getCart() comes from cart.js - reads + parses localStorage["cart"]
+      const cart = getCart();
+
+      const container  = document.getElementById("cartItemsContainer");
+      const emptyMsg   = document.getElementById("emptyCartMsg");
+      const template   = document.getElementById("cartItemTemplate");
+      const proceedBtn = document.getElementById("proceedBtn");
+
+      // Remove any previously-rendered item rows before re-rendering.
+      // We only remove elements with class "cart-item" so we don't
+      // accidentally delete #emptyCartMsg or the <template> itself.
+      container.querySelectorAll(".cart-item").forEach(el => el.remove());
+
+      // ── Empty cart case ────────────────────────────────────────────
+      if (!cart.length) {
+        emptyMsg.style.display = "block";   // show "your cart is empty"
+        proceedBtn.disabled = true;         // can't checkout an empty cart
+        updateSummary(cart);                // still update totals to $0.00
+        return;
+      }
+
+      // ── Cart has items ─────────────────────────────────────────────
+      emptyMsg.style.display = "none";
+      proceedBtn.disabled = false;
+
+      // Loop through every item currently in the cart array
+      cart.forEach(item => {
+
+        // Make a fresh copy of the <template> markup for this item
+        const node = template.content.cloneNode(true);
+
+        // Fill in the image — use the real uploaded path (image_url) stored
+        // on the cart item, with a placeholder fallback for products that
+        // don't have a picture (or were added to the cart before this fix).
+        const img = node.querySelector(".cart-item-img");
+        img.src = item.image_url || "/customer/assets/images/product-placeholder.png";
+        img.alt = item.name;
+
+        // Fill in name + per-unit price
+        node.querySelector(".cart-item-name").textContent = item.name;
+        node.querySelector(".cart-item-price").textContent = `$${item.price.toFixed(2)} each`;
+
+        // Set the quantity input to the item's current qty
+        const qtyInput = node.querySelector(".cart-item-qty");
+        qtyInput.value = item.qty;
+
+        // Line total = unit price * qty
+        const lineTotal = node.querySelector(".cart-item-line-total");
+        lineTotal.textContent = `$${(item.price * item.qty).toFixed(2)}`;
+
+        // ── "-" button: decrease qty by 1 ───────────────────────────
+        // updateQty() (in cart.js) will auto-remove the item if qty <= 0
+        node.querySelector(".qty-decrease").addEventListener("click", () => {
+          updateQty(item.product_id, item.qty - 1);
+          renderCart(); // re-draw everything with the new cart state
+        });
+
+        // ── "+" button: increase qty by 1 ───────────────────────────
+        node.querySelector(".qty-increase").addEventListener("click", () => {
+          updateQty(item.product_id, item.qty + 1);
+          renderCart();
+        });
+
+        // ── Manual qty input: user types a number directly ──────────
+        qtyInput.addEventListener("change", (e) => {
+          // parseInt with fallback to 1 in case the field is cleared/invalid
+          const newQty = parseInt(e.target.value, 10) || 1;
+          updateQty(item.product_id, newQty);
+          renderCart();
+        });
+
+        // ── Remove button: delete this item from the cart entirely ──
+        node.querySelector(".cart-item-remove").addEventListener("click", () => {
+          removeFromCart(item.product_id);
+          renderCart();
+        });
+
+        // Add this fully-built row into the page
+        container.appendChild(node);
+      });
+
+      // Recalculate + display subtotal/total/count based on current cart
+      updateSummary(cart);
+    }
+
+
+    // ── updateSummary(): fill in the right-hand totals box ──────────────
+    // Takes the cart array (already fetched by renderCart) so we don't
+    // call getCart() twice.
+    function updateSummary(cart) {
+      const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+
+      document.getElementById("cartSubtotal").textContent  = `$${total.toFixed(2)}`;
+      document.getElementById("cartItemCount").textContent = count;
+      document.getElementById("cartTotal").textContent     = `$${total.toFixed(2)}`;
+    }
+
+
+    // ── proceedToPurchase(): "Proceed to Checkout" button handler ───────
+    // Just navigates to purchase.html - purchase.html will read the same
+    // cart from localStorage, so nothing needs to be passed along here.
+    function proceedToPurchase() {
+      const cart = getCart();
+      if (!cart.length) {
+        alert("Your cart is empty.");
+        return;
+      }
+      window.location.href = "/customer/purchase";
+    }
+
+
+    // ── Run on page load ──────────────────────────────────────────────
+    // renderCart() builds the initial view from whatever is in localStorage
+    document.addEventListener("DOMContentLoaded", renderCart);
+
+  </script>
+
+</body>
+</html>
