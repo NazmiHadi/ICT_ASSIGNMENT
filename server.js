@@ -27,6 +27,7 @@ app.use("/customer/assets", express.static(path.join(__dirname, "customer", "ass
 app.use("/customer/vendor", express.static(path.join(__dirname, "customer", "vendor")));
 app.use("/admin/assets",    express.static(path.join(__dirname, "admin", "assets")));
 app.use("/admin/vendor",    express.static(path.join(__dirname, "admin", "vendor")));
+app.use("/uploads/products", express.static(path.join(__dirname, "uploads/products")));
 
 // ── API routes ───────────────────────────────────────────────
 app.use("/api", authRoutes);

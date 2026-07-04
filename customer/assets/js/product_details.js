@@ -63,7 +63,7 @@ async function loadProductDetails() {
   // null, so fall back to a placeholder graphic instead of requesting a
   // file that doesn't exist.
   const imgEl = document.getElementById("detail-image");
-  imgEl.src   = product.image_url || "/assets/images/product-placeholder.png";
+  imgEl.src   = product.image_url || "/customer/assets/images/product-placeholder.png"; // keep a placeholder here even though real photos now live in /uploads/products
   imgEl.alt   = product.name;
 
   const stockBadge = document.getElementById("detail-stock-badge");

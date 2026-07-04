@@ -179,8 +179,6 @@
     <script>
 
       // ── logout() ────────────────────────────────────────────────────────
-      // Called when the user clicks "Logout" in the nav.
-      // Clears localStorage and sends the user back to the login page.
       function logout() {
         localStorage.removeItem("role");       // remove saved role (admin/customer)
         localStorage.removeItem("customer");   // remove saved customer info
@@ -191,50 +189,43 @@
       // ── loadLatestProducts() ─────────────────────────────────────────────
       // Fetches products from GET /api/products (which reads from Oracle),
       // then renders only the first 3 as preview cards on the home page.
-      //
-      // This replaces the 5 hard-coded cards that were in the original home.html.
-      // Now if you add or update a product in Oracle, the home page automatically
-      // reflects the change — no need to edit HTML manually.
       async function loadLatestProducts() {
 
         try {
-          // Call our Node.js API endpoint (defined in server.js)
           const response = await fetch("/api/products");
           const data     = await response.json();
 
-          // If the API returned an error or no products, show a message
           if (!data.success || !data.products.length) {
             document.getElementById("homeLoadingMsg").textContent = "No products found.";
             return;
           }
 
-          // Find the grid container where we'll inject the cards
           const grid = document.getElementById("latestProductsGrid");
-
-          // Clear the loading placeholder text
           grid.innerHTML = "";
 
-          // Show only the first 3 products on the home page (preview)
-          // The full list is on /products
           const previewProducts = data.products.slice(0, 3);
 
-          // Build an HTML card for each product
           previewProducts.forEach(product => {
 
-            // Build star rating HTML — 5 stars for all products on home page
-            // (same as the original hard-coded cards)
             const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
 
-            // Template literal: builds the HTML string with product values inserted
+            // Image now comes from the API's image_url (the real uploaded
+            // file under /uploads/products/...). Falls back to a generic
+            // placeholder graphic if this product has no picture yet —
+            // previously this guessed a path under /customer/assets/images/
+            // using product.image, which broke for anything not manually
+            // placed there.
+            const imgSrc = product.image_url || "/customer/assets/images/product-placeholder.png";
+
             const cardHTML = `
               <div class="col-md-4">
                 <div class="product-item">
                   <a href="/customer/products">
-                    <img src="/customer/assets/images/${product.image}" alt="${product.name}">
+                    <img src="${imgSrc}" alt="${product.name}">
                   </a>
                   <div class="down-content">
                     <a href="/customer/products"><h4>${product.name}</h4></a>
-                    <h6>$${product.price.toFixed(2)}</h6>
+                    <h6>$${(product.price ?? 0).toFixed(2)}</h6>
                     <p>${product.description}</p>
                     <ul class="stars">${stars}</ul>
                   </div>
@@ -242,12 +233,10 @@
               </div>
             `;
 
-            // Insert the card HTML into the grid without re-parsing existing content
             grid.insertAdjacentHTML("beforeend", cardHTML);
           });
 
         } catch (err) {
-          // Show an error if the fetch failed (server not running, network issue, etc.)
           document.getElementById("homeLoadingMsg").textContent =
             "Failed to load products. Is the server running?";
           console.error("Home products fetch error:", err);
@@ -255,9 +244,6 @@
       }
 
 
-      // ── Run when the page DOM is ready ───────────────────────────────────
-      // DOMContentLoaded fires once the HTML is parsed (before images finish loading).
-      // We use this instead of window.onload so the fetch starts as early as possible.
       document.addEventListener("DOMContentLoaded", loadLatestProducts);
 
     </script>

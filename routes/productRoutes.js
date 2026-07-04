@@ -59,11 +59,13 @@ router.get("/products", async (req, res) => {
       `SELECT p.ProdID, p.ProdName, p.ProdDesc, p.Price, p.SalesPrice, p.ProdType,
               p.ImageFileName,
               c.ContID, c.ContName,
-              i.Qty
-       FROM PRODUCTS p
-       LEFT JOIN CONTAINERS c ON p.ContID = c.ContID
-       LEFT JOIN INVENTORY i ON i.ProdID = p.ProdID AND i.ContID = c.ContID
-       ORDER BY p.ProdID`
+              NVL(SUM(i.Qty), 0) AS Qty
+        FROM PRODUCTS p
+        LEFT JOIN CONTAINERS c ON p.ContID = c.ContID
+        LEFT JOIN INVENTORY i ON i.ProdID = p.ProdID
+        GROUP BY p.ProdID, p.ProdName, p.ProdDesc, p.Price, p.SalesPrice, p.ProdType,
+                p.ImageFileName, c.ContID, c.ContName
+        ORDER BY p.ProdID`
     );
 
     const products = result.rows.map(row => ({
