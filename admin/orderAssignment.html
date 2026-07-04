@@ -58,9 +58,12 @@
     .empty-state { text-align:center; padding:40px 20px; color:var(--ink-soft); }
     .empty-state i { font-size:32px; margin-bottom:12px; display:block; color:var(--line); }
 
-    /* ── Notification badges ────────────────────────────────────
+    /* ── Notification badges (page heading only) ────────────────
        Red  = not shipped yet (OrderStatus = 'Processing')
-       Yellow = shipped but not delivered yet (OrderStatus = 'In Delivery') */
+       Yellow = shipped but not delivered yet (OrderStatus = 'In Delivery')
+       The matching sidebar-nav badges are rendered separately by
+       page-guard.js (badge-orderAssignment / badge-orderAssignment-2) —
+       this page does NOT touch the sidebar to avoid double badges. */
     .nav-badge {
       display:inline-flex; align-items:center; justify-content:center;
       min-width:20px; height:20px; padding:0 6px; border-radius:10px;
@@ -68,7 +71,6 @@
     }
     .nav-badge.badge-red    { background:var(--accent); }
     .nav-badge.badge-yellow { background:#C79A1E; }
-    .sidebar-nav li a .nav-badge { margin-left:auto; }
 
     @media (max-width:860px) {
       .shell { flex-direction:column; }
@@ -225,11 +227,12 @@
     }
   }
 
-  // ── Notification badges ────────────────────────────────────────────────
+  // ── Notification badges (page heading only) ────────────────────────────
   // Red    = orders still "Processing" (not shipped yet)
   // Yellow = orders "In Delivery" (shipped, not delivered yet)
-  // Shown next to the page heading, and mirrored onto the active sidebar
-  // nav link (same pattern as the unassigned-count badge on Manage Orders).
+  // NOTE: the sidebar nav badge for "My Assigned Orders" is handled by
+  // page-guard.js's loadNavBadges() (badge-orderAssignment / -2). Don't
+  // also inject sidebar badges here — doing so double-counts them.
   async function loadPendingCounts() {
     const workerId = localStorage.getItem("userId");
     if (!workerId) return;
@@ -239,15 +242,14 @@
       const data = await res.json();
       if (!res.ok || !data.success) return;
 
-      renderBadge("badgeNotShipped",   data.not_shipped_count,   "badge-red");
-      renderBadge("badgeNotDelivered", data.not_delivered_count, "badge-yellow");
-      updateSidebarBadges(data.not_shipped_count, data.not_delivered_count);
+      renderBadge("badgeNotShipped",   data.not_shipped_count);
+      renderBadge("badgeNotDelivered", data.not_delivered_count);
     } catch (err) {
       console.error(err);
     }
   }
 
-  function renderBadge(elId, count, cls) {
+  function renderBadge(elId, count) {
     const el = document.getElementById(elId);
     if (!el) return;
     if (count > 0) {
@@ -255,30 +257,6 @@
       el.style.display = "inline-flex";
     } else {
       el.style.display = "none";
-    }
-  }
-
-  // Drops the same two badges onto whichever sidebar link is marked
-  // "active" for this page (role-config.js / page-guard.js build the nav
-  // and apply that class). If your nav marks the active link asynchronously
-  // after this script runs, call updateSidebarBadges() again once that's done.
-  function updateSidebarBadges(notShipped, notDelivered) {
-    const link = document.querySelector(".sidebar-nav li a.active");
-    if (!link) return;
-
-    link.querySelectorAll(".nav-badge").forEach(b => b.remove());
-
-    if (notShipped > 0) {
-      const r = document.createElement("span");
-      r.className = "nav-badge badge-red";
-      r.textContent = notShipped;
-      link.appendChild(r);
-    }
-    if (notDelivered > 0) {
-      const y = document.createElement("span");
-      y.className = "nav-badge badge-yellow";
-      y.textContent = notDelivered;
-      link.appendChild(y);
     }
   }
 
