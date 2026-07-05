@@ -4,25 +4,37 @@ const router  = express.Router();
 const { getConnection } = require("../config/db");
 
 // ── GET /api/inventory ───────────────────────────────────────────
-// Returns all inventory rows with product and container names joined in.
+// Returns all inventory rows with product, container, and — where
+// applicable — the purchase (and vendor) that batch of stock came from.
+// Rows with no PurchID were added as a manual stock adjustment rather
+// than through the Receive Purchase flow.
 router.get("/inventory", async (req, res) => {
   let conn;
   try {
     conn = await getConnection();
     const result = await conn.execute(
-      `SELECT i.ProdID, p.ProdName, i.ContID, c.ContName, i.Qty
+      `SELECT i.InvID, i.ProdID, p.ProdName, i.ContID, c.ContName, i.Qty,
+              i.PurchID, i.DateAssigned,
+              v.VendName
          FROM INVENTORY i
-         LEFT JOIN PRODUCTS   p ON i.ProdID = p.ProdID
-         LEFT JOIN CONTAINERS c ON i.ContID = c.ContID
-        ORDER BY p.ProdName, c.ContName`
+         LEFT JOIN PRODUCTS   p ON i.ProdID   = p.ProdID
+         LEFT JOIN CONTAINERS c ON i.ContID   = c.ContID
+         LEFT JOIN PURCHASE   pu ON i.PurchID = pu.PurchID
+         LEFT JOIN VENDORS    v ON pu.VendID  = v.VendID
+        ORDER BY p.ProdName, c.ContName, i.DateAssigned`
     );
 
     const inventory = result.rows.map(row => ({
+      inv_id:         row.INVID,
       product_id:     row.PRODID,
       product_name:   row.PRODNAME,
       container_id:   row.CONTID,
       container_name: row.CONTNAME,
-      qty:            row.QTY
+      qty:            row.QTY,
+      purchase_id:    row.PURCHID,
+      vendor_name:    row.VENDNAME,
+      date_assigned:  row.DATEASSIGNED,
+      source:         row.PURCHID ? `Purchase #${row.PURCHID}` : "Manual adjustment"
     }));
 
     return res.json({ success: true, inventory });
@@ -36,8 +48,10 @@ router.get("/inventory", async (req, res) => {
 
 // ── POST /api/inventory ──────────────────────────────────────────
 // Body: { product_id, container_id, qty }
-// INVENTORY has a composite primary key (ProdID, ContID), so this is
-// an upsert: if the combo already exists, overwrite Qty; otherwise insert.
+// Manual stock adjustment — NOT tied to any purchase (PurchID stays
+// NULL). To assign stock that came from a purchase, use
+// POST /api/purchases/:purchId/receive instead, which links the
+// resulting INVENTORY row back to that purchase.
 router.post("/inventory", async (req, res) => {
   const { product_id, container_id, qty } = req.body;
 
@@ -52,15 +66,18 @@ router.post("/inventory", async (req, res) => {
   try {
     conn = await getConnection();
 
+    // PurchID is NULL for manual rows, and Oracle's "=" doesn't match
+    // NULL to NULL, so the ON clause uses an explicit NULL check
+    // alongside the product/container match.
     await conn.execute(
       `MERGE INTO INVENTORY inv
        USING DUAL
-          ON (inv.ProdID = :product_id AND inv.ContID = :container_id)
+          ON (inv.ProdID = :product_id AND inv.ContID = :container_id AND inv.PurchID IS NULL)
         WHEN MATCHED THEN
-             UPDATE SET inv.Qty = :qty
+             UPDATE SET inv.Qty = :qty, inv.DateAssigned = SYSDATE
         WHEN NOT MATCHED THEN
-             INSERT (ProdID, ContID, Qty)
-             VALUES (:product_id, :container_id, :qty)`,
+             INSERT (ProdID, ContID, PurchID, Qty, DateAssigned)
+             VALUES (:product_id, :container_id, NULL, :qty, SYSDATE)`,
       { product_id, container_id, qty },
       { autoCommit: true }
     );

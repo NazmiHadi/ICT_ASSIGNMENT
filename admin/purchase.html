@@ -138,18 +138,20 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('new')">
+      <button class="tab-btn active" data-tab="new" id="tabBtn-new" onclick="switchTab('new')">
         <i class="fa fa-plus-circle"></i> New Purchase
       </button>
-      <button class="tab-btn" onclick="switchTab('receive')">
+      <button class="tab-btn" data-tab="receive" id="tabBtn-receive" onclick="switchTab('receive')">
         <i class="fa fa-inbox"></i> Receive Purchase
       </button>
-      <button class="tab-btn" onclick="switchTab('history')">
+      <button class="tab-btn" data-tab="history" id="tabBtn-history" onclick="switchTab('history')">
         <i class="fa fa-history"></i> Purchase History
       </button>
     </div>
 
-    <!-- Tab 1: New Purchase -->
+    <!-- Tab 1: New Purchase (creating a purchase order with a vendor —
+         a procurement decision, kept to admin/full-time only; part-time
+         workers only receive/assign stock that's already been ordered) -->
     <div id="tab-new" class="tab-panel active">
       <div class="two-col">
         <div class="panel">
@@ -264,8 +266,8 @@
 
   // ── Tab switching ──────────────────────────────────────────
   function switchTab(name) {
-    document.querySelectorAll(".tab-btn").forEach((b, i) => {
-      b.classList.toggle("active", ["new","receive","history"][i] === name);
+    document.querySelectorAll(".tab-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab === name);
     });
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
     document.getElementById("tab-" + name).classList.add("active");
@@ -327,21 +329,35 @@
         `<option value="${c.container_id}">${c.container_name}</option>`
       ).join("");
 
-      rows.innerHTML = data.products.map(p => `
+      const pending = data.products.filter(p => p.qty_remaining > 0);
+      const done    = data.products.filter(p => p.qty_remaining <= 0);
+
+      let html = pending.map(p => `
         <div class="receive-row" data-product-id="${p.product_id}">
           <div class="prod-info">
             ${p.product_name}
-            <span>Purchased qty: ${p.qty}</span>
+            <span>Purchased: ${p.qty} · Already received: ${p.qty_received} · Remaining: ${p.qty_remaining}</span>
           </div>
           <div class="receive-cols">
             <select class="form-control recv-container">
               <option value="">Select container...</option>
               ${containerOpts}
             </select>
-            <input type="number" class="form-control recv-qty" value="${p.qty}" min="1" placeholder="Qty">
+            <input type="number" class="form-control recv-qty" value="${p.qty_remaining}" min="1" max="${p.qty_remaining}" placeholder="Qty">
           </div>
         </div>
       `).join("");
+
+      html += done.map(p => `
+        <div class="receive-row" style="opacity:0.6;">
+          <div class="prod-info">
+            ${p.product_name}
+            <span>Purchased: ${p.qty} · Fully received ✓</span>
+          </div>
+        </div>
+      `).join("");
+
+      rows.innerHTML = html || '<p style="font-size:13.5px;color:var(--ink-soft);">All products from this purchase have already been received.</p>';
 
       section.style.display = "block";
 
@@ -353,7 +369,7 @@
 
   async function submitReceive() {
     const purchId = document.getElementById("receivePurchId").value;
-    const receiveRows = document.querySelectorAll(".receive-row");
+    const receiveRows = document.querySelectorAll(".receive-row[data-product-id]");
 
     const items = [];
     let valid = true;
@@ -361,14 +377,16 @@
     receiveRows.forEach(row => {
       const product_id   = row.dataset.productId;
       const container_id = row.querySelector(".recv-container").value;
-      const qty          = parseInt(row.querySelector(".recv-qty").value, 10);
+      const qtyInput      = row.querySelector(".recv-qty");
+      const qty          = parseInt(qtyInput.value, 10);
+      const max          = parseInt(qtyInput.max, 10);
 
-      if (!container_id || !qty || qty < 1) { valid = false; return; }
+      if (!container_id || !qty || qty < 1 || (max && qty > max)) { valid = false; return; }
       items.push({ product_id, container_id, qty });
     });
 
     if (!valid || items.length === 0) {
-      showAlert("Please assign a container and quantity for every product.", "error");
+      showAlert("Please assign a container and a valid quantity (not exceeding what's remaining) for every product.", "error");
       return;
     }
 
@@ -412,9 +430,10 @@
       }
 
       tbody.innerHTML = purchasesCache.map(p => {
-        const tags = p.products.map(pr =>
-          `<span class="product-tag">${pr.product_name} x${pr.qty}</span>`
-        ).join("") || "-";
+        const tags = p.products.map(pr => {
+          const full = pr.qty_remaining === 0;
+          return `<span class="product-tag">${pr.product_name} x${pr.qty}${full ? " ✓" : ` (${pr.qty_received}/${pr.qty} received)`}</span>`;
+        }).join("") || "-";
         return `
           <tr>
             <td>${p.purchase_id}</td>
@@ -441,8 +460,32 @@
     }
   }
 
+  // ── Role restrictions ──────────────────────────────────────
+  // Part-time workers may receive/assign purchased stock into
+  // inventory, but creating a new purchase order with a vendor is a
+  // procurement decision reserved for admin/full-time. Hide that tab
+  // and land part-timers straight on Receive Purchase instead.
+  //
+  // NOTE: this only hides the tab in the UI. The /api/purchases POST
+  // route itself does not currently check role server-side, so this
+  // is not a real security boundary — just keeps the part-time
+  // experience focused on the task they're meant to do.
+  function applyRoleRestrictions() {
+    if (window.currentRole !== "parttime") return;
+
+    document.getElementById("tabBtn-new").style.display = "none";
+
+    const heading = document.querySelector(".page-head h1");
+    const sub     = document.querySelector(".page-head p:last-child");
+    if (heading) heading.textContent = "Receive Purchases";
+    if (sub) sub.textContent = "Assign purchased products into containers and view purchase history.";
+
+    switchTab("receive");
+  }
+
   // ── Init ──────────────────────────────────────────────────
   async function init() {
+    applyRoleRestrictions();
     try {
       // Load form-data (workers, vendors, products)
       const fdRes  = await fetch(`${API}/form-data`);

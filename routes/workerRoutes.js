@@ -10,6 +10,7 @@ router.get("/workers", async (req, res) => {
     conn = await getConnection();
     const result = await conn.execute(
       `SELECT w.WorkID, w.WorkName, w.WorkPhoneNum, w.username, w.ManagerID,
+              w.IsManager,
               m.WorkName AS ManagerName,
               CASE WHEN ft.WorkID IS NOT NULL THEN 'Full Time'
                    WHEN pt.WorkID IS NOT NULL THEN 'Part Time'
@@ -30,6 +31,7 @@ router.get("/workers", async (req, res) => {
       username:     row.USERNAME,
       manager_id:   row.MANAGERID,
       manager_name: row.MANAGERNAME,
+      is_manager:   row.ISMANAGER === 1,
       work_type:    row.WORKTYPE,
       salary:       row.SALARY,
       bonus_salary: row.BONUS_SALARY,
@@ -46,22 +48,35 @@ router.get("/workers", async (req, res) => {
 });
 
 // ── POST /api/workers ─────────────────────────────────────────
-// Body: { name, phone, username, password, manager_id,
+// Body: { name, phone, username, password, manager_id, is_manager,
 //         work_type, salary, bonus_salary, salary_per_hr }
+//
+// is_manager: true/false (or 1/0) — when true, the worker is created as
+// a Manager/Admin (WORKERS.IsManager = 1), which is what /api/login
+// checks to grant the "admin" role. Managers don't require a Full
+// Time / Part Time pay record, since their role comes from IsManager,
+// not from FULL_TIME_WORKERS / PART_TIME_WORKERS — but a work_type can
+// still be supplied for a manager if you also want their salary tracked.
 router.post("/workers", async (req, res) => {
-  const { name, phone, username, password, manager_id,
+  const { name, phone, username, password, manager_id, is_manager,
           work_type, salary, bonus_salary, salary_per_hr } = req.body;
+
+  const isManagerFlag = (is_manager === true || is_manager === "true" || is_manager === 1 || is_manager === "1") ? 1 : 0;
 
   if (!name || !username || !password) {
     return res.status(400).json({ success: false, message: "Name, username, and password are required." });
   }
-  if (!work_type || !["Full Time", "Part Time"].includes(work_type)) {
+
+  // Full Time / Part Time is only mandatory for non-manager workers.
+  // A manager/admin can be created without a pay-type record.
+  const hasWorkType = work_type && ["Full Time", "Part Time"].includes(work_type);
+  if (!isManagerFlag && !hasWorkType) {
     return res.status(400).json({ success: false, message: "Worker type must be Full Time or Part Time." });
   }
-  if (work_type === "Full Time" && !salary) {
+  if (hasWorkType && work_type === "Full Time" && !salary) {
     return res.status(400).json({ success: false, message: "Salary is required for Full Time workers." });
   }
-  if (work_type === "Part Time" && !salary_per_hr) {
+  if (hasWorkType && work_type === "Part Time" && !salary_per_hr) {
     return res.status(400).json({ success: false, message: "Salary per hour is required for Part Time workers." });
   }
 
@@ -78,31 +93,34 @@ router.post("/workers", async (req, res) => {
 
     // Insert into WORKERS
     const result = await conn.execute(
-      `INSERT INTO WORKERS (WorkName, WorkPhoneNum, username, password, ManagerID)
-       VALUES (:name, :phone, :username, :password, :manager_id)
+      `INSERT INTO WORKERS (WorkName, WorkPhoneNum, username, password, ManagerID, IsManager)
+       VALUES (:name, :phone, :username, :password, :manager_id, :is_manager)
        RETURNING WorkID INTO :newId`,
       {
         name, phone: phone || null, username, password,
         manager_id: manager_id || null,
+        is_manager: isManagerFlag,
         newId: { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
       }
     );
 
     const workId = result.outBinds.newId[0];
 
-    // Insert into FULL_TIME or PART_TIME
-    if (work_type === "Full Time") {
-      await conn.execute(
-        `INSERT INTO FULL_TIME_WORKERS (WorkID, Salary, Bonus_Salary)
-         VALUES (:workId, :salary, :bonus_salary)`,
-        { workId, salary: salary || null, bonus_salary: bonus_salary || null }
-      );
-    } else {
-      await conn.execute(
-        `INSERT INTO PART_TIME_WORKERS (WorkID, SalaryPerHr)
-         VALUES (:workId, :salary_per_hr)`,
-        { workId, salary_per_hr: salary_per_hr || null }
-      );
+    // Insert into FULL_TIME or PART_TIME (optional for managers)
+    if (hasWorkType) {
+      if (work_type === "Full Time") {
+        await conn.execute(
+          `INSERT INTO FULL_TIME_WORKERS (WorkID, Salary, Bonus_Salary)
+           VALUES (:workId, :salary, :bonus_salary)`,
+          { workId, salary: salary || null, bonus_salary: bonus_salary || null }
+        );
+      } else {
+        await conn.execute(
+          `INSERT INTO PART_TIME_WORKERS (WorkID, SalaryPerHr)
+           VALUES (:workId, :salary_per_hr)`,
+          { workId, salary_per_hr: salary_per_hr || null }
+        );
+      }
     }
 
     await conn.commit();
