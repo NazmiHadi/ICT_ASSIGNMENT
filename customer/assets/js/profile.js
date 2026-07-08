@@ -177,6 +177,23 @@ async function loadOrders(customerId) {
   orders.forEach(order => {
     const node = orderTemplate.content.cloneNode(true);
 
+    // Make the whole card clickable through to the order detail page.
+    const cardEl = node.querySelector(".order-card");
+    cardEl.style.cursor = "pointer";
+    cardEl.setAttribute("role", "button");
+    cardEl.setAttribute("tabindex", "0");
+    cardEl.setAttribute("title", "View order details");
+    const goToDetail = () => {
+      window.location.href = `/customer/order-details.html?order_id=${encodeURIComponent(order.order_id)}`;
+    };
+    cardEl.addEventListener("click", goToDetail);
+    cardEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        goToDetail();
+      }
+    });
+
     node.querySelector(".order-id").textContent   = `Order #${order.order_id}`;
     node.querySelector(".order-date").textContent = formatDate(order.order_date);
 
