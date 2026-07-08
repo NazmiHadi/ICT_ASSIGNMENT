@@ -104,7 +104,6 @@ CREATE TABLE VENDORS (
 CREATE TABLE CONTAINERS (
     ContID NUMBER GENERATED ALWAYS AS IDENTITY (START WITH 3001 INCREMENT BY 1) PRIMARY KEY,
     ContName VARCHAR2(100),
-    ContDate DATE,
     ContColour VARCHAR2(50)
 );
 
@@ -118,16 +117,11 @@ CREATE TABLE PRODUCTS (
     ProdType VARCHAR2(50),
     SalesPrice NUMBER(10,2),
     ProdDesc VARCHAR2(50),
-    ContID NUMBER,
 
     -- Stored filename of the uploaded product image (e.g. "abc123.jpg"),
     -- served from /uploads/products/<ImageFileName>. NULL until an image
     -- is uploaded for that product.
     ImageFileName VARCHAR2(200),
-
-    CONSTRAINT FK_PRODUCT_CONTAINER
-        FOREIGN KEY (ContID)
-        REFERENCES CONTAINERS(ContID)
 );
 
 -- NOTE: INVENTORY used to be created here, but it now references

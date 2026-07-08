@@ -59,6 +59,17 @@
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); margin-bottom:24px; }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
 
+    /* Panel header row (title + search box side by side) */
+    .panel-head-row { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+    .panel-head-row h3 { margin:0; }
+    .search-box { position:relative; min-width:260px; }
+    .search-box input {
+      width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 14px 10px 36px;
+      font-size:13.5px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff;
+    }
+    .search-box input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+    .search-box i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:13px; }
+
     /* Purchasing-as note */
     .purchasing-as { display:flex; align-items:center; gap:10px; background:#FBF8F4; border:1px solid var(--line); border-radius:8px; padding:10px 14px; margin-bottom:18px; font-size:13.5px; color:var(--ink-soft); }
     .purchasing-as strong { color:var(--ink); }
@@ -241,7 +252,13 @@
     <!-- Tab 3: History (the only tab vendors can see) -->
     <div id="tab-history" class="tab-panel">
       <div class="panel">
-        <h3>Purchase History</h3>
+        <div class="panel-head-row">
+          <h3>Purchase History</h3>
+          <div class="search-box">
+            <i class="fa fa-search"></i>
+            <input type="text" id="purchaseSearchInput" placeholder="Search by ID, vendor, worker, product, date...">
+          </div>
+        </div>
         <div class="table-wrapper">
           <table class="purch-table">
             <thead>
@@ -430,6 +447,31 @@
   }
 
   // ── Purchase History ──────────────────────────────────────
+  // Renders a given list of purchases into the history table. Kept
+  // separate from loadPurchases so the search box can re-render a
+  // filtered subset of purchasesCache without refetching.
+  function renderPurchaseRows(list) {
+    const tbody = document.getElementById("purchaseTableBody");
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5">${purchasesCache.length === 0 ? "No purchases yet." : "No purchases match your search."}</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = list.map(p => {
+      const tags = p.products.map(pr => {
+        const full = pr.qty_remaining === 0;
+        return `<span class="product-tag">${pr.product_name} x${pr.qty}${full ? " ✓" : ` (${pr.qty_received}/${pr.qty} received)`}</span>`;
+      }).join("") || "-";
+      return `
+        <tr>
+          <td>${p.purchase_id}</td>
+          <td>${formatDate(p.purchase_date)}</td>
+          <td>${p.worker_name || "-"}</td>
+          <td>${p.vendor_name || "-"}</td>
+          <td>${tags}</td>
+        </tr>`;
+    }).join("");
+  }
+
   // Vendors get their own list filtered server-side to just their
   // purchases (via ?vendor_id=), so they only ever see their own
   // transactions with us — everyone else sees the full history.
@@ -448,24 +490,11 @@
 
       purchasesCache = data.purchases || [];
 
-      if (purchasesCache.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">No purchases yet.</td></tr>';
-      } else {
-        tbody.innerHTML = purchasesCache.map(p => {
-          const tags = p.products.map(pr => {
-            const full = pr.qty_remaining === 0;
-            return `<span class="product-tag">${pr.product_name} x${pr.qty}${full ? " ✓" : ` (${pr.qty_received}/${pr.qty} received)`}</span>`;
-          }).join("") || "-";
-          return `
-            <tr>
-              <td>${p.purchase_id}</td>
-              <td>${formatDate(p.purchase_date)}</td>
-              <td>${p.worker_name || "-"}</td>
-              <td>${p.vendor_name || "-"}</td>
-              <td>${tags}</td>
-            </tr>`;
-        }).join("");
-      }
+      // Re-apply whatever's currently in the search box (e.g. after a
+      // receive action refreshes the list) instead of always showing
+      // everything.
+      const term = (document.getElementById("purchaseSearchInput")?.value || "").trim().toLowerCase();
+      renderPurchaseRows(term ? filterPurchases(term) : purchasesCache);
 
       // Receive dropdown: only offer purchases that still have at least
       // one product not yet fully received. Once every line on a
@@ -498,6 +527,24 @@
       tbody.innerHTML = '<tr><td colspan="5">Failed to load purchases. Please refresh.</td></tr>';
     }
   }
+
+  // Matches on purchase ID, vendor, worker, formatted date, or any
+  // product name within the purchase.
+  function filterPurchases(term) {
+    return purchasesCache.filter(p => {
+      const idMatch     = String(p.purchase_id).includes(term);
+      const vendorMatch = (p.vendor_name || "").toLowerCase().includes(term);
+      const workerMatch = (p.worker_name || "").toLowerCase().includes(term);
+      const dateMatch   = formatDate(p.purchase_date).toLowerCase().includes(term);
+      const prodMatch   = (p.products || []).some(pr => (pr.product_name || "").toLowerCase().includes(term));
+      return idMatch || vendorMatch || workerMatch || dateMatch || prodMatch;
+    });
+  }
+
+  document.getElementById("purchaseSearchInput").addEventListener("input", function () {
+    const term = this.value.trim().toLowerCase();
+    renderPurchaseRows(term ? filterPurchases(term) : purchasesCache);
+  });
 
   // ── Role restrictions ──────────────────────────────────────
   // Part-time workers may receive/assign purchased stock into

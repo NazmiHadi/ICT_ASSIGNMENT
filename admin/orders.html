@@ -32,10 +32,17 @@
     .sidebar-footer a { display:flex; align-items:center; gap:10px; color:#C9BFB2; text-decoration:none; font-size:14px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
     .sidebar-footer a:hover { color:#fff; }
     .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
-    .page-head { margin-bottom:32px; }
+    .page-head { margin-bottom:32px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; }
     .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
     .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+    .search-box { position:relative; min-width:260px; }
+    .search-box input {
+      width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 14px 10px 36px;
+      font-size:13.5px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff;
+    }
+    .search-box input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+    .search-box i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:13px; }
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
     .table-wrapper { overflow-x:auto; }
@@ -63,6 +70,7 @@
       .sidebar-nav li a.active { border-left:none; border-bottom-color:var(--accent); }
       .sidebar-footer { display:none; }
       .main { padding:28px 20px 40px; }
+      .page-head { flex-direction:column; align-items:flex-start; }
     }
   </style>
 </head>
@@ -81,9 +89,15 @@
 
   <main class="main">
     <div class="page-head">
-      <p class="eyebrow">Operations</p>
-      <h1>Manage Orders</h1>
-      <p>View customer orders, assigned products, and assign workers.</p>
+      <div>
+        <p class="eyebrow">Operations</p>
+        <h1>Manage Orders</h1>
+        <p>View customer orders, assigned products, and assign workers.</p>
+      </div>
+      <div class="search-box">
+        <i class="fa fa-search"></i>
+        <input type="text" id="orderSearchInput" placeholder="Search by order ID, customer, product, status...">
+      </div>
     </div>
 
     <div id="pageAlert"></div>
@@ -117,6 +131,7 @@
   function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
 
   let workersCache = [];
+  let ordersCache  = [];
 
   function showAlert(msg, type) {
     const box = document.getElementById("pageAlert");
@@ -139,6 +154,58 @@
     return html;
   }
 
+  // Renders a given list of orders into the table. Kept separate from
+  // loadOrders so the search box can re-render a filtered subset of
+  // ordersCache without refetching.
+  function renderOrders(list) {
+    const tbody = document.getElementById("orderTableBody");
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6">${ordersCache.length === 0 ? "No orders found." : "No orders match your search."}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(o => {
+      const isAssigned = o.worker_id !== null && o.worker_id !== undefined;
+      const statusClass = isAssigned ? "status-assigned" : "status-pending";
+      const statusText  = isAssigned ? "Assigned" : "Pending";
+      const productTags = o.products && o.products.length > 0
+        ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
+        : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
+
+      return `
+        <tr>
+          <td>#${o.order_id}</td>
+          <td>${formatDate(o.order_date)}</td>
+          <td>${o.customer_name || "Customer #" + o.customer_id}</td>
+          <td>${productTags}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td>
+            <select class="assign-select" id="select-${o.order_id}">${buildWorkerOptions(o.worker_id)}</select>
+            <button class="save-btn" onclick="assignWorker(${o.order_id})">Save</button>
+          </td>
+        </tr>`;
+    }).join("");
+  }
+
+  // Matches on order ID, customer name, status (pending/assigned), or
+  // any product name within the order.
+  function filterOrders(term) {
+    return ordersCache.filter(o => {
+      const idMatch       = String(o.order_id).includes(term);
+      const customerMatch = (o.customer_name || "").toLowerCase().includes(term);
+      const dateMatch     = formatDate(o.order_date).toLowerCase().includes(term);
+      const isAssigned    = o.worker_id !== null && o.worker_id !== undefined;
+      const statusMatch   = (isAssigned ? "assigned" : "pending").includes(term);
+      const prodMatch     = (o.products || []).some(p => (p.product_name || "").toLowerCase().includes(term));
+      return idMatch || customerMatch || dateMatch || statusMatch || prodMatch;
+    });
+  }
+
+  document.getElementById("orderSearchInput").addEventListener("input", function () {
+    const term = this.value.trim().toLowerCase();
+    renderOrders(term ? filterOrders(term) : ordersCache);
+  });
+
   async function loadOrders() {
     const tbody = document.getElementById("orderTableBody");
     try {
@@ -151,33 +218,13 @@
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
 
-      const orders = data.orders || [];
-      if (orders.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6">No orders found.</td></tr>';
-        return;
-      }
+      ordersCache = data.orders || [];
 
-      tbody.innerHTML = orders.map(o => {
-        const isAssigned = o.worker_id !== null && o.worker_id !== undefined;
-        const statusClass = isAssigned ? "status-assigned" : "status-pending";
-        const statusText  = isAssigned ? "Assigned" : "Pending";
-        const productTags = o.products && o.products.length > 0
-          ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
-          : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
-
-        return `
-          <tr>
-            <td>#${o.order_id}</td>
-            <td>${formatDate(o.order_date)}</td>
-            <td>${o.customer_name || "Customer #" + o.customer_id}</td>
-            <td>${productTags}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td>
-              <select class="assign-select" id="select-${o.order_id}">${buildWorkerOptions(o.worker_id)}</select>
-              <button class="save-btn" onclick="assignWorker(${o.order_id})">Save</button>
-            </td>
-          </tr>`;
-      }).join("");
+      // Re-apply whatever's currently in the search box (e.g. after
+      // assigning a worker refreshes the list) instead of always
+      // showing everything.
+      const term = document.getElementById("orderSearchInput").value.trim().toLowerCase();
+      renderOrders(term ? filterOrders(term) : ordersCache);
 
     } catch (err) {
       console.error(err);
