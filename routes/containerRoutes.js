@@ -28,6 +28,15 @@ router.get("/containers", async (req, res) => {
 
 // ── POST /api/containers ───────────────────────────────────────
 // Body: { name, date, colour }
+// NOTE 1: the bind variable is named :contDate (not :date) — "date" is an
+// Oracle SQL reserved word, and using it as a bind variable name causes
+// ORA-01745: invalid host/bind variable name.
+// NOTE 2: :contDate is bound as a plain VARCHAR2 string (e.g. "2026-07-08"
+// from <input type="date">). Letting Oracle implicitly convert that
+// string into ContDate's DATE column relies on the session's default
+// date format (usually DD-MON-RR), which doesn't match "YYYY-MM-DD" and
+// throws ORA-01861. TO_DATE(:contDate, 'YYYY-MM-DD') tells Oracle exactly
+// how to parse it instead of guessing.
 router.post("/containers", async (req, res) => {
   const { name, date, colour } = req.body;
 
@@ -40,13 +49,13 @@ router.post("/containers", async (req, res) => {
     conn = await getConnection();
     const result = await conn.execute(
       `INSERT INTO CONTAINERS (ContName, ContDate, ContColour)
-       VALUES (:name, :date, :colour)
+       VALUES (:name, TO_DATE(:contDate, 'YYYY-MM-DD'), :colour)
        RETURNING ContID INTO :newId`,
       {
         name,
-        date:   date || null,
-        colour: colour || null,
-        newId:  { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
+        contDate: date || null,
+        colour:   colour || null,
+        newId:    { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
       },
       { autoCommit: true }
     );

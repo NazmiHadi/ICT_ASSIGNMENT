@@ -3,17 +3,15 @@
 
 ## ADMIN
 - 
-- add worker takbole add manager
-- manage vendor tak letak username dgn password.
-- dekat dalam inventory management, also letak purchaseid dekat dalam tu. cth 3 barang sampai harini. kita masukkan 2 barang harini dgn 1 barang esok dlm inventory. kena tau dari purchase mana 2 dengan 1 barang tu.
+- kira semua worker, customer, vendor, product.
+- waktu add product, buang add to container
 
-- total up the amount of product in inventory
-- when already assigned a purhcase, that purchase cannot be assigned again.
-- in inventory, add a way to remove stock.
+- container takyah ada tarikh, letak tarikh Q  
 
 
 ## CUSTOMER
-
+- fix customer home and product, not showing product picture but cart shows.
+- add orders tab in my profile.
 
 ## DATABASE
 

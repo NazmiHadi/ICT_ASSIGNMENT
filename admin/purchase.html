@@ -59,6 +59,11 @@
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); margin-bottom:24px; }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
 
+    /* Purchasing-as note */
+    .purchasing-as { display:flex; align-items:center; gap:10px; background:#FBF8F4; border:1px solid var(--line); border-radius:8px; padding:10px 14px; margin-bottom:18px; font-size:13.5px; color:var(--ink-soft); }
+    .purchasing-as strong { color:var(--ink); }
+    .purchasing-as i { color:var(--accent); }
+
     /* Form */
     .form-group { margin-bottom:16px; }
     .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:6px; }
@@ -138,29 +143,31 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('new')">
+      <button class="tab-btn active" data-tab="new" id="tabBtn-new" onclick="switchTab('new')">
         <i class="fa fa-plus-circle"></i> New Purchase
       </button>
-      <button class="tab-btn" onclick="switchTab('receive')">
+      <button class="tab-btn" data-tab="receive" id="tabBtn-receive" onclick="switchTab('receive')">
         <i class="fa fa-inbox"></i> Receive Purchase
       </button>
-      <button class="tab-btn" onclick="switchTab('history')">
+      <button class="tab-btn" data-tab="history" id="tabBtn-history" onclick="switchTab('history')">
         <i class="fa fa-history"></i> Purchase History
       </button>
     </div>
 
-    <!-- Tab 1: New Purchase -->
+    <!-- Tab 1: New Purchase (creating a purchase order with a vendor —
+         a procurement decision, kept to admin/full-time only; part-time
+         workers only receive/assign stock that's already been ordered) -->
     <div id="tab-new" class="tab-panel active">
       <div class="two-col">
         <div class="panel">
           <h3>New Purchase Order</h3>
+
+          <div class="purchasing-as">
+            <i class="fa fa-user-circle"></i>
+            <span>Purchasing as: <strong id="purchasingAsName">—</strong></span>
+          </div>
+
           <form id="purchaseForm">
-            <div class="form-group">
-              <label for="workerId">Worker</label>
-              <select class="form-control" id="workerId" required>
-                <option value="">Select a worker...</option>
-              </select>
-            </div>
             <div class="form-group">
               <label for="vendorId">Vendor</label>
               <select class="form-control" id="vendorId" required>
@@ -181,8 +188,8 @@
           <h3>Tips</h3>
           <p style="color:var(--ink-soft);font-size:14px;line-height:1.7;">
             <i class="fa fa-info-circle" style="color:var(--accent)"></i>
-            Select the worker handling this purchase and the vendor you are buying from.
-            Add all products and quantities you are ordering.
+            This purchase is automatically recorded under your account — select the vendor
+            you are buying from and add all products and quantities you are ordering.
             <br><br>
             <i class="fa fa-info-circle" style="color:var(--accent)"></i>
             Once the products arrive, go to the <strong>Receive Purchase</strong> tab to add them into their containers.
@@ -221,6 +228,9 @@
             <br><br>
             <i class="fa fa-info-circle" style="color:var(--accent)"></i>
             If the product already exists in the container, the quantity will be added on top of the existing stock.
+            <br><br>
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            Purchases that have already been fully received won't appear in this list anymore.
           </p>
         </div>
       </div>
@@ -261,11 +271,12 @@
   let productsCache   = [];
   let containersCache = [];
   let purchasesCache  = [];
+  let workersCache    = [];
 
   // ── Tab switching ──────────────────────────────────────────
   function switchTab(name) {
-    document.querySelectorAll(".tab-btn").forEach((b, i) => {
-      b.classList.toggle("active", ["new","receive","history"][i] === name);
+    document.querySelectorAll(".tab-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab === name);
     });
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
     document.getElementById("tab-" + name).classList.add("active");
@@ -327,21 +338,35 @@
         `<option value="${c.container_id}">${c.container_name}</option>`
       ).join("");
 
-      rows.innerHTML = data.products.map(p => `
+      const pending = data.products.filter(p => p.qty_remaining > 0);
+      const done    = data.products.filter(p => p.qty_remaining <= 0);
+
+      let html = pending.map(p => `
         <div class="receive-row" data-product-id="${p.product_id}">
           <div class="prod-info">
             ${p.product_name}
-            <span>Purchased qty: ${p.qty}</span>
+            <span>Purchased: ${p.qty} · Already received: ${p.qty_received} · Remaining: ${p.qty_remaining}</span>
           </div>
           <div class="receive-cols">
             <select class="form-control recv-container">
               <option value="">Select container...</option>
               ${containerOpts}
             </select>
-            <input type="number" class="form-control recv-qty" value="${p.qty}" min="1" placeholder="Qty">
+            <input type="number" class="form-control recv-qty" value="${p.qty_remaining}" min="1" max="${p.qty_remaining}" placeholder="Qty">
           </div>
         </div>
       `).join("");
+
+      html += done.map(p => `
+        <div class="receive-row" style="opacity:0.6;">
+          <div class="prod-info">
+            ${p.product_name}
+            <span>Purchased: ${p.qty} · Fully received ✓</span>
+          </div>
+        </div>
+      `).join("");
+
+      rows.innerHTML = html || '<p style="font-size:13.5px;color:var(--ink-soft);">All products from this purchase have already been received.</p>';
 
       section.style.display = "block";
 
@@ -353,7 +378,7 @@
 
   async function submitReceive() {
     const purchId = document.getElementById("receivePurchId").value;
-    const receiveRows = document.querySelectorAll(".receive-row");
+    const receiveRows = document.querySelectorAll(".receive-row[data-product-id]");
 
     const items = [];
     let valid = true;
@@ -361,14 +386,16 @@
     receiveRows.forEach(row => {
       const product_id   = row.dataset.productId;
       const container_id = row.querySelector(".recv-container").value;
-      const qty          = parseInt(row.querySelector(".recv-qty").value, 10);
+      const qtyInput      = row.querySelector(".recv-qty");
+      const qty          = parseInt(qtyInput.value, 10);
+      const max          = parseInt(qtyInput.max, 10);
 
-      if (!container_id || !qty || qty < 1) { valid = false; return; }
+      if (!container_id || !qty || qty < 1 || (max && qty > max)) { valid = false; return; }
       items.push({ product_id, container_id, qty });
     });
 
     if (!valid || items.length === 0) {
-      showAlert("Please assign a container and quantity for every product.", "error");
+      showAlert("Please assign a container and a valid quantity (not exceeding what's remaining) for every product.", "error");
       return;
     }
 
@@ -390,6 +417,10 @@
       document.getElementById("receiveItems").style.display = "none";
       document.getElementById("receiveRows").innerHTML = "";
 
+      // The purchase we just (fully or partially) received may now be
+      // fully received — refresh so the dropdown drops it if so.
+      await loadPurchases();
+
     } catch (err) {
       console.error(err);
       showAlert("Something went wrong. Please try again.", "error");
@@ -408,32 +439,46 @@
 
       if (purchasesCache.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5">No purchases yet.</td></tr>';
-        return;
+      } else {
+        tbody.innerHTML = purchasesCache.map(p => {
+          const tags = p.products.map(pr => {
+            const full = pr.qty_remaining === 0;
+            return `<span class="product-tag">${pr.product_name} x${pr.qty}${full ? " ✓" : ` (${pr.qty_received}/${pr.qty} received)`}</span>`;
+          }).join("") || "-";
+          return `
+            <tr>
+              <td>${p.purchase_id}</td>
+              <td>${formatDate(p.purchase_date)}</td>
+              <td>${p.worker_name || "-"}</td>
+              <td>${p.vendor_name || "-"}</td>
+              <td>${tags}</td>
+            </tr>`;
+        }).join("");
       }
 
-      tbody.innerHTML = purchasesCache.map(p => {
-        const tags = p.products.map(pr =>
-          `<span class="product-tag">${pr.product_name} x${pr.qty}</span>`
-        ).join("") || "-";
-        return `
-          <tr>
-            <td>${p.purchase_id}</td>
-            <td>${formatDate(p.purchase_date)}</td>
-            <td>${p.worker_name || "-"}</td>
-            <td>${p.vendor_name || "-"}</td>
-            <td>${tags}</td>
-          </tr>`;
-      }).join("");
+      // Receive dropdown: only offer purchases that still have at least
+      // one product not yet fully received. Once every line on a
+      // purchase is fully received, it drops out of this list — History
+      // still shows it (marked with ✓), just Receive no longer does.
+      const receivable = purchasesCache.filter(p =>
+        (p.products || []).some(pr => pr.qty_remaining > 0)
+      );
 
-      // Also update receive dropdown
       const sel = document.getElementById("receivePurchId");
       const cur = sel.value;
       sel.innerHTML = '<option value="">-- Select a purchase to receive --</option>' +
-        purchasesCache.map(p =>
+        receivable.map(p =>
           `<option value="${p.purchase_id}" ${String(p.purchase_id)===cur?"selected":""}>
             #${p.purchase_id} — ${p.vendor_name} (${formatDate(p.purchase_date)})
           </option>`
         ).join("");
+
+      // If the purchase that was selected just became fully received
+      // (and so is no longer in the list), clear the receive panel.
+      if (cur && !receivable.some(p => String(p.purchase_id) === cur)) {
+        document.getElementById("receiveItems").style.display = "none";
+        document.getElementById("receiveRows").innerHTML = "";
+      }
 
     } catch (err) {
       console.error(err);
@@ -441,24 +486,62 @@
     }
   }
 
+  // ── Role restrictions ──────────────────────────────────────
+  // Part-time workers may receive/assign purchased stock into
+  // inventory, but creating a new purchase order with a vendor is a
+  // procurement decision reserved for admin/full-time. Hide that tab
+  // and land part-timers straight on Receive Purchase instead.
+  //
+  // NOTE: this only hides the tab in the UI. The /api/purchases POST
+  // route itself does not currently check role server-side, so this
+  // is not a real security boundary — just keeps the part-time
+  // experience focused on the task they're meant to do.
+  function applyRoleRestrictions() {
+    if (window.currentRole !== "parttime") return;
+
+    document.getElementById("tabBtn-new").style.display = "none";
+
+    const heading = document.querySelector(".page-head h1");
+    const sub     = document.querySelector(".page-head p:last-child");
+    if (heading) heading.textContent = "Receive Purchases";
+    if (sub) sub.textContent = "Assign purchased products into containers and view purchase history.";
+
+    switchTab("receive");
+  }
+
+  // Shows the current worker's name (matched from the workers list by
+  // the userId stored at login) instead of asking them to pick
+  // themselves from a dropdown — a purchase is always recorded under
+  // whoever is currently logged in.
+  function showPurchasingAs() {
+    const workerId = localStorage.getItem("userId");
+    const label = document.getElementById("purchasingAsName");
+    if (!label) return;
+
+    const match = workersCache.find(w => String(w.worker_id) === String(workerId));
+    label.textContent = match ? match.name : (workerId ? `Worker #${workerId}` : "Unknown — please log in again");
+  }
+
   // ── Init ──────────────────────────────────────────────────
   async function init() {
+    applyRoleRestrictions();
     try {
-      // Load form-data (workers, vendors, products)
+      // Load form-data (workers, vendors, products). Workers are only
+      // used here to look up the current worker's display name — the
+      // form itself no longer lets you pick a different worker.
       const fdRes  = await fetch(`${API}/form-data`);
       const fdData = await fdRes.json();
       if (!fdRes.ok || !fdData.success) throw new Error(fdData.message);
 
       productsCache = fdData.products || [];
+      workersCache  = fdData.workers  || [];
 
-      fdData.workers.forEach(w => {
-        document.getElementById("workerId").innerHTML +=
-          `<option value="${w.worker_id}">${w.name}</option>`;
-      });
       fdData.vendors.forEach(v => {
         document.getElementById("vendorId").innerHTML +=
           `<option value="${v.vendor_id}">${v.name}</option>`;
       });
+
+      showPurchasingAs();
 
       // Load containers
       const cRes  = await fetch(`${API}/containers`);
@@ -478,11 +561,18 @@
   }
 
   // ── New Purchase form submit ──────────────────────────────
+  // worker_id now always comes from the logged-in account, not a
+  // dropdown selection.
   document.getElementById("purchaseForm").addEventListener("submit", async function(e) {
     e.preventDefault();
 
-    const worker_id = document.getElementById("workerId").value;
+    const worker_id = localStorage.getItem("userId");
     const vendor_id = document.getElementById("vendorId").value;
+
+    if (!worker_id) {
+      showAlert("Could not identify your worker account. Please log in again.", "error");
+      return;
+    }
 
     const productRows = document.querySelectorAll("#newProductRows .product-row");
     const products = [];
@@ -495,7 +585,7 @@
       products.push({ product_id, qty });
     });
 
-    if (!worker_id || !vendor_id) { showAlert("Please select a worker and vendor.", "error"); return; }
+    if (!vendor_id) { showAlert("Please select a vendor.", "error"); return; }
     if (!valid || products.length === 0) { showAlert("Please add at least one product with a valid quantity.", "error"); return; }
 
     try {

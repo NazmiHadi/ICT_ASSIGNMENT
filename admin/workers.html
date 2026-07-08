@@ -51,6 +51,8 @@
     .badge-ft { background:#E8F5EA; color:#1C7A3D; }
     .badge-pt { background:#FBF1DC; color:#91701C; }
     .badge-na { background:#F0EDE8; color:#8A7B6C; }
+    .badge-mgr { background:#EDE3F5; color:#5B2C8D; margin-left:6px; }
+    .manager-check { background:#FBF8F4; border-radius:8px; padding:12px 14px; }
     .btn-primary { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; width:100%; font-family:'Poppins',sans-serif; margin-top:6px; }
     .btn-primary:hover { background:#8E2A33; }
     .table-wrapper { overflow-x:auto; }
@@ -119,14 +121,25 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Manager (optional)</label>
+            <label>Reports To (optional)</label>
             <select class="form-control" id="managerId">
               <option value="">No manager / Top level</option>
             </select>
           </div>
+
+          <div class="form-group manager-check">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:0;">
+              <input type="checkbox" id="isManager" onchange="toggleManagerMode()" style="width:16px;height:16px;margin:0;">
+              Register this worker as a Manager / Admin
+            </label>
+            <p style="margin:6px 0 0;font-size:12.5px;color:var(--ink-soft);">
+              Grants full admin access (same as the "admin" role at login). Worker type below becomes optional.
+            </p>
+          </div>
+
           <div class="form-group">
-            <label>Worker Type</label>
-            <select class="form-control" id="workType" onchange="toggleSalaryFields()" required>
+            <label>Worker Type <span id="workTypeOptionalTag" style="display:none;font-weight:400;color:var(--ink-soft);">(optional for managers)</span></label>
+            <select class="form-control" id="workType" onchange="toggleSalaryFields()">
               <option value="">Select type...</option>
               <option value="Full Time">Full Time</option>
               <option value="Part Time">Part Time</option>
@@ -197,6 +210,12 @@
     document.getElementById("ptSection").classList.toggle("show", type === "Part Time");
   }
 
+  function toggleManagerMode() {
+    const isManager = document.getElementById("isManager").checked;
+    document.getElementById("workType").required = !isManager;
+    document.getElementById("workTypeOptionalTag").style.display = isManager ? "inline" : "none";
+  }
+
   function showAlert(msg, type) {
     const box = document.getElementById("formAlert");
     box.textContent = msg; box.className = type; box.style.display = "block";
@@ -219,6 +238,10 @@
     return `<span class="badge badge-na">-</span>`;
   }
 
+  function managerBadgeHtml(isManager) {
+    return isManager ? `<span class="badge badge-mgr">Manager/Admin</span>` : "";
+  }
+
   async function loadWorkers() {
     const tbody = document.getElementById("workerTableBody");
     const mgSel = document.getElementById("managerId");
@@ -236,7 +259,7 @@
               <td>${w.name}</td>
               <td>${w.phone || "-"}</td>
               <td>${w.username}</td>
-              <td>${badgeHtml(w.work_type)}</td>
+              <td>${badgeHtml(w.work_type)}${managerBadgeHtml(w.is_manager)}</td>
               <td>${salaryDisplay(w)}</td>
               <td>${w.manager_name || "-"}</td>
             </tr>`).join("");
@@ -252,14 +275,16 @@
 
   document.getElementById("workerForm").addEventListener("submit", async function(e) {
     e.preventDefault();
-    const work_type = document.getElementById("workType").value;
+    const work_type  = document.getElementById("workType").value;
+    const is_manager = document.getElementById("isManager").checked;
     const payload = {
       name:         document.getElementById("workName").value.trim(),
       phone:        document.getElementById("workPhone").value.trim(),
       username:     document.getElementById("username").value.trim(),
       password:     document.getElementById("password").value,
       manager_id:   document.getElementById("managerId").value || null,
-      work_type,
+      is_manager,
+      work_type:    work_type || null,
       salary:       document.getElementById("salary").value || null,
       bonus_salary: document.getElementById("bonusSalary").value || null,
       salary_per_hr: document.getElementById("salaryPerHr").value || null,
@@ -272,6 +297,7 @@
       showAlert(data.message || "Worker added successfully.", "success");
       document.getElementById("workerForm").reset();
       toggleSalaryFields();
+      toggleManagerMode();
       loadWorkers();
     } catch (err) {
       console.error(err);
