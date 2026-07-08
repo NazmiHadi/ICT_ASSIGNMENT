@@ -49,9 +49,10 @@ const ROLE_CONFIG = {
   parttime: {
     label: "Part-Time Worker",
     heading: "Welcome back",
-    sub: "Here's your assigned orders and current stock levels.",
+    sub: "Here's your assigned orders, current stock levels, and purchases waiting to be received.",
     groups: [
-      { label: "Daily Tasks", keys: ["orderAssignment", "inventory"] }
+      { label: "Daily Tasks", keys: ["orderAssignment"] },
+      { label: "Stock",       keys: ["inventory", "purchase"] }
     ],
     stats:   ["orders", "inventory"],
     actions: ["orderAssignment", "inventory"]
@@ -110,6 +111,6 @@ const PAGE_ACCESS = {
   inventory:       ["admin", "fulltime", "parttime"],
   orders:          ["admin", "fulltime"],
   orderAssignment: ["admin", "fulltime", "parttime"],
-  purchase:        ["admin", "fulltime", "vendor"],
+  purchase:        ["admin", "fulltime", "parttime", "vendor"],
   profile:         ["admin", "fulltime", "parttime", "vendor"]
 };

@@ -247,9 +247,11 @@
         // Make a fresh copy of the <template> markup for this item
         const node = template.content.cloneNode(true);
 
-        // Fill in the image
+        // Fill in the image — use the real uploaded path (image_url) stored
+        // on the cart item, with a placeholder fallback for products that
+        // don't have a picture (or were added to the cart before this fix).
         const img = node.querySelector(".cart-item-img");
-        img.src = `/customer/assets/images/${item.image}`;
+        img.src = item.image_url || "/customer/assets/images/product-placeholder.png";
         img.alt = item.name;
 
         // Fill in name + per-unit price

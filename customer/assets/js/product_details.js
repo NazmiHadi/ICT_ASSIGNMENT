@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // product_details.js
 // Reads the product_id from the URL, fetches all products from /api/products,
-// filters down to the one we want, then populates the detail page.
+// then filters down to the one we want, then populates the detail page.
 // ─────────────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", loadProductDetails);
@@ -62,8 +62,11 @@ async function loadProductDetails() {
   // product was added before a picture was uploaded, image_url will be
   // null, so fall back to a placeholder graphic instead of requesting a
   // file that doesn't exist.
+  // (Fixed: the fallback was pointing at /assets/images/... but every
+  // other asset on this site lives under /customer/assets/images/..., so
+  // the fallback itself was 404ing and showing a broken image.)
   const imgEl = document.getElementById("detail-image");
-  imgEl.src   = product.image_url || "/customer/assets/images/product-placeholder.png"; // keep a placeholder here even though real photos now live in /uploads/products
+  imgEl.src   = product.image_url || "/customer/assets/images/product-placeholder.png";
   imgEl.alt   = product.name;
 
   const stockBadge = document.getElementById("detail-stock-badge");

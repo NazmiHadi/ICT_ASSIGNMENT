@@ -45,15 +45,87 @@ function renderProfile(c) {
   document.getElementById("profileAvatar").textContent          = initials;
   document.getElementById("profileName").textContent            = c.name        || "—";
   document.getElementById("profileUsernameDisplay").textContent = "@" + (c.username || "—");
-  document.getElementById("profileUsername").textContent        = c.username    || "—";
 
-  setField("profileEmail",   c.email);
-  setField("profilePhone",   c.phone);
-  setField("profileAddress", c.address);
+  document.getElementById("profileNameInput").value     = c.name     || "";
+  document.getElementById("profileEmailInput").value    = c.email    || "";
+  document.getElementById("profilePhoneInput").value    = c.phone    || "";
+  document.getElementById("profileAddressInput").value  = c.address || "";
+  document.getElementById("profileUsernameInput").value = c.username || "";
 
   document.getElementById("profileStateMessage").style.display = "none";
   document.getElementById("profileCard").style.display         = "block";
   document.getElementById("ordersSection").style.display       = "block";
+}
+
+
+// ── Save profile changes ────────────────────────────────────────────────────
+document.getElementById("profileForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const customerId = getCustomerId();
+  const alertBox    = document.getElementById("profileAlert");
+  const submitBtn   = e.target.querySelector("button[type=submit]");
+
+  const password        = document.getElementById("profilePasswordInput").value;
+  const confirmPassword = document.getElementById("profileConfirmPasswordInput").value;
+
+  const payload = {
+    customer_id: customerId,
+    name:        document.getElementById("profileNameInput").value.trim(),
+    email:       document.getElementById("profileEmailInput").value.trim(),
+    phone:       document.getElementById("profilePhoneInput").value.trim(),
+    address:     document.getElementById("profileAddressInput").value.trim(),
+    username:    document.getElementById("profileUsernameInput").value.trim()
+  };
+
+  if (password || confirmPassword) {
+    payload.password        = password;
+    payload.confirmPassword = confirmPassword;
+  }
+
+  const originalBtnText = submitBtn.textContent;
+  submitBtn.disabled    = true;
+  submitBtn.textContent = "Saving...";
+
+  try {
+    const res  = await fetch("/api/customer/profile", {
+      method:  "PUT",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      showProfileAlert(data.message || "Failed to update profile.", "error");
+      return;
+    }
+
+    // Keep localStorage's "customer" object in sync (name/username feed
+    // the navbar avatar/initials and the cart key, so this matters).
+    localStorage.setItem("customer", JSON.stringify(data.customer));
+
+    document.getElementById("profilePasswordInput").value        = "";
+    document.getElementById("profileConfirmPasswordInput").value = "";
+
+    renderProfile(data.customer);
+    showProfileAlert("Profile updated successfully.", "success");
+
+  } catch (err) {
+    console.error("[PROFILE] Update error:", err);
+    showProfileAlert("Could not reach the server. Please try again.", "error");
+  } finally {
+    submitBtn.disabled    = false;
+    submitBtn.textContent = originalBtnText;
+  }
+});
+
+function showProfileAlert(message, type) {
+  const box = document.getElementById("profileAlert");
+  box.textContent = message;
+  box.className   = type;
+  box.style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => { box.style.display = "none"; }, 4500);
 }
 
 

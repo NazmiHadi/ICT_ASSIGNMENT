@@ -85,7 +85,7 @@
     <div class="page-head">
       <p class="eyebrow">Catalog &amp; Stock</p>
       <h1>Manage Containers</h1>
-      <p>Add containers used to group and store products.</p>
+      <p>Add containers used to group and store products. Stock (and when it arrived) is assigned via Receive Purchase or Manage Inventory.</p>
     </div>
 
     <div id="formAlert"></div>
@@ -97,10 +97,6 @@
           <div class="form-group">
             <label>Container Name</label>
             <input type="text" class="form-control" id="contName" placeholder="e.g. Container A1" required>
-          </div>
-          <div class="form-group">
-            <label>Date</label>
-            <input type="date" class="form-control" id="contDate">
           </div>
           <div class="form-group">
             <label>Colour</label>
@@ -118,12 +114,11 @@
               <tr>
                 <th>ID</th>
                 <th>Name</th>
-                <th>Date</th>
                 <th>Colour</th>
               </tr>
             </thead>
             <tbody id="containerTableBody">
-              <tr><td colspan="4">Loading containers...</td></tr>
+              <tr><td colspan="3">Loading containers...</td></tr>
             </tbody>
           </table>
         </div>
@@ -143,13 +138,10 @@
     setTimeout(() => { box.style.display = "none"; }, 4000);
   }
 
-  function formatDate(d) {
-    if (!d) return "-";
-    const dt = new Date(d);
-    return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
-  }
-
-  // Maps to CONTAINERS table: ContID, ContName, ContDate, ContColour
+  // Maps to CONTAINERS table: ContID, ContName, ContColour. A container
+  // no longer has its own date — when stock landed in it is tracked per
+  // batch on INVENTORY.DateAssigned instead (see Receive Purchase /
+  // Manage Inventory).
   async function loadContainers() {
     const tbody = document.getElementById("containerTableBody");
     try {
@@ -158,17 +150,16 @@
       if (!res.ok || !data.success) throw new Error(data.message);
       const containers = data.containers || [];
       tbody.innerHTML = containers.length === 0
-        ? '<tr><td colspan="4">No containers added yet.</td></tr>'
+        ? '<tr><td colspan="3">No containers added yet.</td></tr>'
         : containers.map(c => `
             <tr>
               <td>${c.container_id}</td>
               <td>${c.name}</td>
-              <td>${formatDate(c.date)}</td>
               <td>${c.colour ? `<span class="colour-dot" style="background:${c.colour.toLowerCase()}"></span>${c.colour}` : "-"}</td>
             </tr>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="4">Failed to load containers. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="3">Failed to load containers. Please refresh.</td></tr>';
     }
   }
 
@@ -176,7 +167,6 @@
     e.preventDefault();
     const payload = {
       name:   document.getElementById("contName").value.trim(),
-      date:   document.getElementById("contDate").value || null,
       colour: document.getElementById("contColour").value.trim()
     };
     try {

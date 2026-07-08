@@ -71,6 +71,12 @@
           <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
           <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
 
+          <!-- ── Cart link with badge ──────────────────────────────────────────
+              The <span id="cartBadge"> is what cart.js's updateCartBadge()
+              function looks for. It will:
+                - set the number inside the span to the total qty in the cart
+                - show/hide the span depending on whether the cart has items
+              Clicking this link takes the user to /cart (cart.html below). -->
           <li class="nav-item">
             <a class="nav-link" href="/customer/cart" style="position: relative;">
               <i class="fa fa-shopping-cart"></i> Cart
@@ -84,6 +90,7 @@
             <a class="nav-link" href="/customer/profile">My Profile</a>
           </li>
           <li class="nav-item">
+            <!-- Logout: clears localStorage and goes back to login page -->
             <a class="nav-link" href="#" onclick="logout()">Logout</a>
           </li>
         </ul>
@@ -123,10 +130,16 @@
           </div>
         </div>
 
-        <!-- Product cards container -->
+        <!-- Product cards container
+             The 'grid' class is used by Isotope for the masonry/filter layout.
+             The id="productGrid" lets our JavaScript inject cards here. -->
         <div class="col-md-12">
           <div class="filters-content">
             <div class="row grid" id="productGrid">
+
+              <!-- Product cards will be injected here by loadProducts() below.
+                   Each card will look exactly like the original HTML cards
+                   but the name, price, and description come from the server. -->
 
               <!-- Loading placeholder shown while the API call is in progress -->
               <div class="col-12 text-center py-4" id="loadingMsg">
@@ -157,39 +170,56 @@
   <!-- ── Product loading + logout script ─────────────────────────────── -->
   <script>
 
+    // ── Logout function ──────────────────────────────────────────────────
+    // Called when the user clicks "Logout" in the nav bar.
+    // Removes stored data and sends the user back to the login page.
     function logout() {
-      localStorage.removeItem("role");
-      localStorage.removeItem("customer");
-      window.location.href = "/";
+      localStorage.removeItem("role");       // remove the saved role
+      localStorage.removeItem("customer");   // remove saved customer info
+      window.location.href = "/";            // go back to index.html (login)
     }
 
 
     // ── loadProducts(): fetch products from server and render them ───────
+    // This replaces the hard-coded product cards in the original products.html
+    // with dynamic data coming from GET /api/products in server.js.
+    //
+    // In the future you would connect server.js to Oracle and run:
+    //   SELECT * FROM products
+    // The API would return the same JSON shape, so this code needs no changes.
     async function loadProducts() {
 
       try {
+        // Send a GET request to our Node.js API
         const response = await fetch("/api/products");
+
+        // Convert the response body from JSON text to a JS object
         const data = await response.json();
 
+        // If the request failed or returned no products, show a message
         if (!data.success || !data.products.length) {
           document.getElementById("loadingMsg").textContent = "No products found.";
           return;
         }
 
+        // Find the grid container where we'll put the product cards
         const grid = document.getElementById("productGrid");
+
+        // Remove the "Loading..." placeholder
         grid.innerHTML = "";
 
+        // Filter categories to cycle through for variety (mirrors original HTML classes)
         const filterClasses = ["all des", "all dev", "all gra"];
 
+        // Loop through each product and build an HTML card for it
         data.products.forEach((product, index) => {
           const filterClass = filterClasses[index % filterClasses.length];
           const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
 
-          // Image comes from the API's image_url (the real uploaded file
-          // under /uploads/products/...), with a placeholder fallback for
-          // products that don't have a picture yet. Previously this built
-          // a guessed path under /customer/assets/images/ from product.image,
-          // which broke unless someone manually dropped a matching file there.
+          // ── Image: use the uploaded image_url from the API, with a
+          // placeholder fallback for products that don't have a picture.
+          // (Previously this referenced product.image, a field the API
+          // never actually returns, which rendered a broken image.)
           const imgSrc = product.image_url || "/customer/assets/images/product-placeholder.png";
 
           const cardHTML = `
@@ -216,12 +246,18 @@
 
           const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
 
+          // ── Disable the button up front if there's no stock ───────────
+          // Mirrors product_details.html, which disables #addToCartBtn
+          // when product.stock <= 0.
           if ((product.stock ?? 0) <= 0) {
             newCard.disabled = true;
             newCard.textContent = "Out of Stock";
           }
 
           newCard.addEventListener("click", () => {
+            // addToCart() throws if the product is out of stock, or if
+            // adding 1 more would exceed available stock - catch that
+            // here so the page doesn't break with an uncaught error.
             try {
               addToCart(product, 1);
               alert(`${product.name} added to cart.`);
@@ -232,6 +268,8 @@
         });
 
         // Re-initialise Isotope after adding dynamic content.
+        // Isotope needs to know about the new cards so its filter/sort works.
+        // We use a short timeout to let the browser render the cards first.
         setTimeout(() => {
           const $grid = $(".grid");
           if ($grid.length && typeof $.fn.isotope !== "undefined") {
@@ -240,6 +278,7 @@
         }, 200);
 
       } catch (err) {
+        // Show an error if the network or server failed
         document.getElementById("loadingMsg").textContent =
           "Failed to load products. Is the server running?";
         console.error("Products fetch error:", err);
@@ -248,6 +287,7 @@
 
 
     // ── Run on page load ─────────────────────────────────────────────────
+    // Call loadProducts() as soon as the page's DOM is ready
     document.addEventListener("DOMContentLoaded", loadProducts);
 
   </script>

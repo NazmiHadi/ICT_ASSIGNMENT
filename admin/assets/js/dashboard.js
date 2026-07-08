@@ -9,7 +9,7 @@
   const role = localStorage.getItem("role");
 
   if (!VALID_ROLES.includes(role)) {
-    window.location.href = "/login.html";
+    window.location.href = "/";
     return;
   }
 
@@ -34,8 +34,14 @@
     group.keys.forEach(key => {
       const item = NAV_ITEMS[key];
       if (!item) return;
-      navHtml += `<li><a href="${item.href}" class="${pageKey === key ? "active" : ""}">
+      // Two badge slots per nav item: badge-<key> (red, e.g. "not
+      // shipped"/"unassigned") and badge-<key>-2 (yellow, e.g. "not
+      // delivered"). Both hidden by default; loadNavBadges() below only
+      // reveals the ones a given nav item actually uses.
+      navHtml += `<li><a href="${item.href}" id="nav-${key}" class="${pageKey === key ? "active" : ""}">
                     <i class="fa ${item.icon}"></i> ${item.label}
+                    <span id="badge-${key}" style="display:none; margin-left:auto; background:#e74c3c; color:#fff; border-radius:10px; padding:1px 8px; font-size:11px; font-weight:700; line-height:1.6;"></span>
+                    <span id="badge-${key}-2" style="display:none; margin-left:4px; background:#d4a017; color:#fff; border-radius:10px; padding:1px 8px; font-size:11px; font-weight:700; line-height:1.6;"></span>
                   </a></li>`;
     });
   });
@@ -87,8 +93,72 @@
     e.preventDefault();
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
-    window.location.href = "/login.html";
+    window.location.href = "/";
   });
+
+  /* ---------- Nav notification badges ----------
+     "Manage Orders"      -> orders with no worker assigned yet (red)
+     "My Assigned Orders" -> my assigned orders that haven't shipped yet
+                             (red) and orders that are shipped but not
+                             delivered yet (yellow)
+     Same logic as page-guard.js's loadNavBadges() — duplicated here since
+     the dashboard renders its sidebar via this separate script rather
+     than page-guard.js. */
+  (async function loadNavBadges() {
+    const ordersBadge = document.getElementById("badge-orders");
+    if (ordersBadge) {
+      try {
+        const res  = await fetch("/api/orders/unassigned-count");
+        const data = await res.json();
+        if (data.success && data.count > 0) {
+          ordersBadge.textContent   = data.count;
+          ordersBadge.style.display = "inline-block";
+        }
+      } catch (err) {
+        console.error("[NAV BADGE] Could not load unassigned order count:", err);
+      }
+    }
+
+    /* ---------- Real stat numbers ---------- */
+  (async function loadDashboardStats() {
+    const userId = localStorage.getItem("userId");
+    try {
+      const res  = await fetch(`/api/dashboard-stats?role=${encodeURIComponent(role)}&id=${encodeURIComponent(userId || "")}`);
+      const data = await res.json();
+      if (!data.success) return;
+
+      Object.keys(data.stats).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.textContent = data.stats[key];
+      });
+    } catch (err) {
+      console.error("[DASHBOARD STATS] Could not load stats:", err);
+    }
+  })();
+
+    const notShippedBadge   = document.getElementById("badge-orderAssignment");
+    const notDeliveredBadge = document.getElementById("badge-orderAssignment-2");
+    if (notShippedBadge || notDeliveredBadge) {
+      const workerId = localStorage.getItem("userId");
+      if (!workerId) return;
+      try {
+        const res  = await fetch(`/api/orders/pending-count?worker_id=${encodeURIComponent(workerId)}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        if (notShippedBadge && data.not_shipped_count > 0) {
+          notShippedBadge.textContent   = data.not_shipped_count;
+          notShippedBadge.style.display = "inline-block";
+        }
+        if (notDeliveredBadge && data.not_delivered_count > 0) {
+          notDeliveredBadge.textContent   = data.not_delivered_count;
+          notDeliveredBadge.style.display = "inline-block";
+        }
+      } catch (err) {
+        console.error("[NAV BADGE] Could not load pending shipment/delivery counts:", err);
+      }
+    }
+  })();
 
   /* ---------- Wire up real numbers ----------
      fetch('/api/dashboard-stats?role=' + role)

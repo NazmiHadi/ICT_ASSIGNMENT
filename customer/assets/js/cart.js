@@ -74,6 +74,7 @@ function addToCart(product, qty = 1) {
       name:       product.name,
       price:      product.price,
       image:      product.image,
+      image_url:  product.image_url,
       qty:        qty
     });
   }

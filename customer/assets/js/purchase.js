@@ -60,7 +60,7 @@ async function checkout() {
     // Success! Clear cart and show confirmation
     clearCart();
     alert(`Order placed successfully! Order ID: ${data.orderId}`);
-    window.location.href = "/customer/orders";
+    window.location.href = "/customer/profile";
 
   } catch (err) {
     console.error("Checkout error:", err);

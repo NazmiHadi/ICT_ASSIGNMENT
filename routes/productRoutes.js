@@ -49,6 +49,12 @@ function imageUrl(fileName) {
 }
 
 // ── GET /api/products ────────────────────────────────────────
+// PRODUCTS no longer has a ContID — a product isn't tied to a single
+// container anymore. "Where is this product stored?" is now answered
+// entirely by INVENTORY (a product can sit across several containers,
+// in however many batches came from Receive Purchase / manual
+// adjustments). `stock` below is just the product's total qty summed
+// across every container it happens to be in.
 router.get("/products", async (req, res) => {
   let conn;
 
@@ -58,33 +64,28 @@ router.get("/products", async (req, res) => {
     const result = await conn.execute(
       `SELECT p.ProdID, p.ProdName, p.ProdDesc, p.Price, p.SalesPrice, p.ProdType,
               p.ImageFileName,
-              c.ContID, c.ContName,
               NVL(SUM(i.Qty), 0) AS Qty
        FROM PRODUCTS p
-       LEFT JOIN CONTAINERS c ON p.ContID = c.ContID
        LEFT JOIN INVENTORY i ON i.ProdID = p.ProdID
        GROUP BY p.ProdID, p.ProdName, p.ProdDesc, p.Price, p.SalesPrice, p.ProdType,
-                p.ImageFileName, c.ContID, c.ContName
+                p.ImageFileName
        ORDER BY p.ProdID`
     );
 
     const products = result.rows.map(row => ({
-      product_id:     row.PRODID,
-      name:           row.PRODNAME,
-      description:    row.PRODDESC,
-      price:          row.SALESPRICE,
-      list_price:     row.PRICE,
-      sales_price:    row.SALESPRICE,
-      type:           row.PRODTYPE,
-      container_id:   row.CONTID,
-      container:      row.CONTNAME,
-      container_name: row.CONTNAME,
-      stock:          row.QTY ?? 0,
+      product_id:  row.PRODID,
+      name:        row.PRODNAME,
+      description: row.PRODDESC,
+      price:       row.SALESPRICE,
+      list_price:  row.PRICE,
+      sales_price: row.SALESPRICE,
+      type:        row.PRODTYPE,
+      stock:       row.QTY ?? 0,
       // Real uploaded image, or null if none was ever added — the front
       // end should show a placeholder graphic in that case rather than
       // request a file that doesn't exist.
-      image:          row.IMAGEFILENAME,
-      image_url:      imageUrl(row.IMAGEFILENAME)
+      image:       row.IMAGEFILENAME,
+      image_url:   imageUrl(row.IMAGEFILENAME)
     }));
 
     return res.json({ success: true, products });
@@ -100,11 +101,16 @@ router.get("/products", async (req, res) => {
 
 // ── POST /api/products ───────────────────────────────────────
 // Now multipart/form-data (so it can carry a file), not JSON.
-// Fields: name, type, price, sales_price, description, container_id
+// Fields: name, type, price, sales_price, description
 // File field name: "image" (optional — product can be added without one
 // and the picture added later via PUT /api/products/:id/image)
+//
+// container_id is no longer accepted here — a product isn't assigned to
+// a container at creation time anymore. That assignment happens later,
+// either via Receive Purchase (POST /api/purchases/:purchId/receive) or
+// a manual Inventory adjustment (POST /api/inventory).
 router.post("/products", upload.single("image"), async (req, res) => {
-  const { name, type, price, sales_price, description, container_id } = req.body;
+  const { name, type, price, sales_price, description } = req.body;
 
   if (!name || price === undefined || price === null || price === "") {
     // Clean up the uploaded file if validation fails after upload
@@ -119,8 +125,8 @@ router.post("/products", upload.single("image"), async (req, res) => {
     conn = await getConnection();
 
     const result = await conn.execute(
-      `INSERT INTO PRODUCTS (ProdName, Price, ProdType, SalesPrice, ProdDesc, ContID, ImageFileName)
-       VALUES (:name, :price, :type, :sales_price, :description, :container_id, :imageFileName)
+      `INSERT INTO PRODUCTS (ProdName, Price, ProdType, SalesPrice, ProdDesc, ImageFileName)
+       VALUES (:name, :price, :type, :sales_price, :description, :imageFileName)
        RETURNING ProdID INTO :newId`,
       {
         name,
@@ -128,7 +134,6 @@ router.post("/products", upload.single("image"), async (req, res) => {
         type:         type || null,
         sales_price:  sales_price || null,
         description:  description || null,
-        container_id: container_id || null,
         imageFileName,
         newId:        { dir: oracledb.BIND_OUT, type: oracledb.NUMBER }
       },

@@ -51,6 +51,9 @@
                              padding:2px 6px; font-size:11px;">0</span>
               </a>
             </li>
+            <li>
+              <a class="nav-link" href="/customer/profile">My Profile</a>
+            </li>
             <li class="nav-item">
               <a class="nav-link" href="#" onclick="logout()">Logout</a>
               <script>
@@ -208,7 +211,7 @@
         const node = template.content.cloneNode(true);
 
         const img = node.querySelector(".checkout-item-img");
-        img.src = `/customer/assets/images/${item.image}`;
+        img.src = item.image_url || "/customer/assets/images/product-placeholder.png";
         img.alt = item.name;
 
         node.querySelector(".checkout-item-name").textContent  = item.name;

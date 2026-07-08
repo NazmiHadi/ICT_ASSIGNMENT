@@ -30,6 +30,68 @@ router.get("/orders/workers", async (req, res) => {
   }
 });
 
+// ── GET /api/orders/unassigned-count ──────────────────────────
+// Count of orders with no worker assigned yet. Powers the notification
+// badge on the "Manage Orders" nav item (admin/fulltime).
+router.get("/orders/unassigned-count", async (req, res) => {
+  let conn;
+  try {
+    conn = await getConnection();
+    const result = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM ORDERS WHERE WorkID IS NULL`
+    );
+    return res.json({ success: true, count: result.rows[0].CNT });
+  } catch (err) {
+    console.error("[ORDERS UNASSIGNED COUNT ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not load count." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+// ── GET /api/orders/pending-count?worker_id=123 ───────────────
+// Returns two counts for this worker's assigned orders, used to power the
+// two-color notification badge on "My Assigned Orders":
+//   not_shipped_count   -> OrderStatus = 'Processing'  (needs Ship)   -> RED
+//   not_delivered_count -> OrderStatus = 'In Delivery' (needs Deliver)-> YELLOW
+// `count` is kept for backward compatibility and mirrors not_shipped_count.
+router.get("/orders/pending-count", async (req, res) => {
+  const workerId = Number(req.query.worker_id);
+
+  if (!workerId) {
+    return res.status(400).json({ success: false, message: "worker_id is required." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+    const result = await conn.execute(
+      `SELECT
+         SUM(CASE WHEN OrderStatus = 'Processing'  THEN 1 ELSE 0 END) AS NOT_SHIPPED,
+         SUM(CASE WHEN OrderStatus = 'In Delivery' THEN 1 ELSE 0 END) AS NOT_DELIVERED
+         FROM ORDERS
+        WHERE WorkID = :workerId`,
+      { workerId }
+    );
+
+    const row = result.rows[0] || {};
+    const notShipped   = Number(row.NOT_SHIPPED)   || 0;
+    const notDelivered = Number(row.NOT_DELIVERED) || 0;
+
+    return res.json({
+      success: true,
+      count: notShipped, // legacy field
+      not_shipped_count: notShipped,
+      not_delivered_count: notDelivered
+    });
+  } catch (err) {
+    console.error("[ORDERS PENDING COUNT ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not load count." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 // ── GET /api/orders ───────────────────────────────────────────
 // Returns orders with customer, worker, tracking/status, and ordered products.
 // Used by the Manage Orders page (admin/fulltime — can (re)assign workers).
@@ -336,24 +398,3 @@ router.put("/orders/:orderId/status", async (req, res) => {
 });
 
 module.exports = router;
-
-// =====================================================================
-// NOTE FOR THE WORKER-SIDE FILES YOU'LL SEND NEXT:
-//
-// 1. Staff dashboard "unassigned orders" view: just call GET /api/orders
-//    and filter client-side for worker_id === null (or add a
-//    ?unassigned=true param here if you'd rather do it server-side —
-//    easy to add once I see how that page is structured).
-//
-// 2. "Ship" button: call PUT /api/orders/:orderId/ship with
-//    { worker_id }. Only enabled for an order once it's assigned to
-//    the logged-in worker and status is "Processing".
-//
-// 3. Manual status edit (In Delivery <-> Delivered): call
-//    PUT /api/orders/:orderId/status with { status, worker_id }.
-//    Only enabled once TrackingNo exists.
-//
-// I've assumed "Processing" is the initial state your DB calls
-// "in process" — rename in the CHECK constraint + code if you'd
-// rather it read literally "In Process".
-// =====================================================================

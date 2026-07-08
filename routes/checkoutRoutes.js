@@ -2,69 +2,11 @@ const express = require("express");
 const router = express.Router();
 const { getConnection, oracledb } = require("../config/db");
 
-// ── GET /api/orders?customer_id=... ────────────────────────────
-router.get("/orders", async (req, res) => {
-  const { customer_id } = req.query;
-  let conn;
-
-  if (!customer_id) {
-    return res.status(400).json({ success: false, message: "customer_id is required." });
-  }
-
-  try {
-    conn = await getConnection();
-
-    const ordersResult = await conn.execute(
-      `SELECT OrderID, OrderDate
-       FROM ORDERS
-       WHERE CustID = :custId
-       ORDER BY OrderDate DESC, OrderID DESC`,
-      { custId: customer_id }
-    );
-
-    const orders = [];
-
-    for (const row of ordersResult.rows) {
-      const itemsResult = await conn.execute(
-        `SELECT op.ProdID, op.Qty, p.ProdName, p.SalesPrice
-         FROM ORDER_PRODUCTS op
-         JOIN PRODUCTS p ON p.ProdID = op.ProdID
-         WHERE op.OrderID = :orderId`,
-        { orderId: row.ORDERID }
-      );
-
-      const items = itemsResult.rows.map(item => ({
-        product_id: item.PRODID,
-        name:       item.PRODNAME,
-        price:      item.SALESPRICE,
-        qty:        item.QTY,
-        line_total: item.SALESPRICE * item.QTY,
-        image:      `product_${String(item.PRODID).padStart(2, '0')}.jpg`
-      }));
-
-      const total = items.reduce((sum, i) => sum + i.line_total, 0);
-
-      orders.push({
-        order_id:   row.ORDERID,
-        order_date: row.ORDERDATE,
-        total,
-        items
-      });
-    }
-
-    return res.json({ success: true, orders });
-
-  } catch (err) {
-    console.error("[ORDERS ERROR]", err);
-    return res.status(500).json({ success: false, message: "Could not load orders." });
-
-  } finally {
-    if (conn) await conn.close();
-  }
-});
-
-
-// ── POST /api/checkout ──────────────────────────────────────────
+// NOTE: GET /api/orders used to be defined here too, but it duplicated (and
+// shadowed, due to mount order in server.js) the fuller implementation in
+// orderRoutes.js — which returns products, image_url, tracking number,
+// status, and worker info, and supports the same ?customer_id filter.
+// Removed here so there's a single source of truth for that route.
 router.post("/checkout", async (req, res) => {
   const { items, customer_id } = req.body;
   let conn;

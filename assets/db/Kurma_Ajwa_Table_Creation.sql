@@ -4,6 +4,9 @@
 --   1. Each IDENTITY column now starts at a different value so IDs
 --      don't all begin at 1.
 --   2. ORDERS gets TrackingNo + OrderStatus for the shipment workflow.
+--   3. PRODUCTS gets ImageFileName so product images can be stored and
+--      served (fixes ORA-00904 from orderRoutes.js/productRoutes.js
+--      querying p.ImageFileName against a table that didn't have it).
 --
 -- NOTE ON "LETTERS + NUMBERS" PKs:
 -- Oracle's GENERATED ALWAYS AS IDENTITY only works on NUMBER columns,
@@ -16,6 +19,12 @@
 -- TrackingNo column a letter+number format (e.g. KA20260704-008123-4F7A)
 -- since that's a free-text field, not a key, so it's the right place
 -- for that combination.
+--
+-- NOTE: if PRODUCTS already exists in your database (i.e. you're not
+-- running this whole script fresh), editing the CREATE TABLE below does
+-- NOT retroactively add the column to your live table — run
+-- alter_products_add_image.sql (ALTER TABLE PRODUCTS ADD ImageFileName
+-- VARCHAR2(200);) against your existing schema instead.
 -- =====================================================================
 
 -- =====================================
@@ -95,7 +104,6 @@ CREATE TABLE VENDORS (
 CREATE TABLE CONTAINERS (
     ContID NUMBER GENERATED ALWAYS AS IDENTITY (START WITH 3001 INCREMENT BY 1) PRIMARY KEY,
     ContName VARCHAR2(100),
-    ContDate DATE,
     ContColour VARCHAR2(50)
 );
 
@@ -109,32 +117,16 @@ CREATE TABLE PRODUCTS (
     ProdType VARCHAR2(50),
     SalesPrice NUMBER(10,2),
     ProdDesc VARCHAR2(50),
-    ContID NUMBER,
 
-    CONSTRAINT FK_PRODUCT_CONTAINER
-        FOREIGN KEY (ContID)
-        REFERENCES CONTAINERS(ContID)
+    -- Stored filename of the uploaded product image (e.g. "abc123.jpg"),
+    -- served from /uploads/products/<ImageFileName>. NULL until an image
+    -- is uploaded for that product.
+    ImageFileName VARCHAR2(200),
 );
 
--- =====================================
--- INVENTORY
--- =====================================
-CREATE TABLE INVENTORY (
-    ProdID NUMBER,
-    ContID NUMBER,
-    Qty NUMBER DEFAULT 0 NOT NULL,
-
-    CONSTRAINT PK_INVENTORY
-        PRIMARY KEY (ProdID, ContID),
-
-    CONSTRAINT FK_INV_PRODUCT
-        FOREIGN KEY (ProdID)
-        REFERENCES PRODUCTS(ProdID),
-
-    CONSTRAINT FK_INV_CONTAINER
-        FOREIGN KEY (ContID)
-        REFERENCES CONTAINERS(ContID)
-);
+-- NOTE: INVENTORY used to be created here, but it now references
+-- PURCHASE (see below), so its definition has moved further down the
+-- script, right after PURCHASE_PRODUCT, where PURCHASE already exists.
 
 -- =====================================
 -- ORDERS  (+ TrackingNo, OrderStatus)
@@ -206,10 +198,16 @@ CREATE TABLE PURCHASE (
 -- =====================================
 -- PURCHASE_PRODUCT
 -- =====================================
+-- QtyReceived tracks how much of this purchase LINE has already been
+-- moved into INVENTORY so far. A purchase of Qty=3 can be received into
+-- inventory across several separate visits (e.g. 2 today, 1 tomorrow) —
+-- QtyReceived keeps a running total so the remaining amount
+-- (Qty - QtyReceived) is always known and workers can't over-receive.
 CREATE TABLE PURCHASE_PRODUCT (
     PurchID NUMBER,
     ProdID NUMBER,
     Qty NUMBER NOT NULL,
+    QtyReceived NUMBER DEFAULT 0 NOT NULL,
 
     CONSTRAINT PK_PURCHASE_PRODUCT
         PRIMARY KEY (PurchID, ProdID),
@@ -220,6 +218,48 @@ CREATE TABLE PURCHASE_PRODUCT (
 
     CONSTRAINT FK_PP_PRODUCT
         FOREIGN KEY (ProdID)
-        REFERENCES PRODUCTS(ProdID)
+        REFERENCES PRODUCTS(ProdID),
+
+    CONSTRAINT CHK_PP_RECEIVED_LE_QTY
+        CHECK (QtyReceived <= Qty)
 );
 
+-- =====================================
+-- INVENTORY
+-- =====================================
+-- Each row is one "batch" of stock: a specific product, sitting in a
+-- specific container, that came from a specific purchase (PurchID).
+-- This is what lets the app answer "which purchase did this stock come
+-- from?" instead of just holding one blended total per product/container.
+--
+-- PurchID is nullable to allow manual stock adjustments that aren't
+-- tied to any purchase (e.g. stock corrections). A surrogate InvID is
+-- used as the primary key (instead of a composite key including the
+-- nullable PurchID) because Oracle primary key columns cannot be NULL.
+-- The UNIQUE constraint below still prevents duplicate rows for the
+-- same product + container + purchase combination, so receiving into
+-- the same container across multiple days accumulates onto one row
+-- instead of creating duplicates.
+CREATE TABLE INVENTORY (
+    InvID NUMBER GENERATED ALWAYS AS IDENTITY (START WITH 4001 INCREMENT BY 1) PRIMARY KEY,
+    ProdID NUMBER NOT NULL,
+    ContID NUMBER NOT NULL,
+    PurchID NUMBER,
+    Qty NUMBER DEFAULT 0 NOT NULL,
+    DateAssigned DATE DEFAULT SYSDATE,
+
+    CONSTRAINT UQ_INV_PROD_CONT_PURCH
+        UNIQUE (ProdID, ContID, PurchID),
+
+    CONSTRAINT FK_INV_PRODUCT
+        FOREIGN KEY (ProdID)
+        REFERENCES PRODUCTS(ProdID),
+
+    CONSTRAINT FK_INV_CONTAINER
+        FOREIGN KEY (ContID)
+        REFERENCES CONTAINERS(ContID),
+
+    CONSTRAINT FK_INV_PURCHASE
+        FOREIGN KEY (PurchID)
+        REFERENCES PURCHASE(PurchID)
+);

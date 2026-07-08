@@ -132,7 +132,7 @@
     <div class="page-head">
       <p class="eyebrow">Catalog &amp; Stock</p>
       <h1>Manage Products</h1>
-      <p>Add products, set pricing, link each product to a container, and upload a picture.</p>
+      <p>Add products, set pricing, and upload a picture. Assigning stock to a container happens in Receive Purchase or Manage Inventory.</p>
     </div>
 
     <div id="formAlert"></div>
@@ -173,12 +173,6 @@
             <label>Description</label>
             <input type="text" class="form-control" id="prodDesc" placeholder="Short description" maxlength="50">
           </div>
-          <div class="form-group">
-            <label>Container</label>
-            <select class="form-control" id="contId">
-              <option value="">-- No container --</option>
-            </select>
-          </div>
           <button type="submit" class="btn-primary">Add Product</button>
         </form>
       </div>
@@ -195,7 +189,7 @@
                 <th>Type</th>
                 <th>Price</th>
                 <th>Description</th>
-                <th>Container</th>
+                <th>Stock</th>
               </tr>
             </thead>
             <tbody id="productTableBody">
@@ -253,21 +247,11 @@
     reader.readAsDataURL(file);
   });
 
-  // Maps to PRODUCTS table: ProdID, ProdName, Price, ProdType, SalesPrice, ProdDesc, ContID (FK -> CONTAINERS), ImageFileName
-  async function loadContainerOptions() {
-    const sel = document.getElementById("contId");
-    try {
-      const res  = await fetch("/api/containers");
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message);
-      const containers = data.containers || [];
-      sel.innerHTML = '<option value="">-- No container --</option>' +
-        containers.map(c => `<option value="${c.container_id}">${c.name}</option>`).join("");
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
+  // Maps to PRODUCTS table: ProdID, ProdName, Price, ProdType, SalesPrice,
+  // ProdDesc, ImageFileName. Products no longer carry a container link —
+  // "Stock" here is the total qty across every container this product
+  // happens to be sitting in (INVENTORY), assigned via Receive Purchase
+  // or a manual Inventory adjustment.
   async function loadProducts() {
     const tbody = document.getElementById("productTableBody");
     try {
@@ -285,7 +269,7 @@
               <td>${p.type || "-"}</td>
               <td>${priceDisplay(p)}</td>
               <td>${p.description || "-"}</td>
-              <td>${p.container_name || "-"}</td>
+              <td>${p.stock ?? 0}</td>
             </tr>`).join("");
     } catch (err) {
       console.error(err);
@@ -300,12 +284,11 @@
     e.preventDefault();
 
     const formData = new FormData();
-    formData.append("name",         document.getElementById("prodName").value.trim());
-    formData.append("type",         document.getElementById("prodType").value.trim());
-    formData.append("price",        document.getElementById("price").value);
-    formData.append("sales_price",  document.getElementById("salesPrice").value || "");
-    formData.append("description",  document.getElementById("prodDesc").value.trim());
-    formData.append("container_id", document.getElementById("contId").value || "");
+    formData.append("name",        document.getElementById("prodName").value.trim());
+    formData.append("type",        document.getElementById("prodType").value.trim());
+    formData.append("price",       document.getElementById("price").value);
+    formData.append("sales_price", document.getElementById("salesPrice").value || "");
+    formData.append("description", document.getElementById("prodDesc").value.trim());
 
     if (fileInput.files[0]) {
       formData.append("image", fileInput.files[0]);
@@ -326,7 +309,6 @@
     }
   });
 
-  loadContainerOptions();
   loadProducts();
 </script>
 </body>

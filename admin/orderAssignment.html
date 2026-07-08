@@ -23,7 +23,7 @@
     .sidebar-brand .role-pill { display:inline-block; margin-top:10px; padding:4px 10px; font-size:10.5px; letter-spacing:1px; text-transform:uppercase; font-weight:600; color:#EDE6DC; background:rgba(168,51,61,0.35); border:1px solid rgba(168,51,61,0.6); border-radius:20px; }
     .sidebar-nav { list-style:none; margin:0; padding:0; flex:1; }
     .sidebar-nav .nav-group-label { padding:16px 28px 6px; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#8A7B6C; font-weight:600; }
-    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; }
+    .sidebar-nav li a { display:flex; align-items:center; gap:12px; padding:13px 28px; color:#C9BFB2; text-decoration:none; font-size:14.5px; font-weight:500; border-left:3px solid transparent; transition:background .15s,color .15s; position:relative; }
     .sidebar-nav li a i { width:18px; text-align:center; font-size:14px; }
     .sidebar-nav li a:hover { background:var(--sidebar-hover); color:#fff; }
     .sidebar-nav li a.active { background:var(--sidebar-hover); color:#fff; border-left-color:var(--accent); }
@@ -31,10 +31,17 @@
     .sidebar-footer a { display:flex; align-items:center; gap:10px; color:#C9BFB2; text-decoration:none; font-size:14px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
     .sidebar-footer a:hover { color:#fff; }
     .main { flex:1; padding:40px 48px 60px; max-width:1200px; }
-    .page-head { margin-bottom:32px; }
+    .page-head { margin-bottom:32px; display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; }
     .page-head .eyebrow { font-size:12px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px; }
-    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
+    .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
+    .search-box { position:relative; min-width:260px; }
+    .search-box input {
+      width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 14px 10px 36px;
+      font-size:13.5px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff;
+    }
+    .search-box input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+    .search-box i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:13px; }
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
     .table-wrapper { overflow-x:auto; }
@@ -43,8 +50,35 @@
     table.assign-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
     table.assign-table tbody tr:hover { background:#FBF8F4; }
     .product-tag { display:inline-block; background:var(--accent-soft); color:var(--accent); border-radius:4px; padding:2px 8px; font-size:12px; margin:2px 2px 2px 0; }
+    .status-badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; white-space:nowrap; }
+    .status-processing { background:#F3E9D8; color:#A87D0A; }
+    .status-in-delivery { background:#DCEBF9; color:#2266A8; }
+    .status-delivered { background:#DFF3E3; color:#237A3F; }
+    .tracking-no { display:block; font-size:11px; color:var(--ink-soft); font-family:monospace; margin-top:4px; }
+    .action-btn { border:none; border-radius:6px; cursor:pointer; padding:7px 14px; font-size:13px; font-weight:600; transition:background .15s; font-family:'Poppins',sans-serif; white-space:nowrap; }
+    .ship-btn { background:var(--accent); color:#fff; }
+    .ship-btn:hover { background:#8E2A33; }
+    .deliver-btn { background:#2266A8; color:#fff; }
+    .deliver-btn:hover { background:#184E80; }
+    #pageAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
+    #pageAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
     .empty-state { text-align:center; padding:40px 20px; color:var(--ink-soft); }
     .empty-state i { font-size:32px; margin-bottom:12px; display:block; color:var(--line); }
+
+    /* ── Notification badges (page heading only) ────────────────
+       Red  = not shipped yet (OrderStatus = 'Processing')
+       Yellow = shipped but not delivered yet (OrderStatus = 'In Delivery')
+       The matching sidebar-nav badges are rendered separately by
+       page-guard.js (badge-orderAssignment / badge-orderAssignment-2) —
+       this page does NOT touch the sidebar to avoid double badges. */
+    .nav-badge {
+      display:inline-flex; align-items:center; justify-content:center;
+      min-width:20px; height:20px; padding:0 6px; border-radius:10px;
+      font-size:11px; font-weight:700; color:#fff; line-height:1;
+    }
+    .nav-badge.badge-red    { background:var(--accent); }
+    .nav-badge.badge-yellow { background:#C79A1E; }
+
     @media (max-width:860px) {
       .shell { flex-direction:column; }
       .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
@@ -55,6 +89,7 @@
       .sidebar-nav li a.active { border-left:none; border-bottom-color:var(--accent); }
       .sidebar-footer { display:none; }
       .main { padding:28px 20px 40px; }
+      .page-head { flex-direction:column; align-items:flex-start; }
     }
   </style>
 </head>
@@ -74,10 +109,22 @@
 
   <main class="main">
     <div class="page-head">
-      <p class="eyebrow">Daily Tasks</p>
-      <h1>My Assigned Orders</h1>
-      <p>Orders that a manager or full-time worker has assigned to you. This is view-only — you cannot assign orders to others here.</p>
+      <div>
+        <h1>
+          My Assigned Orders
+          <span id="badgeNotShipped"   class="nav-badge badge-red"    style="display:none;" title="Not shipped yet"></span>
+          <span id="badgeNotDelivered" class="nav-badge badge-yellow" style="display:none;" title="Shipped, not delivered yet"></span>
+        </h1>
+        <p class="eyebrow" style="margin-top:4px;">Daily Tasks</p>
+        <p>Orders that a manager or full-time worker has assigned to you. Ship an order once it's ready, then mark it delivered once it reaches the customer.</p>
+      </div>
+      <div class="search-box">
+        <i class="fa fa-search"></i>
+        <input type="text" id="assignSearchInput" placeholder="Search by order ID, customer, product, status...">
+      </div>
     </div>
+
+    <div id="pageAlert" style="display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px;"></div>
 
     <div class="panel">
       <h3>Assigned To Me</h3>
@@ -89,10 +136,12 @@
               <th>Date</th>
               <th>Customer</th>
               <th>Products</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="assignTableBody">
-            <tr><td colspan="4">Loading your orders...</td></tr>
+            <tr><td colspan="6">Loading your orders...</td></tr>
           </tbody>
         </table>
       </div>
@@ -105,6 +154,13 @@
 <script>
   function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
 
+  let assignedOrdersCache = [];
+
+  function showAlert(msg, type) {
+    const box = document.getElementById("pageAlert");
+    box.textContent = msg; box.className = type; box.style.display = "block";
+    setTimeout(() => { box.style.display = "none"; }, 4000);
+  }
 
   function formatDate(d) {
     if (!d) return "-";
@@ -112,12 +168,101 @@
     return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
   }
 
+  function statusClass(status) {
+    switch (status) {
+      case "Delivered":   return "status-delivered";
+      case "In Delivery": return "status-in-delivery";
+      default:            return "status-processing";
+    }
+  }
+
+  // ── actionCell(): decides which button (if any) a row gets ────────────
+  // Processing  -> "Ship" button (auto-generates tracking no, flips to
+  //                "In Delivery")
+  // In Delivery -> "Mark Delivered" button (manual, mocks the driver
+  //                confirming drop-off)
+  // Delivered   -> nothing left to do
+  function actionCell(order) {
+    const status = order.status || "Processing";
+    if (status === "Processing") {
+      return `<button class="action-btn ship-btn" onclick="shipOrder(${order.order_id})">Ship</button>`;
+    }
+    if (status === "In Delivery") {
+      return `<button class="action-btn deliver-btn" onclick="markDelivered(${order.order_id})">Mark Delivered</button>`;
+    }
+    return `<span style="color:var(--ink-soft);font-size:13px;">—</span>`;
+  }
+
+  // Renders a given list of assigned orders into the table. Kept
+  // separate from loadMyOrders so the search box can re-render a
+  // filtered subset of assignedOrdersCache without refetching.
+  function renderAssignedOrders(list) {
+    const tbody = document.getElementById("assignTableBody");
+
+    if (list.length === 0) {
+      if (assignedOrdersCache.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6">
+          <div class="empty-state">
+            <i class="fa fa-inbox"></i>
+            No orders have been assigned to you yet.
+          </div>
+        </td></tr>`;
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6">
+          <div class="empty-state">
+            <i class="fa fa-search"></i>
+            No orders match your search.
+          </div>
+        </td></tr>`;
+      }
+      return;
+    }
+
+    tbody.innerHTML = list.map(o => {
+      const productTags = o.products && o.products.length > 0
+        ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
+        : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
+
+      const status = o.status || "Processing";
+      const trackingLine = o.tracking_no ? `<span class="tracking-no">${o.tracking_no}</span>` : "";
+
+      return `
+        <tr id="row-${o.order_id}">
+          <td>#${o.order_id}</td>
+          <td>${formatDate(o.order_date)}</td>
+          <td>${o.customer_name || "-"}</td>
+          <td>${productTags}</td>
+          <td><span class="status-badge ${statusClass(status)}">${status}</span>${trackingLine}</td>
+          <td>${actionCell(o)}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  // Matches on order ID, customer name, formatted date, status,
+  // tracking number, or any product name within the order.
+  function filterAssignedOrders(term) {
+    return assignedOrdersCache.filter(o => {
+      const idMatch       = String(o.order_id).includes(term);
+      const customerMatch = (o.customer_name || "").toLowerCase().includes(term);
+      const dateMatch     = formatDate(o.order_date).toLowerCase().includes(term);
+      const statusMatch   = (o.status || "Processing").toLowerCase().includes(term);
+      const trackingMatch = (o.tracking_no || "").toLowerCase().includes(term);
+      const prodMatch     = (o.products || []).some(p => (p.product_name || "").toLowerCase().includes(term));
+      return idMatch || customerMatch || dateMatch || statusMatch || trackingMatch || prodMatch;
+    });
+  }
+
+  document.getElementById("assignSearchInput").addEventListener("input", function () {
+    const term = this.value.trim().toLowerCase();
+    renderAssignedOrders(term ? filterAssignedOrders(term) : assignedOrdersCache);
+  });
+
   async function loadMyOrders() {
     const tbody = document.getElementById("assignTableBody");
     const workerId = localStorage.getItem("userId");
 
     if (!workerId) {
-      tbody.innerHTML = '<tr><td colspan="4">Could not identify your worker account. Please log in again.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6">Could not identify your worker account. Please log in again.</td></tr>';
       return;
     }
 
@@ -126,37 +271,97 @@
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
 
-      const orders = data.orders || [];
-      if (orders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4">
-          <div class="empty-state">
-            <i class="fa fa-inbox"></i>
-            No orders have been assigned to you yet.
-          </div>
-        </td></tr>`;
-        return;
-      }
+      assignedOrdersCache = data.orders || [];
 
-      tbody.innerHTML = orders.map(o => {
-        const productTags = o.products && o.products.length > 0
-          ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
-          : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
-        return `
-          <tr>
-            <td>#${o.order_id}</td>
-            <td>${formatDate(o.order_date)}</td>
-            <td>${o.customer_name || "-"}</td>
-            <td>${productTags}</td>
-          </tr>`;
-      }).join("");
+      // Re-apply whatever's currently in the search box (e.g. after
+      // shipping/delivering refreshes the list) instead of always
+      // showing everything.
+      const term = document.getElementById("assignSearchInput").value.trim().toLowerCase();
+      renderAssignedOrders(term ? filterAssignedOrders(term) : assignedOrdersCache);
 
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="4">Failed to load your orders. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6">Failed to load your orders. Please refresh.</td></tr>';
+    }
+  }
+
+  // ── Notification badges (page heading only) ────────────────────────────
+  // Red    = orders still "Processing" (not shipped yet)
+  // Yellow = orders "In Delivery" (shipped, not delivered yet)
+  // NOTE: the sidebar nav badge for "My Assigned Orders" is handled by
+  // page-guard.js's loadNavBadges() (badge-orderAssignment / -2). Don't
+  // also inject sidebar badges here — doing so double-counts them.
+  async function loadPendingCounts() {
+    const workerId = localStorage.getItem("userId");
+    if (!workerId) return;
+
+    try {
+      const res  = await fetch(`/api/orders/pending-count?worker_id=${encodeURIComponent(workerId)}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) return;
+
+      renderBadge("badgeNotShipped",   data.not_shipped_count);
+      renderBadge("badgeNotDelivered", data.not_delivered_count);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function renderBadge(elId, count) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count;
+      el.style.display = "inline-flex";
+    } else {
+      el.style.display = "none";
+    }
+  }
+
+  // ── shipOrder(): worker presses "Ship" ─────────────────────────────────
+  // Server auto-generates a tracking number and flips status to
+  // "In Delivery" — nothing for the worker to type in.
+  async function shipOrder(orderId) {
+    const workerId = localStorage.getItem("userId");
+    try {
+      const res  = await fetch(`/api/orders/${orderId}/ship`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ worker_id: workerId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to ship order.", "error"); return; }
+      showAlert(`Order #${orderId} shipped. Tracking No: ${data.tracking_no}`, "success");
+      loadMyOrders();
+      loadPendingCounts();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  }
+
+  // ── markDelivered(): worker manually confirms drop-off (mock) ─────────
+  async function markDelivered(orderId) {
+    const workerId = localStorage.getItem("userId");
+    try {
+      const res  = await fetch(`/api/orders/${orderId}/status`, {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ status: "Delivered", worker_id: workerId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to update status.", "error"); return; }
+      showAlert(`Order #${orderId} marked as delivered.`, "success");
+      loadMyOrders();
+      loadPendingCounts();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
     }
   }
 
   loadMyOrders();
+  loadPendingCounts();
 </script>
 </body>
 </html>

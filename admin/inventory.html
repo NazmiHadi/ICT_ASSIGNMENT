@@ -37,14 +37,18 @@
     .page-head h1 { font-size:28px; font-weight:700; margin:0 0 6px; }
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
     .two-col { display:grid; grid-template-columns:minmax(280px,360px) 1fr; gap:24px; align-items:start; }
+    .form-stack { display:flex; flex-direction:column; gap:24px; }
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
+    .panel h3 i { color:var(--accent); margin-right:6px; }
     .form-group { margin-bottom:14px; }
     .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:5px; }
     .form-control { width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:14px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
     .form-control:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
     .btn-primary { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s; width:100%; font-family:'Poppins',sans-serif; margin-top:6px; }
     .btn-primary:hover { background:#8E2A33; }
+    .btn-remove { background:#fff; color:var(--accent); border:1.5px solid var(--accent); border-radius:6px; padding:11px 22px; font-size:14px; font-weight:600; cursor:pointer; transition:background .15s,color .15s; width:100%; font-family:'Poppins',sans-serif; margin-top:6px; }
+    .btn-remove:hover { background:var(--accent); color:#fff; }
     .table-wrapper { overflow-x:auto; }
     table.inv-table { width:100%; border-collapse:collapse; }
     table.inv-table th, table.inv-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:14px; vertical-align:middle; }
@@ -54,6 +58,10 @@
     .qty-ok  { background:#E8F5EA; color:#1C7A3D; }
     .qty-low { background:#FBF1DC; color:#91701C; }
     .qty-out { background:#FBE9E7; color:#A8333D; }
+    .source-stack { display:flex; flex-wrap:wrap; gap:4px; max-width:260px; }
+    .source-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11.5px; font-weight:600; white-space:nowrap; }
+    .source-purch { background:#E3EEF9; color:#1C5A91; }
+    .source-manual { background:#F0EDE8; color:#8A7B6C; }
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
@@ -94,27 +102,66 @@
     <div id="formAlert"></div>
 
     <div class="two-col">
-      <div class="panel">
-        <h3>Set / Update Stock</h3>
-        <form id="inventoryForm">
-          <div class="form-group">
-            <label>Product</label>
-            <select class="form-control" id="prodId" required>
-              <option value="">-- Select product --</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Container</label>
-            <select class="form-control" id="contId" required>
-              <option value="">-- Select container --</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Quantity</label>
-            <input type="number" class="form-control" id="qty" placeholder="e.g. 100" min="0" required>
-          </div>
-          <button type="submit" class="btn-primary">Save Stock</button>
-        </form>
+      <div class="form-stack">
+        <div class="panel">
+          <h3><i class="fa fa-pencil"></i>Set / Update Stock</h3>
+          <form id="inventoryForm">
+            <div class="form-group">
+              <label>Product</label>
+              <select class="form-control" id="prodId" required>
+                <option value="">-- Select product --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Container</label>
+              <select class="form-control" id="contId" required>
+                <option value="">-- Select container --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quantity</label>
+              <input type="number" class="form-control" id="qty" placeholder="e.g. 100" min="0" required>
+            </div>
+            <button type="submit" class="btn-primary">Save Stock</button>
+          </form>
+          <p style="margin:14px 0 0;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            This sets a <strong>manual</strong> stock amount not tied to any purchase — entering a
+            new quantity here <strong>replaces</strong> the current manual amount, it doesn't add to it.
+            It's added on top of any purchase-received stock already in that container.
+            To assign stock that came from a purchase, use the <strong>Receive Purchase</strong>
+            tab under Manage Purchases instead.
+          </p>
+        </div>
+
+        <div class="panel">
+          <h3><i class="fa fa-trash"></i>Remove Stock</h3>
+          <form id="removeForm">
+            <div class="form-group">
+              <label>Product</label>
+              <select class="form-control" id="removeProdId" required>
+                <option value="">-- Select product --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Container</label>
+              <select class="form-control" id="removeContId" required>
+                <option value="">-- Select container --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quantity to Remove</label>
+              <input type="number" class="form-control" id="removeQty" placeholder="e.g. 5" min="1" required>
+            </div>
+            <button type="submit" class="btn-remove">Remove Stock</button>
+          </form>
+          <p style="margin:14px 0 0;font-size:12.5px;color:var(--ink-soft);line-height:1.6;">
+            <i class="fa fa-info-circle" style="color:var(--accent)"></i>
+            Use this to write off stock that's gone bad, been damaged, or otherwise can't be sold.
+            It deducts from the <strong>oldest</strong> stock first, and can pull across several
+            purchase batches (and the manual row) if needed to reach the amount you're removing.
+          </p>
+        </div>
       </div>
 
       <div class="panel">
@@ -125,11 +172,13 @@
               <tr>
                 <th>Product</th>
                 <th>Container</th>
-                <th>Quantity</th>
+                <th>Total Qty</th>
+                <th>Sources</th>
+                <th>Last Updated</th>
               </tr>
             </thead>
             <tbody id="inventoryTableBody">
-              <tr><td colspan="3">Loading inventory...</td></tr>
+              <tr><td colspan="5">Loading inventory...</td></tr>
             </tbody>
           </table>
         </div>
@@ -166,23 +215,51 @@
       const prodData = await prodRes.json();
       const contData = await contRes.json();
 
-      const prodSel = document.getElementById("prodId");
-      const contSel = document.getElementById("contId");
+      const prodOptionsHtml = prodRes.ok && prodData.success
+        ? '<option value="">-- Select product --</option>' +
+          (prodData.products || []).map(p => `<option value="${p.product_id}">${p.name}</option>`).join("")
+        : '<option value="">-- Select product --</option>';
 
-      if (prodRes.ok && prodData.success) {
-        prodSel.innerHTML = '<option value="">-- Select product --</option>' +
-          (prodData.products || []).map(p => `<option value="${p.product_id}">${p.name}</option>`).join("");
-      }
-      if (contRes.ok && contData.success) {
-        contSel.innerHTML = '<option value="">-- Select container --</option>' +
-          (contData.containers || []).map(c => `<option value="${c.container_id}">${c.name}</option>`).join("");
-      }
+      const contOptionsHtml = contRes.ok && contData.success
+        ? '<option value="">-- Select container --</option>' +
+          (contData.containers || []).map(c => `<option value="${c.container_id}">${c.name}</option>`).join("")
+        : '<option value="">-- Select container --</option>';
+
+      // Same dropdown options power both the "Set/Update Stock" form and
+      // the "Remove Stock" form, since they act on the same products and
+      // containers.
+      document.getElementById("prodId").innerHTML       = prodOptionsHtml;
+      document.getElementById("removeProdId").innerHTML = prodOptionsHtml;
+      document.getElementById("contId").innerHTML       = contOptionsHtml;
+      document.getElementById("removeContId").innerHTML = contOptionsHtml;
     } catch (err) {
       console.error(err);
     }
   }
 
-  // Maps to INVENTORY junction table: ProdID (FK), ContID (FK), Qty
+  // Renders one small pill per underlying batch that makes up this
+  // product+container's total (e.g. two purchases plus a manual row).
+  function sourceStack(batches) {
+    if (!batches || batches.length === 0) {
+      return '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
+    }
+    return `<div class="source-stack">${batches.map(b => {
+      if (b.purchase_id) {
+        const vendorPart = b.vendor_name ? ` — ${b.vendor_name}` : "";
+        return `<span class="source-badge source-purch">Purchase #${b.purchase_id}${vendorPart}: ${b.qty}</span>`;
+      }
+      return `<span class="source-badge source-manual">Manual: ${b.qty}</span>`;
+    }).join("")}</div>`;
+  }
+
+  function formatDate(d) {
+    if (!d) return "-";
+    const dt = new Date(d);
+    return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
+  }
+
+  // Maps to INVENTORY table, TOTALED per product+container across every
+  // underlying batch row (purchase-linked or manual).
   async function loadInventory() {
     const tbody = document.getElementById("inventoryTableBody");
     try {
@@ -191,19 +268,23 @@
       if (!res.ok || !data.success) throw new Error(data.message);
       const inventory = data.inventory || [];
       tbody.innerHTML = inventory.length === 0
-        ? '<tr><td colspan="3">No inventory records yet.</td></tr>'
+        ? '<tr><td colspan="5">No inventory records yet.</td></tr>'
         : inventory.map(i => `
             <tr>
               <td>${i.product_name}</td>
               <td>${i.container_name}</td>
-              <td>${qtyBadge(i.qty)}</td>
+              <td>${qtyBadge(i.total_qty)}</td>
+              <td>${sourceStack(i.batches)}</td>
+              <td>${formatDate(i.last_updated)}</td>
             </tr>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="3">Failed to load inventory. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5">Failed to load inventory. Please refresh.</td></tr>';
     }
   }
 
+  // "Set / Update Stock" — manual adjustment. Overrides the existing
+  // manual amount for this product+container rather than adding to it.
   document.getElementById("inventoryForm").addEventListener("submit", async function(e) {
     e.preventDefault();
     const payload = {
@@ -217,6 +298,28 @@
       if (!res.ok || !data.success) { showAlert(data.message || "Failed to save stock.", "error"); return; }
       showAlert(data.message || "Inventory saved successfully.", "success");
       document.getElementById("inventoryForm").reset();
+      loadInventory();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  });
+
+  // "Remove Stock" — writes off spoiled/damaged product. Pulls from the
+  // oldest batch(es) for this product+container first.
+  document.getElementById("removeForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const payload = {
+      product_id:   document.getElementById("removeProdId").value,
+      container_id: document.getElementById("removeContId").value,
+      qty:          document.getElementById("removeQty").value
+    };
+    try {
+      const res  = await fetch("/api/inventory/remove", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to remove stock.", "error"); return; }
+      showAlert(data.message || "Stock removed successfully.", "success");
+      document.getElementById("removeForm").reset();
       loadInventory();
     } catch (err) {
       console.error(err);

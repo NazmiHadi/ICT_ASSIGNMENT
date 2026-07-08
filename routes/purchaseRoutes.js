@@ -32,8 +32,13 @@ router.get("/purchases/form-data", async (req, res) => {
 });
 
 // ── GET /api/purchases ────────────────────────────────────────
-// Returns all purchases with worker, vendor and product details.
+// Returns purchases with worker, vendor and product details.
+// Optional ?vendor_id=... restricts results to that vendor only — used
+// by the vendor-role Purchase History tab so a vendor only ever sees
+// their own transactions with us, never other vendors' purchases.
 router.get("/purchases", async (req, res) => {
+  const vendorId = req.query.vendor_id ? Number(req.query.vendor_id) : null;
+
   let conn;
   try {
     conn = await getConnection();
@@ -48,14 +53,17 @@ router.get("/purchases", async (req, res) => {
          FROM PURCHASE p
          LEFT JOIN WORKERS w ON p.WorkID = w.WorkID
          LEFT JOIN VENDORS v ON p.VendID = v.VendID
-        ORDER BY p.PurchID DESC`
+        ${vendorId ? "WHERE p.VendID = :vendorId" : ""}
+        ORDER BY p.PurchID DESC`,
+      vendorId ? { vendorId } : {}
     );
 
     const prodResult = await conn.execute(
       `SELECT pp.PurchID,
               pp.ProdID,
               pr.ProdName,
-              pp.Qty
+              pp.Qty,
+              pp.QtyReceived
          FROM PURCHASE_PRODUCT pp
          LEFT JOIN PRODUCTS pr ON pp.ProdID = pr.ProdID
         ORDER BY pp.PurchID`
@@ -65,9 +73,11 @@ router.get("/purchases", async (req, res) => {
     prodResult.rows.forEach(row => {
       if (!productsByPurch[row.PURCHID]) productsByPurch[row.PURCHID] = [];
       productsByPurch[row.PURCHID].push({
-        product_id:   row.PRODID,
-        product_name: row.PRODNAME,
-        qty:          row.QTY
+        product_id:    row.PRODID,
+        product_name:  row.PRODNAME,
+        qty:           row.QTY,
+        qty_received:  row.QTYRECEIVED,
+        qty_remaining: row.QTY - row.QTYRECEIVED
       });
     });
 
@@ -94,6 +104,9 @@ router.get("/purchases", async (req, res) => {
 // ── POST /api/purchases ───────────────────────────────────────
 // Create a new purchase order with one or more products.
 // Body: { worker_id, vendor_id, products: [{ product_id, qty }] }
+// worker_id is the currently logged-in worker (sent by the frontend from
+// localStorage's userId) — the form no longer asks the user to pick a
+// worker from a dropdown.
 router.post("/purchases", async (req, res) => {
   const { worker_id, vendor_id, products } = req.body;
 
@@ -161,7 +174,8 @@ router.get("/purchases/:purchId/products", async (req, res) => {
     const result = await conn.execute(
       `SELECT pp.ProdID,
               pr.ProdName,
-              pp.Qty
+              pp.Qty,
+              pp.QtyReceived
          FROM PURCHASE_PRODUCT pp
          LEFT JOIN PRODUCTS pr ON pp.ProdID = pr.ProdID
         WHERE pp.PurchID = :purchId`,
@@ -169,9 +183,11 @@ router.get("/purchases/:purchId/products", async (req, res) => {
     );
 
     const products = result.rows.map(row => ({
-      product_id:   row.PRODID,
-      product_name: row.PRODNAME,
-      qty:          row.QTY
+      product_id:    row.PRODID,
+      product_name:  row.PRODNAME,
+      qty:           row.QTY,
+      qty_received:  row.QTYRECEIVED,
+      qty_remaining: row.QTY - row.QTYRECEIVED
     }));
 
     return res.json({ success: true, products });
@@ -211,9 +227,18 @@ router.get("/purchases/containers", async (req, res) => {
 });
 
 // ── POST /api/purchases/:purchId/receive ─────────────────────
-// Add purchased products into their respective containers (INVENTORY).
+// Assign purchased products into their respective containers (INVENTORY),
+// recording WHICH purchase each batch of stock came from.
+//
 // Body: { items: [{ product_id, container_id, qty }] }
-// Uses MERGE so existing inventory rows are updated, new ones inserted.
+//
+// A purchase line can be received across multiple separate calls (e.g.
+// different days) — each call can only assign up to what's still
+// remaining on that line (Qty - QtyReceived), so the same purchased
+// stock can never be assigned into inventory twice. If EVERY line on
+// the purchase has already been fully received, the whole request is
+// rejected up front — this is the server-side backstop for the
+// frontend hiding fully-received purchases from the receive dropdown.
 router.post("/purchases/:purchId/receive", async (req, res) => {
   const purchId = Number(req.params.purchId);
   const { items } = req.body;
@@ -240,23 +265,79 @@ router.post("/purchases/:purchId/receive", async (req, res) => {
       return res.status(404).json({ success: false, message: "Purchase not found." });
     }
 
-    // MERGE each item into INVENTORY
-    // If (ProdID, ContID) exists → add qty. If not → insert new row.
+    // Reject outright if every line on this purchase has already been
+    // fully received.
+    const remainingCheck = await conn.execute(
+      `SELECT COUNT(*) AS REMAINING_LINES
+         FROM PURCHASE_PRODUCT
+        WHERE PurchID = :purchId AND Qty > QtyReceived`,
+      { purchId }
+    );
+    if (remainingCheck.rows[0].REMAINING_LINES === 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Purchase #${purchId} has already been fully received.`
+      });
+    }
+
     for (const item of items) {
+      // Lock the purchase line and check how much is actually left to
+      // receive, so two people (or the same person twice) can't
+      // over-assign more than was actually purchased.
+      const lineResult = await conn.execute(
+        `SELECT Qty, QtyReceived
+           FROM PURCHASE_PRODUCT
+          WHERE PurchID = :purchId AND ProdID = :product_id
+          FOR UPDATE`,
+        { purchId, product_id: item.product_id }
+      );
+
+      if (lineResult.rows.length === 0) {
+        await conn.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Product ${item.product_id} is not part of purchase #${purchId}.`
+        });
+      }
+
+      const { QTY: lineQty, QTYRECEIVED: lineReceived } = lineResult.rows[0];
+      const remaining = lineQty - lineReceived;
+
+      if (item.qty > remaining) {
+        await conn.rollback();
+        return res.status(400).json({
+          success: false,
+          message: `Only ${remaining} unit(s) of product ${item.product_id} are still left to receive from purchase #${purchId}.`
+        });
+      }
+
+      // Assign this batch into INVENTORY, tagged with the purchase it
+      // came from. If some of this same purchase was already assigned
+      // into this exact container before (e.g. yesterday), top up that
+      // row's Qty instead of creating a duplicate.
       await conn.execute(
         `MERGE INTO INVENTORY inv
-         USING DUAL
-            ON (inv.ProdID = :product_id AND inv.ContID = :container_id)
+         USING (SELECT :product_id AS ProdID, :container_id AS ContID, :purch_id AS PurchID FROM DUAL) src
+            ON (inv.ProdID = src.ProdID AND inv.ContID = src.ContID AND inv.PurchID = src.PurchID)
           WHEN MATCHED THEN
-               UPDATE SET inv.Qty = inv.Qty + :qty
+               UPDATE SET inv.Qty = inv.Qty + :qty, inv.DateAssigned = SYSDATE
           WHEN NOT MATCHED THEN
-               INSERT (ProdID, ContID, Qty)
-               VALUES (:product_id, :container_id, :qty)`,
+               INSERT (ProdID, ContID, PurchID, Qty, DateAssigned)
+               VALUES (src.ProdID, src.ContID, src.PurchID, :qty, SYSDATE)`,
         {
           product_id:   item.product_id,
           container_id: item.container_id,
+          purch_id:     purchId,
           qty:          item.qty
         }
+      );
+
+      // Record how much of this purchase line has now been received in total.
+      await conn.execute(
+        `UPDATE PURCHASE_PRODUCT
+            SET QtyReceived = QtyReceived + :qty
+          WHERE PurchID = :purchId AND ProdID = :product_id`,
+        { qty: item.qty, purchId, product_id: item.product_id }
       );
     }
 
