@@ -20,7 +20,7 @@
   const pageKey = window.PAGE_KEY;
 
   if (!VALID_ROLES.includes(role)) {
-    window.location.href = "/login.html";
+    window.location.href = "/";
     return;
   }
 
@@ -84,7 +84,7 @@
       e.preventDefault();
       localStorage.removeItem("role");
       localStorage.removeItem("userId");
-      window.location.href = "/login.html";
+      window.location.href = "/";
     });
   }
 

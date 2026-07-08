@@ -9,7 +9,7 @@
   const role = localStorage.getItem("role");
 
   if (!VALID_ROLES.includes(role)) {
-    window.location.href = "/login.html";
+    window.location.href = "/";
     return;
   }
 
@@ -93,7 +93,7 @@
     e.preventDefault();
     localStorage.removeItem("role");
     localStorage.removeItem("userId");
-    window.location.href = "/login.html";
+    window.location.href = "/";
   });
 
   /* ---------- Nav notification badges ----------
@@ -118,6 +118,23 @@
         console.error("[NAV BADGE] Could not load unassigned order count:", err);
       }
     }
+
+    /* ---------- Real stat numbers ---------- */
+  (async function loadDashboardStats() {
+    const userId = localStorage.getItem("userId");
+    try {
+      const res  = await fetch(`/api/dashboard-stats?role=${encodeURIComponent(role)}&id=${encodeURIComponent(userId || "")}`);
+      const data = await res.json();
+      if (!data.success) return;
+
+      Object.keys(data.stats).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.textContent = data.stats[key];
+      });
+    } catch (err) {
+      console.error("[DASHBOARD STATS] Could not load stats:", err);
+    }
+  })();
 
     const notShippedBadge   = document.getElementById("badge-orderAssignment");
     const notDeliveredBadge = document.getElementById("badge-orderAssignment-2");

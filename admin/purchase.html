@@ -156,7 +156,8 @@
 
     <!-- Tab 1: New Purchase (creating a purchase order with a vendor —
          a procurement decision, kept to admin/full-time only; part-time
-         workers only receive/assign stock that's already been ordered) -->
+         workers only receive/assign stock that's already been ordered;
+         vendors are view-only and never see this tab at all) -->
     <div id="tab-new" class="tab-panel active">
       <div class="two-col">
         <div class="panel">
@@ -198,7 +199,8 @@
       </div>
     </div>
 
-    <!-- Tab 2: Receive Purchase -->
+    <!-- Tab 2: Receive Purchase (admin/full-time/part-time only —
+         vendors never see this tab) -->
     <div id="tab-receive" class="tab-panel">
       <div class="two-col">
         <div class="panel">
@@ -236,7 +238,7 @@
       </div>
     </div>
 
-    <!-- Tab 3: History -->
+    <!-- Tab 3: History (the only tab vendors can see) -->
     <div id="tab-history" class="tab-panel">
       <div class="panel">
         <h3>Purchase History</h3>
@@ -428,10 +430,19 @@
   }
 
   // ── Purchase History ──────────────────────────────────────
+  // Vendors get their own list filtered server-side to just their
+  // purchases (via ?vendor_id=), so they only ever see their own
+  // transactions with us — everyone else sees the full history.
   async function loadPurchases() {
     const tbody = document.getElementById("purchaseTableBody");
     try {
-      const res  = await fetch(API);
+      let url = API;
+      if (window.currentRole === "vendor") {
+        const vendorId = localStorage.getItem("userId");
+        url += `?vendor_id=${encodeURIComponent(vendorId)}`;
+      }
+
+      const res  = await fetch(url);
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
 
@@ -460,6 +471,8 @@
       // one product not yet fully received. Once every line on a
       // purchase is fully received, it drops out of this list — History
       // still shows it (marked with ✓), just Receive no longer does.
+      // (Vendors never see the Receive tab at all, so this is a no-op
+      // for them, but harmless to compute.)
       const receivable = purchasesCache.filter(p =>
         (p.products || []).some(pr => pr.qty_remaining > 0)
       );
@@ -492,21 +505,42 @@
   // procurement decision reserved for admin/full-time. Hide that tab
   // and land part-timers straight on Receive Purchase instead.
   //
-  // NOTE: this only hides the tab in the UI. The /api/purchases POST
-  // route itself does not currently check role server-side, so this
-  // is not a real security boundary — just keeps the part-time
-  // experience focused on the task they're meant to do.
+  // Vendors are view-only: they can see their own Purchase History,
+  // but never create a purchase or receive stock — both those tabs are
+  // hidden and they're landed straight on History.
+  //
+  // NOTE: this only hides tabs in the UI. Neither the /api/purchases
+  // POST route nor the /receive route currently check role
+  // server-side, so this is not a real security boundary — just keeps
+  // each role's experience focused on what they're meant to do. The
+  // vendor_id filter on GET /api/purchases (see loadPurchases above) is
+  // the same kind of convenience filter, not an auth check — a client
+  // could still request another vendor_id.
   function applyRoleRestrictions() {
-    if (window.currentRole !== "parttime") return;
+    if (window.currentRole === "parttime") {
+      document.getElementById("tabBtn-new").style.display = "none";
 
-    document.getElementById("tabBtn-new").style.display = "none";
+      const heading = document.querySelector(".page-head h1");
+      const sub     = document.querySelector(".page-head p:last-child");
+      if (heading) heading.textContent = "Receive Purchases";
+      if (sub) sub.textContent = "Assign purchased products into containers and view purchase history.";
 
-    const heading = document.querySelector(".page-head h1");
-    const sub     = document.querySelector(".page-head p:last-child");
-    if (heading) heading.textContent = "Receive Purchases";
-    if (sub) sub.textContent = "Assign purchased products into containers and view purchase history.";
+      switchTab("receive");
+      return;
+    }
 
-    switchTab("receive");
+    if (window.currentRole === "vendor") {
+      document.getElementById("tabBtn-new").style.display = "none";
+      document.getElementById("tabBtn-receive").style.display = "none";
+
+      const heading = document.querySelector(".page-head h1");
+      const sub     = document.querySelector(".page-head p:last-child");
+      if (heading) heading.textContent = "Purchase History";
+      if (sub) sub.textContent = "View your purchase transactions with us.";
+
+      switchTab("history");
+      return;
+    }
   }
 
   // Shows the current worker's name (matched from the workers list by
@@ -525,6 +559,15 @@
   // ── Init ──────────────────────────────────────────────────
   async function init() {
     applyRoleRestrictions();
+
+    // Vendors are view-only: skip loading form-data (vendors/products
+    // for the New Purchase form) and containers (for the Receive form)
+    // entirely — they only need the History tab's data.
+    if (window.currentRole === "vendor") {
+      await loadPurchases();
+      return;
+    }
+
     try {
       // Load form-data (workers, vendors, products). Workers are only
       // used here to look up the current worker's display name — the
