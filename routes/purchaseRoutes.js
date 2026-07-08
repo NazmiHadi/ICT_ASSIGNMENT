@@ -32,8 +32,13 @@ router.get("/purchases/form-data", async (req, res) => {
 });
 
 // ── GET /api/purchases ────────────────────────────────────────
-// Returns all purchases with worker, vendor and product details.
+// Returns purchases with worker, vendor and product details.
+// Optional ?vendor_id=... restricts results to that vendor only — used
+// by the vendor-role Purchase History tab so a vendor only ever sees
+// their own transactions with us, never other vendors' purchases.
 router.get("/purchases", async (req, res) => {
+  const vendorId = req.query.vendor_id ? Number(req.query.vendor_id) : null;
+
   let conn;
   try {
     conn = await getConnection();
@@ -48,7 +53,9 @@ router.get("/purchases", async (req, res) => {
          FROM PURCHASE p
          LEFT JOIN WORKERS w ON p.WorkID = w.WorkID
          LEFT JOIN VENDORS v ON p.VendID = v.VendID
-        ORDER BY p.PurchID DESC`
+        ${vendorId ? "WHERE p.VendID = :vendorId" : ""}
+        ORDER BY p.PurchID DESC`,
+      vendorId ? { vendorId } : {}
     );
 
     const prodResult = await conn.execute(
@@ -347,4 +354,4 @@ router.post("/purchases/:purchId/receive", async (req, res) => {
   }
 });
 
-module.exports = router;  
+module.exports = router;
