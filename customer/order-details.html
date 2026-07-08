@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Order Details - Kurma Ajwa</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900&display=swap" rel="stylesheet">
+  <link href="/customer/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/customer/assets/css/fontawesome.css">
+  <link rel="stylesheet" href="/customer/assets/css/templatemo-sixteen.css">
+  <link rel="stylesheet" href="/customer/assets/css/owl.css">
+
+  <style>
+    /* ── Layout ───────────────────────────────────────── */
+    .order-details-section {
+      padding: 60px 0 60px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #A8333D;
+      margin-bottom: 24px;
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: #7d2530; text-decoration: none; }
+
+    .detail-card {
+      background: #fff;
+      border: 1px solid #eee;
+      border-radius: 10px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Header row: order id / date + status ────────────── */
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .detail-header h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+      color: #2B2118;
+    }
+
+    .detail-header .order-date {
+      color: #999;
+      font-size: 0.88rem;
+    }
+
+    .order-status-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      padding: 6px 16px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .status-processing  { background: #F3E9D8; color: #A87D0A; }
+    .status-in-delivery  { background: #DCEBF9; color: #2266A8; }
+    .status-delivered    { background: #DFF3E3; color: #237A3F; }
+
+    /* ── Status timeline ──────────────────────────────────── */
+    .status-timeline {
+      display: flex;
+      align-items: center;
+      margin: 8px 0 32px;
+      padding: 0 8px;
+    }
+
+    .timeline-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+
+    .timeline-step .dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #eee;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+      font-size: 12px;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 1px #eee;
+      transition: all .2s;
+    }
+
+    .timeline-step.done .dot,
+    .timeline-step.current .dot {
+      background: #A8333D;
+      color: #fff;
+      box-shadow: 0 0 0 1px #A8333D;
+    }
+
+    .timeline-step .label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #bbb;
+    }
+
+    .timeline-step.done .label,
+    .timeline-step.current .label { color: #2B2118; }
+
+    .timeline-line {
+      flex: 1;
+      height: 3px;
+      background: #eee;
+      margin-bottom: 26px;
+      transition: background .2s;
+    }
+
+    .timeline-line.done { background: #A8333D; }
+
+    .tracking-line {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #666;
+      text-align: center;
+      margin-top: -18px;
+      margin-bottom: 8px;
+    }
+
+    /* ── Section headings within the card ─────────────────── */
+    .detail-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2B2118;
+      margin: 0 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .detail-section-title i { color: #A8333D; }
+
+    /* ── Customer / shipping info grid ────────────────────── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .info-field label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #A8333D;
+      margin-bottom: 4px;
+    }
+
+    .info-field p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: #2B2118;
+    }
+
+    /* ── Items table ──────────────────────────────────────── */
+    .detail-item-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .detail-item-row:last-child { border-bottom: none; }
+
+    .detail-item-img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: #f7f2ee;
+    }
+
+    .detail-item-info { flex: 1; }
+
+    .detail-item-name {
+      margin: 0 0 4px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2B2118;
+    }
+
+    .detail-item-meta {
+      font-size: 0.82rem;
+      color: #999;
+    }
+
+    .detail-item-line-total {
+      font-weight: 700;
+      font-size: 0.92rem;
+      color: #2B2118;
+      white-space: nowrap;
+    }
+
+    /* ── Order summary box ───────────────────────────────── */
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #666;
+      padding: 6px 0;
+    }
+
+    .summary-row.total {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #2B2118;
+      border-top: 1px solid #eee;
+      margin-top: 8px;
+      padding-top: 14px;
+    }
+
+    /* ── State messages ───────────────────────────────────── */
+    .state-message {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+      font-size: 0.95rem;
+    }
+
+    .state-message.error { color: #c0392b; }
+  </style>
+</head>
+
+<body>
+
+  <div id="preloader">
+    <div class="jumper"><div></div><div></div><div></div></div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/customer/home" style="display: flex; align-items: center; gap: 15px;">
+          <img src="/customer/assets/images/logo_kurma_ajwa.png" alt="Kurma Ajwa Logo" style="height: 45px; width: auto; object-fit: contain;">
+          <h2>KURMA <em>AJWA</em></h2>
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+          aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item"><a class="nav-link" href="/customer/home">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/products">Our Products</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
+            <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="/customer/cart" style="position:relative;">
+                <i class="fa fa-shopping-cart"></i> Cart
+                <span id="cartBadge"
+                style="display:none; position:absolute; top:-5px; right:-10px;
+                             background:#e74c3c; color:#fff; border-radius:50%;
+                             padding:2px 6px; font-size:11px;">0</span>
+              </a>
+            </li>
+            <li class="nav-item active"><a class="nav-link" href="/customer/profile">My Profile</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" onclick="logout()">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page heading banner -->
+  <div class="page-heading products-heading header-text">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="text-content">
+            <h4>Account</h4>
+            <h2>Order Details</h2>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="order-details-section">
+    <div class="container">
+
+      <a href="/customer/profile" class="back-link"><i class="fa fa-arrow-left"></i> Back to My Orders</a>
+
+      <div id="stateMessage" class="state-message">
+        <p>Loading order details...</p>
+      </div>
+
+      <div id="orderDetailContent" style="display:none;">
+
+        <!-- Header + status timeline -->
+        <div class="detail-card">
+          <div class="detail-header">
+            <div>
+              <h2 id="detailOrderId"></h2>
+              <div class="order-date" id="detailOrderDate"></div>
+            </div>
+            <span class="order-status-badge" id="detailStatusBadge"></span>
+          </div>
+
+          <div class="status-timeline" id="statusTimeline">
+            <div class="timeline-step" data-step="Processing">
+              <div class="dot"><i class="fa fa-check"></i></div>
+              <div class="label">Processing</div>
+            </div>
+            <div class="timeline-line" data-line="1"></div>
+            <div class="timeline-step" data-step="In Delivery">
+              <div class="dot"><i class="fa fa-truck"></i></div>
+              <div class="label">In Delivery</div>
+            </div>
+            <div class="timeline-line" data-line="2"></div>
+            <div class="timeline-step" data-step="Delivered">
+              <div class="dot"><i class="fa fa-home"></i></div>
+              <div class="label">Delivered</div>
+            </div>
+          </div>
+          <div class="tracking-line" id="detailTracking" style="display:none;"></div>
+
+          <div class="info-grid">
+            <div class="info-field">
+              <label><i class="fa fa-user-o"></i> Customer</label>
+              <p id="detailCustomerName">—</p>
+            </div>
+            <div class="info-field">
+              <label><i class="fa fa-map-marker"></i> Shipping Address</label>
+              <p id="detailAddress">—</p>
+            </div>
+            <div class="info-field">
+              <label><i class="fa fa-truck"></i> Tracking Number</label>
+              <p id="detailTrackingNo">Not yet assigned</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items -->
+        <div class="detail-card">
+          <p class="detail-section-title"><i class="fa fa-shopping-basket"></i> Items in this order</p>
+          <div id="detailItemsContainer"></div>
+        </div>
+
+        <!-- Order summary -->
+        <div class="detail-card">
+          <p class="detail-section-title"><i class="fa fa-receipt"></i> Order Summary</p>
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="detailSubtotal">$0.00</span>
+          </div>
+          <div class="summary-row total">
+            <span>Order Total</span>
+            <span id="detailTotal">$0.00</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Item row template -->
+  <template id="detailItemTemplate">
+    <div class="detail-item-row">
+      <img class="detail-item-img" src="" alt="">
+      <div class="detail-item-info">
+        <p class="detail-item-name"></p>
+        <span class="detail-item-meta"></span>
+      </div>
+      <strong class="detail-item-line-total"></strong>
+    </div>
+  </template>
+
+  <script src="/customer/vendor/jquery/jquery.min.js"></script>
+  <script src="/customer/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/customer/assets/js/custom.js"></script>
+  <script src="/customer/assets/js/cart.js"></script>
+
+  <script>
+    function logout() {
+      localStorage.removeItem("role");
+      localStorage.removeItem("customer");
+      window.location.href = "/";
+    }
+
+    function getCustomerId() {
+      const raw = localStorage.getItem("customer");
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed.customer_id ?? parsed.CustID ?? parsed.cust_id ?? parsed.id ?? null;
+      } catch {
+        return raw;
+      }
+    }
+
+    function statusClass(status) {
+      switch (status) {
+        case "Delivered":   return "status-delivered";
+        case "In Delivery": return "status-in-delivery";
+        default:            return "status-processing";
+      }
+    }
+
+    function formatDate(isoString) {
+      if (!isoString) return "";
+      const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
+      return d.toLocaleDateString(undefined, {
+        year: "numeric", month: "long", day: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    function showState(html, isError = false) {
+      const el = document.getElementById("stateMessage");
+      el.innerHTML = `<p>${html}</p>`;
+      el.className = isError ? "state-message error" : "state-message";
+      el.style.display = "block";
+      document.getElementById("orderDetailContent").style.display = "none";
+    }
+
+    // Order of statuses used to drive the timeline
+    const STATUS_ORDER = ["Processing", "In Delivery", "Delivered"];
+
+    function renderTimeline(status) {
+      const currentIndex = STATUS_ORDER.indexOf(status);
+      document.querySelectorAll(".timeline-step").forEach(step => {
+        const stepIndex = STATUS_ORDER.indexOf(step.dataset.step);
+        step.classList.remove("done", "current");
+        if (stepIndex < currentIndex) step.classList.add("done");
+        else if (stepIndex === currentIndex) step.classList.add("current");
+      });
+      document.querySelectorAll(".timeline-line").forEach(line => {
+        const lineIndex = Number(line.dataset.line); // 1 -> between step0/1, 2 -> between step1/2
+        line.classList.toggle("done", currentIndex >= lineIndex);
+      });
+    }
+
+    async function loadOrderDetail() {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = params.get("order_id");
+      const customerId = getCustomerId();
+
+      if (!customerId) {
+        showState("Please log in to view this order.", true);
+        return;
+      }
+      if (!orderId) {
+        showState("No order specified.", true);
+        return;
+      }
+
+      let data;
+      try {
+        const res = await fetch(`/api/orders?customer_id=${encodeURIComponent(customerId)}`);
+        if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+        data = await res.json();
+      } catch (err) {
+        showState("Could not reach the server. Is it running?", true);
+        console.error("[ORDER DETAIL] Fetch error:", err);
+        return;
+      }
+
+      if (!data.success) {
+        showState(data.message || "Failed to load order.", true);
+        return;
+      }
+
+      const order = (data.orders || []).find(o => String(o.order_id) === String(orderId));
+
+      if (!order) {
+        showState("Order not found, or it doesn't belong to your account.", true);
+        return;
+      }
+
+      renderOrderDetail(order);
+    }
+
+    function renderOrderDetail(order) {
+      document.getElementById("detailOrderId").textContent   = `Order #${order.order_id}`;
+      document.getElementById("detailOrderDate").textContent = `Placed on ${formatDate(order.order_date)}`;
+
+      const statusEl = document.getElementById("detailStatusBadge");
+      statusEl.textContent = order.status || "Processing";
+      statusEl.className   = "order-status-badge " + statusClass(order.status);
+
+      renderTimeline(order.status || "Processing");
+
+      document.getElementById("detailCustomerName").textContent = order.customer_name || "—";
+      document.getElementById("detailAddress").textContent      = order.address || "—";
+
+      const trackingNoEl = document.getElementById("detailTrackingNo");
+      if (order.tracking_no) {
+        trackingNoEl.textContent = order.tracking_no;
+        trackingNoEl.style.fontFamily = "monospace";
+      } else {
+        trackingNoEl.textContent = "Not yet assigned";
+        trackingNoEl.style.fontFamily = "inherit";
+      }
+
+      const itemsContainer = document.getElementById("detailItemsContainer");
+      const itemTemplate   = document.getElementById("detailItemTemplate");
+      itemsContainer.innerHTML = "";
+
+      (order.products || []).forEach(item => {
+        const node = itemTemplate.content.cloneNode(true);
+
+        const img = node.querySelector(".detail-item-img");
+        if (item.image_url) {
+          img.src = item.image_url;
+          img.alt = item.product_name;
+        } else {
+          img.style.display = "none";
+        }
+
+        node.querySelector(".detail-item-name").textContent = item.product_name;
+        node.querySelector(".detail-item-meta").textContent =
+          `Qty: ${item.qty} × $${Number(item.price || 0).toFixed(2)}`;
+        node.querySelector(".detail-item-line-total").textContent =
+          `$${Number(item.line_total || 0).toFixed(2)}`;
+
+        itemsContainer.appendChild(node);
+      });
+
+      const total = Number(order.total || 0);
+      document.getElementById("detailSubtotal").textContent = `$${total.toFixed(2)}`;
+      document.getElementById("detailTotal").textContent    = `$${total.toFixed(2)}`;
+
+      document.getElementById("stateMessage").style.display = "none";
+      document.getElementById("orderDetailContent").style.display = "block";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof updateCartBadge === "function") updateCartBadge();
+      loadOrderDetail();
+    });
+  </script>
+
+</body>
+</html>
