@@ -225,12 +225,18 @@
             // (same as the original hard-coded cards)
             const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
 
+            // ── Image: use the uploaded image_url from the API, with a
+            // placeholder fallback for products that don't have a picture.
+            // (Previously this referenced product.image, a field the API
+            // never actually returns, which rendered a broken image.)
+            const imgSrc = product.image_url || "/customer/assets/images/product-placeholder.png";
+
             // Template literal: builds the HTML string with product values inserted
             const cardHTML = `
               <div class="col-md-4">
                 <div class="product-item">
                   <a href="/customer/products">
-                    <img src="/customer/assets/images/${product.image}" alt="${product.name}">
+                    <img src="${imgSrc}" alt="${product.name}">
                   </a>
                   <div class="down-content">
                     <a href="/customer/products"><h4>${product.name}</h4></a>

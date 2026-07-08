@@ -71,15 +71,12 @@
           <li class="nav-item"><a class="nav-link" href="/customer/about">About Us</a></li>
           <li class="nav-item"><a class="nav-link" href="/customer/contact">Contact Us</a></li>
 
-<<<<<<< HEAD
           <!-- ── Cart link with badge ──────────────────────────────────────────
               The <span id="cartBadge"> is what cart.js's updateCartBadge()
               function looks for. It will:
                 - set the number inside the span to the total qty in the cart
                 - show/hide the span depending on whether the cart has items
               Clicking this link takes the user to /cart (cart.html below). -->
-=======
->>>>>>> 45c5861f393a0494e5829a3b73edec458fe94240
           <li class="nav-item">
             <a class="nav-link" href="/customer/cart" style="position: relative;">
               <i class="fa fa-shopping-cart"></i> Cart
@@ -216,47 +213,59 @@
 
         // Loop through each product and build an HTML card for it
         data.products.forEach((product, index) => {
-        const filterClass = filterClasses[index % filterClasses.length];
-        const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
+          const filterClass = filterClasses[index % filterClasses.length];
+          const stars = '<li><i class="fa fa-star"></i></li>'.repeat(5);
 
-        const cardHTML = `
-          <div class="col-lg-4 col-md-4 ${filterClass}">
-            <div class="product-item">
-              <a href="/customer/product_details?product_id=${product.product_id}">
-                <img src="/customer/assets/images/${product.image}" alt="${product.name}">
-              </a>
-              <div class="down-content">
-                <a href="/customer/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
-                <h6>$${(product.price ?? 0).toFixed(2)}</h6>
-                <p>${product.description}</p>
-                <ul class="stars">${stars}</ul>
-                <span>Stock: ${product.stock} units</span>
-                <button class="btn btn-primary add-to-cart-btn" data-id="${product.product_id}">
-                  Add to Cart
-                </button>
+          // ── Image: use the uploaded image_url from the API, with a
+          // placeholder fallback for products that don't have a picture.
+          // (Previously this referenced product.image, a field the API
+          // never actually returns, which rendered a broken image.)
+          const imgSrc = product.image_url || "/customer/assets/images/product-placeholder.png";
+
+          const cardHTML = `
+            <div class="col-lg-4 col-md-4 ${filterClass}">
+              <div class="product-item">
+                <a href="/customer/product_details?product_id=${product.product_id}">
+                  <img src="${imgSrc}" alt="${product.name}">
+                </a>
+                <div class="down-content">
+                  <a href="/customer/product_details?product_id=${product.product_id}"><h4>${product.name}</h4></a>
+                  <h6>$${(product.price ?? 0).toFixed(2)}</h6>
+                  <p>${product.description}</p>
+                  <ul class="stars">${stars}</ul>
+                  <span>Stock: ${product.stock} units</span>
+                  <button class="btn btn-primary add-to-cart-btn" data-id="${product.product_id}">
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        `;
+          `;
 
-        grid.insertAdjacentHTML("beforeend", cardHTML);
+          grid.insertAdjacentHTML("beforeend", cardHTML);
 
-        const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
+          const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
 
-        if ((product.stock ?? 0) <= 0) {
-          newCard.disabled = true;
-          newCard.textContent = "Out of Stock";
-        }
-
-        newCard.addEventListener("click", () => {
-          try {
-            addToCart(product, 1);
-            alert(`${product.name} added to cart.`);
-          } catch (err) {
-            alert(err.message);
+          // ── Disable the button up front if there's no stock ───────────
+          // Mirrors product_details.html, which disables #addToCartBtn
+          // when product.stock <= 0.
+          if ((product.stock ?? 0) <= 0) {
+            newCard.disabled = true;
+            newCard.textContent = "Out of Stock";
           }
+
+          newCard.addEventListener("click", () => {
+            // addToCart() throws if the product is out of stock, or if
+            // adding 1 more would exceed available stock - catch that
+            // here so the page doesn't break with an uncaught error.
+            try {
+              addToCart(product, 1);
+              alert(`${product.name} added to cart.`);
+            } catch (err) {
+              alert(err.message);
+            }
+          });
         });
-      });
 
         // Re-initialise Isotope after adding dynamic content.
         // Isotope needs to know about the new cards so its filter/sort works.
@@ -274,29 +283,6 @@
           "Failed to load products. Is the server running?";
         console.error("Products fetch error:", err);
       }
-
-      // Wire up the button after inserting (since cardHTML is a string, not yet in DOM-aware scope)
-      const newCard = grid.lastElementChild.querySelector(".add-to-cart-btn");
-
-      // ── Disable the button up front if there's no stock ───────────
-      // Mirrors product_details.html, which disables #addToCartBtn
-      // when product.stock <= 0.
-      if ((product.stock ?? 0) <= 0) {
-        newCard.disabled = true;
-        newCard.textContent = "Out of Stock";
-      }
-
-      newCard.addEventListener("click", () => {
-        // addToCart() now throws if the product is out of stock, or if
-        // adding 1 more would exceed available stock - catch that here
-        // so the page doesn't break with an uncaught error.
-        try {
-          addToCart(product, 1);
-          alert(`${product.name} added to cart.`);
-        } catch (err) {
-          alert(err.message);
-        }
-      });
     }
 
 
