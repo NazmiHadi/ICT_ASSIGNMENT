@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+  <html lang="en">
+
+    <head>
+
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <meta name="description" content="">
+      <meta name="author" content="">
+      <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800&display=swap" rel="stylesheet">
+
+      <title>KURMA AJWA ENTERPRISE | Reports</title>
+
+      <!-- Bootstrap core CSS -->
+      <link href="/admin/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+      <!-- Additional CSS Files -->
+      <link rel="stylesheet" href="/admin/assets/css/fontawesome.css">
+
+      <!-- Chart.js -->
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+      <style>
+        :root {
+          --bg:        #FAF7F2;
+          --sidebar:   #2B2118;
+          --sidebar-hover: #3B2E22;
+          --accent:    #A8333D;
+          --accent-soft: #F3E3DD;
+          --ink:       #2B2118;
+          --ink-soft:  #8A7B6C;
+          --line:      #E8E1D8;
+          --card:      #FFFFFF;
+          --good:      #3E7C4A;
+          --warn:      #D4A017;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+          margin: 0;
+          font-family: 'Poppins', sans-serif;
+          background: var(--bg);
+          color: var(--ink);
+        }
+
+        /* ---------- Layout shell ---------- */
+        .shell { display: flex; min-height: 100vh; }
+
+        /* ---------- Sidebar (identical to dashboard) ---------- */
+        .sidebar {
+          width: 260px;
+          flex-shrink: 0;
+          background: var(--sidebar);
+          color: #EDE6DC;
+          display: flex;
+          flex-direction: column;
+          padding: 28px 0;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          overflow-y: auto;
+        }
+
+        .sidebar-brand {
+          padding: 0 28px 28px;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          margin-bottom: 20px;
+        }
+
+        .sidebar-brand .mark {
+          font-size: 11px;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: #C9A98A;
+          margin: 0 0 4px;
+        }
+
+        .sidebar-brand h2 { font-size: 21px; font-weight: 700; margin: 0; line-height: 1.25; }
+        .sidebar-brand h2 em { font-style: normal; color: var(--accent); }
+
+        .sidebar-brand .role-pill {
+          display: inline-block;
+          margin-top: 10px;
+          padding: 4px 10px;
+          font-size: 10.5px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          font-weight: 600;
+          color: #EDE6DC;
+          background: rgba(168,51,61,0.35);
+          border: 1px solid rgba(168,51,61,0.6);
+          border-radius: 20px;
+        }
+
+        .sidebar-nav { list-style: none; margin: 0; padding: 0; flex: 1; }
+
+        .sidebar-nav .nav-group-label {
+          padding: 16px 28px 6px;
+          font-size: 10.5px;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          color: #8A7B6C;
+          font-weight: 600;
+        }
+
+        .sidebar-nav li a {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 13px 28px;
+          color: #C9BFB2;
+          text-decoration: none;
+          font-size: 14.5px;
+          font-weight: 500;
+          border-left: 3px solid transparent;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .sidebar-nav li a i { width: 18px; text-align: center; font-size: 14px; }
+        .sidebar-nav li a:hover { background: var(--sidebar-hover); color: #fff; }
+        .sidebar-nav li a.active { background: var(--sidebar-hover); color: #fff; border-left-color: var(--accent); }
+
+        .sidebar-footer { padding: 0 28px; margin-top: 12px; }
+        .sidebar-footer a {
+          display: flex; align-items: center; gap: 10px;
+          color: #C9BFB2; text-decoration: none; font-size: 14px;
+          padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .sidebar-footer a:hover { color: #fff; }
+
+        /* ---------- Main content ---------- */
+        .main { flex: 1; padding: 40px 48px 60px; max-width: 1320px; }
+
+        .page-head {
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 20px;
+          flex-wrap: wrap;
+          margin-bottom: 32px;
+        }
+
+        .page-head .eyebrow {
+          font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+          color: var(--accent); font-weight: 600; margin: 0 0 6px;
+        }
+        .page-head h1 { font-size: 28px; font-weight: 700; margin: 0 0 6px; color: var(--ink); }
+        .page-head p { margin: 0; color: var(--ink-soft); font-size: 14.5px; }
+
+        /* ---------- Filter bar ---------- */
+        .filter-bar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .filter-bar label {
+          font-size: 12.5px;
+          color: var(--ink-soft);
+          font-weight: 600;
+          margin-right: 2px;
+        }
+
+        .filter-bar select {
+          font-family: inherit;
+          font-size: 13.5px;
+          padding: 8px 30px 8px 12px;
+          border-radius: 8px;
+          border: 1px solid var(--line);
+          background: var(--card);
+          color: var(--ink);
+          cursor: pointer;
+        }
+
+        /* ---------- Stat cards ---------- */
+        .stat-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+
+        .stat-card {
+          background: var(--card);
+          border-radius: 10px;
+          border-left: 4px solid var(--accent);
+          padding: 20px 20px 18px;
+          box-shadow: 0 1px 3px rgba(43,33,24,0.06);
+        }
+
+        .stat-card.alt { border-left-color: var(--good); }
+        .stat-card.warn { border-left-color: var(--warn); }
+
+        .stat-card .stat-icon {
+          width: 34px; height: 34px; border-radius: 8px;
+          background: var(--accent-soft); color: var(--accent);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; margin-bottom: 12px;
+        }
+
+        .stat-card .stat-value { font-size: 24px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+        .stat-card .stat-label { font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
+
+        /* ---------- Chart cards ---------- */
+        .section-label {
+          font-size: 13px; letter-spacing: 1px; text-transform: uppercase;
+          color: var(--ink-soft); font-weight: 600; margin: 36px 0 16px;
+        }
+
+        .chart-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+          gap: 18px;
+        }
+
+        .chart-card {
+          background: var(--card);
+          border-radius: 10px;
+          padding: 22px 22px 14px;
+          box-shadow: 0 1px 3px rgba(43,33,24,0.06);
+        }
+
+        .chart-card.full { grid-column: 1 / -1; }
+
+        .chart-card-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 14px;
+        }
+
+        .chart-card-head h3 { font-size: 15px; font-weight: 600; margin: 0; }
+        .chart-card-head p  { font-size: 12px; color: var(--ink-soft); margin: 2px 0 0; }
+
+        .chart-wrap { position: relative; height: 280px; }
+        .chart-wrap.short { height: 220px; }
+
+        .empty-note {
+          color: var(--ink-soft);
+          font-size: 13px;
+          text-align: center;
+          padding: 40px 0;
+        }
+
+        /* ---------- Top products table ---------- */
+        table.report-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        table.report-table th {
+          text-align: left; padding: 10px 8px; color: var(--ink-soft);
+          font-weight: 600; font-size: 11.5px; letter-spacing: 0.5px;
+          text-transform: uppercase; border-bottom: 1px solid var(--line);
+        }
+        table.report-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); }
+        table.report-table tr:last-child td { border-bottom: none; }
+        table.report-table td.num, table.report-table th.num { text-align: right; }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 860px) {
+          .shell { flex-direction: column; }
+          .sidebar {
+            width: 100%; height: auto; position: relative;
+            flex-direction: row; align-items: center; padding: 14px 20px; overflow-x: auto;
+          }
+          .sidebar-brand { display: none; }
+          .sidebar-nav { display: flex; flex: none; }
+          .sidebar-nav .nav-group-label { display: none; }
+          .sidebar-nav li a { padding: 8px 16px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+          .sidebar-nav li a.active { border-left: none; border-bottom-color: var(--accent); }
+          .sidebar-footer { display: none; }
+          .main { padding: 28px 20px 40px; }
+          .chart-grid { grid-template-columns: 1fr; }
+        }
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="shell">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-brand">
+            <p class="mark">Dashboard</p>
+            <h2>KURMA <em>AJWA</em></h2>
+            <span class="role-pill" id="rolePill">—</span>
+          </div>
+
+          <ul class="sidebar-nav" id="sidebarNav">
+            <!-- populated by reports.js based on role -->
+          </ul>
+
+          <div class="sidebar-footer">
+            <a href="#" id="logoutLink"><i class="fa fa-sign-out"></i> Logout</a>
+          </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="main">
+
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Insights</p>
+              <h1>Reports</h1>
+              <p>Sales, purchases, top products and team performance at a glance.</p>
+            </div>
+            <div class="filter-bar">
+              <label for="monthlyRange">Sales window</label>
+              <select id="monthlyRange">
+                <option value="3">Last 3 months</option>
+                <option value="6">Last 6 months</option>
+                <option value="12" selected>Last 12 months</option>
+                <option value="24">Last 24 months</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="stat-grid" id="statGrid">
+            <!-- populated by reports.js -->
+          </div>
+
+          <p class="section-label">Sales</p>
+          <div class="chart-grid">
+            <div class="chart-card full">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Monthly Sales</h3>
+                  <p>Revenue and order count per month</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="monthlySalesChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Daily Sales</h3>
+                  <p>Revenue for the last 30 days</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="dailySalesChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Order Status</h3>
+                  <p>Every order in the system, by current status</p>
+                </div>
+              </div>
+              <div class="chart-wrap short"><canvas id="orderStatusChart"></canvas></div>
+            </div>
+          </div>
+
+          <p class="section-label">Products</p>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Most Popular Products</h3>
+                  <p>Top sellers by quantity sold</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="topProductsChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Top Sellers</h3>
+                  <p>Ranked table with revenue contribution</p>
+                </div>
+              </div>
+              <div id="topProductsTable"><p class="empty-note">Loading&hellip;</p></div>
+            </div>
+          </div>
+
+          <p class="section-label">Purchases</p>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Vendor Spend</h3>
+                  <p>Purchase spend by vendor</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="vendorSpendChart"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Purchase Spend Over Time</h3>
+                  <p>Monthly purchase spend</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="purchaseTrendChart"></canvas></div>
+            </div>
+          </div>
+
+          <p class="section-label">Team</p>
+          <div class="chart-grid">
+            <div class="chart-card full">
+              <div class="chart-card-head">
+                <div>
+                  <h3>Worker Performance</h3>
+                  <p>Assigned vs. delivered vs. in-delivery orders per worker</p>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="workerPerformanceChart"></canvas></div>
+            </div>
+          </div>
+
+        </main>
+
+      </div>
+
+      <!-- Bootstrap core JavaScript -->
+      <script src="/admin/vendor/jquery/jquery.min.js"></script>
+      <script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+      <!-- Role-based nav + report logic -->
+      <script src="/admin/assets/js/role-config.js"></script>
+      <script src="/admin/assets/js/reports.js"></script>
+
+    </body>
+
+  </html>
