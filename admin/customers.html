@@ -49,7 +49,14 @@
     table.cust-table { width:100%; border-collapse:collapse; }
     table.cust-table th, table.cust-table td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; }
     table.cust-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
+    table.cust-table th.num, table.cust-table td.num { text-align:right; }
     table.cust-table tbody tr:hover { background:#FBF8F4; }
+    .order-count-badge {
+      display:inline-block; min-width:26px; padding:3px 10px; border-radius:20px;
+      font-size:12px; font-weight:600; background:var(--accent-soft); color:var(--accent);
+      text-align:center;
+    }
+    .order-count-badge.zero { background:#F0ECE5; color:var(--ink-soft); }
     .empty-state { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:14px; }
     @media (max-width:860px) {
       .shell { flex-direction:column; }
@@ -104,10 +111,11 @@
               <th>Phone</th>
               <th>Address</th>
               <th>Username</th>
+              <th class="num">Total Orders</th>
             </tr>
           </thead>
           <tbody id="customerTableBody">
-            <tr><td colspan="6">Loading customers...</td></tr>
+            <tr><td colspan="7">Loading customers...</td></tr>
           </tbody>
         </table>
       </div>
@@ -121,14 +129,20 @@
   function logout() { localStorage.removeItem("role"); window.location.href = "/"; }
 
   let customersCache = [];
+  // customer_id -> number of orders placed. Built from /api/orders since
+  // that endpoint already returns every order with its customer_id — no
+  // new backend endpoint needed just to get a count.
+  let orderCountByCustomer = {};
 
   function renderCustomers(list) {
     const tbody = document.getElementById("customerTableBody");
     if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">No customers found.</div></td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">No customers found.</div></td></tr>';
       return;
     }
-    tbody.innerHTML = list.map(c => `
+    tbody.innerHTML = list.map(c => {
+      const count = orderCountByCustomer[c.customer_id] || 0;
+      return `
       <tr>
         <td>${c.customer_id}</td>
         <td>${c.name}</td>
@@ -136,7 +150,9 @@
         <td>${c.phone || "-"}</td>
         <td>${c.address || "-"}</td>
         <td>${c.username}</td>
-      </tr>`).join("");
+        <td class="num"><span class="order-count-badge ${count === 0 ? "zero" : ""}">${count}</span></td>
+      </tr>`;
+    }).join("");
   }
 
   // Maps to CUSTOMERS table: CustID, CustName, CustEmail, CustAddress, CustPhoneNum, username
@@ -144,14 +160,32 @@
   async function loadCustomers() {
     const tbody = document.getElementById("customerTableBody");
     try {
-      const res  = await fetch("/api/customers");
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message);
-      customersCache = data.customers || [];
+      const [custRes, ordersRes] = await Promise.all([
+        fetch("/api/customers"),
+        fetch("/api/orders")
+      ]);
+
+      const custData = await custRes.json();
+      if (!custRes.ok || !custData.success) throw new Error(custData.message);
+      customersCache = custData.customers || [];
+
+      // Order count is best-effort: if this fails, still show the
+      // customer list, just with every count at 0 rather than blocking
+      // the whole page on it.
+      orderCountByCustomer = {};
+      try {
+        const ordersData = await ordersRes.json();
+        if (ordersRes.ok && ordersData.success) {
+          (ordersData.orders || []).forEach(o => {
+            orderCountByCustomer[o.customer_id] = (orderCountByCustomer[o.customer_id] || 0) + 1;
+          });
+        }
+      } catch (_) { /* order counts stay at 0 */ }
+
       renderCustomers(customersCache);
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="6">Failed to load customers. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7">Failed to load customers. Please refresh.</td></tr>';
     }
   }
 

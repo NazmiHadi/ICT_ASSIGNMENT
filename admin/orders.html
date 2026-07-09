@@ -61,9 +61,47 @@
     .save-btn:hover { background:#8E2A33; }
     .delete-btn { background:none; border:1px solid var(--line); color:var(--accent); border-radius:6px; cursor:pointer; padding:7px 12px; font-size:13px; font-weight:600; transition:background .15s, border-color .15s; }
     .delete-btn:hover { background:var(--accent-soft); border-color:var(--accent); }
+    .view-btn { background:none; border:1px solid var(--line); color:var(--ink); border-radius:6px; cursor:pointer; padding:7px 12px; font-size:13px; font-weight:600; transition:background .15s, border-color .15s; }
+    .view-btn:hover { background:#FBF8F4; border-color:var(--ink-soft); }
     #pageAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #pageAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #pageAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+
+    /* ── Order details modal ─────────────────────────────────── */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(43,33,24,0.55);
+      align-items:center; justify-content:center; padding:20px; z-index:1000;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:#fff; border-radius:10px; width:100%; max-width:640px; max-height:88vh;
+      overflow-y:auto; box-shadow:0 12px 40px rgba(43,33,24,0.25);
+    }
+    .modal-head {
+      display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+      padding:22px 26px; border-bottom:1px solid var(--line);
+    }
+    .modal-head h3 { margin:0 0 4px; font-size:18px; font-weight:700; }
+    .modal-head .sub { margin:0; font-size:13px; color:var(--ink-soft); }
+    .modal-close {
+      background:none; border:none; font-size:20px; line-height:1; color:var(--ink-soft);
+      cursor:pointer; padding:2px 4px;
+    }
+    .modal-close:hover { color:var(--ink); }
+    .modal-body { padding:22px 26px; }
+    .detail-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:14px 20px; margin-bottom:22px;
+    }
+    .detail-item .label { font-size:11px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); margin:0 0 3px; }
+    .detail-item .value { font-size:14px; font-weight:600; margin:0; }
+    .detail-item .value.mono { font-family:monospace; font-size:13px; }
+    table.detail-table { width:100%; border-collapse:collapse; margin-bottom:6px; }
+    table.detail-table th, table.detail-table td { padding:9px 8px; text-align:left; font-size:13px; border-bottom:1px solid var(--line); }
+    table.detail-table th { font-size:10.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--ink-soft); }
+    table.detail-table td.num, table.detail-table th.num { text-align:right; }
+    .detail-thumb { width:34px; height:34px; border-radius:6px; object-fit:cover; vertical-align:middle; margin-right:8px; background:var(--accent-soft); }
+    .grand-total-row td { font-weight:700; border-bottom:none; padding-top:14px; }
+
     @media (max-width:860px) {
       .shell { flex-direction:column; }
       .sidebar { width:100%; height:auto; position:relative; flex-direction:row; align-items:center; padding:14px 20px; overflow-x:auto; }
@@ -74,6 +112,7 @@
       .sidebar-footer { display:none; }
       .main { padding:28px 20px 40px; }
       .page-head { flex-direction:column; align-items:flex-start; }
+      .detail-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -128,6 +167,22 @@
   </main>
 </div>
 
+<!-- Order details modal -->
+<div class="modal-overlay" id="orderDetailsOverlay" onclick="if(event.target===this) closeOrderDetails()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <h3 id="odTitle">Order</h3>
+        <p class="sub" id="odSub"></p>
+      </div>
+      <button class="modal-close" onclick="closeOrderDetails()" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="odBody">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
 <script src="/admin/vendor/jquery/jquery.min.js"></script>
 <script src="/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -146,6 +201,15 @@
     if (!d) return "-";
     const dt = new Date(d);
     return isNaN(dt) ? d : dt.toLocaleDateString("en-MY", { day:"2-digit", month:"short", year:"numeric" });
+  }
+
+  function formatMoney(n) {
+    const num = Number(n) || 0;
+    return "RM " + num.toFixed(2);
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   }
 
   function buildWorkerOptions(selectedId) {
@@ -172,20 +236,21 @@
       const statusClass = isAssigned ? "status-assigned" : "status-pending";
       const statusText  = isAssigned ? "Assigned" : "Pending";
       const productTags = o.products && o.products.length > 0
-        ? o.products.map(p => `<span class="product-tag">${p.product_name} x${p.qty}</span>`).join("")
+        ? o.products.map(p => `<span class="product-tag">${escapeHtml(p.product_name)} x${p.qty}</span>`).join("")
         : '<span style="color:var(--ink-soft);font-size:13px;">-</span>';
 
       return `
         <tr>
           <td>#${o.order_id}</td>
           <td>${formatDate(o.order_date)}</td>
-          <td>${o.customer_name || "Customer #" + o.customer_id}</td>
+          <td>${escapeHtml(o.customer_name || "Customer #" + o.customer_id)}</td>
           <td>${productTags}</td>
           <td><span class="status-badge ${statusClass}">${statusText}</span></td>
           <td>
             <div class="action-cell">
               <select class="assign-select" id="select-${o.order_id}">${buildWorkerOptions(o.worker_id)}</select>
               <button class="save-btn" onclick="assignWorker(${o.order_id})">Save</button>
+              <button class="view-btn" onclick="viewOrderDetails(${o.order_id})">Details</button>
               <button class="delete-btn" onclick="deleteOrder(${o.order_id})">Delete</button>
             </div>
           </td>
@@ -232,6 +297,14 @@
       const term = document.getElementById("orderSearchInput").value.trim().toLowerCase();
       renderOrders(term ? filterOrders(term) : ordersCache);
 
+      // If the details modal is open for an order, refresh it too (e.g.
+      // after a re-assign) instead of leaving stale data on screen.
+      if (currentDetailsOrderId !== null) {
+        const stillThere = ordersCache.find(o => o.order_id === currentDetailsOrderId);
+        if (stillThere) renderOrderDetailsModal(stillThere);
+        else closeOrderDetails();
+      }
+
     } catch (err) {
       console.error(err);
       tbody.innerHTML = '<tr><td colspan="6">Failed to load orders. Please refresh.</td></tr>';
@@ -263,12 +336,94 @@
       const data = await res.json();
       if (!res.ok || !data.success) { showAlert(data.message || "Failed to delete order.", "error"); return; }
       showAlert(data.message || `Order #${orderId} deleted.`, "success");
+      if (currentDetailsOrderId === orderId) closeOrderDetails();
       loadOrders();
     } catch (err) {
       console.error(err);
       showAlert("Something went wrong.", "error");
     }
   }
+
+  // ── Order details modal ──────────────────────────────────────
+  let currentDetailsOrderId = null;
+
+  function viewOrderDetails(orderId) {
+    const order = ordersCache.find(o => o.order_id === orderId);
+    if (!order) { showAlert("Could not find that order.", "error"); return; }
+    currentDetailsOrderId = orderId;
+    renderOrderDetailsModal(order);
+    document.getElementById("orderDetailsOverlay").classList.add("open");
+  }
+
+  function closeOrderDetails() {
+    currentDetailsOrderId = null;
+    document.getElementById("orderDetailsOverlay").classList.remove("open");
+  }
+
+  function renderOrderDetailsModal(order) {
+    const isAssigned  = order.worker_id !== null && order.worker_id !== undefined;
+    const statusClass = isAssigned ? "status-assigned" : "status-pending";
+
+    document.getElementById("odTitle").textContent = `Order #${order.order_id}`;
+    document.getElementById("odSub").textContent = `Placed ${formatDate(order.order_date)}`;
+
+    const products = order.products || [];
+    const rows = products.length
+      ? products.map(p => `
+          <tr>
+            <td>
+              ${p.image_url ? `<img class="detail-thumb" src="${p.image_url}" alt="">` : ""}
+              ${escapeHtml(p.product_name || "Product #" + p.product_id)}
+            </td>
+            <td class="num">${p.qty}</td>
+            <td class="num">${formatMoney(p.price)}</td>
+            <td class="num">${formatMoney(p.line_total)}</td>
+          </tr>`).join("")
+      : `<tr><td colspan="4" style="color:var(--ink-soft);">No products on this order.</td></tr>`;
+
+    document.getElementById("odBody").innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-item">
+          <p class="label">Customer</p>
+          <p class="value">${escapeHtml(order.customer_name || "Customer #" + order.customer_id)}</p>
+        </div>
+        <div class="detail-item">
+          <p class="label">Status</p>
+          <p class="value"><span class="status-badge ${statusClass}">${order.status || (isAssigned ? "Assigned" : "Pending")}</span></p>
+        </div>
+        <div class="detail-item">
+          <p class="label">Assigned Worker</p>
+          <p class="value">${order.worker_name ? escapeHtml(order.worker_name) : "Unassigned"}</p>
+        </div>
+        <div class="detail-item">
+          <p class="label">Tracking No.</p>
+          <p class="value mono">${order.tracking_no ? escapeHtml(order.tracking_no) : "Not shipped yet"}</p>
+        </div>
+      </div>
+
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="num">Qty</th>
+            <th class="num">Price</th>
+            <th class="num">Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr class="grand-total-row">
+            <td colspan="3">Order Total</td>
+            <td class="num">${formatMoney(order.total)}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+  }
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && currentDetailsOrderId !== null) closeOrderDetails();
+  });
 
   loadOrders();
 </script>
