@@ -2,11 +2,10 @@
 - 
 
 ## ADMIN
-- 
 
 
 ## CUSTOMER
-- 
+- remove orders.html after exiting cart
 
 
 ## DATABASE
