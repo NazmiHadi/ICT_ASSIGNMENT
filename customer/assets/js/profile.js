@@ -184,7 +184,7 @@ async function loadOrders(customerId) {
     cardEl.setAttribute("tabindex", "0");
     cardEl.setAttribute("title", "View order details");
     const goToDetail = () => {
-      window.location.href = `/customer/order-details?order_id=${encodeURIComponent(order.order_id)}`;
+      window.location.href = `/customer/order-details.html?order_id=${encodeURIComponent(order.order_id)}`;
     };
     cardEl.addEventListener("click", goToDetail);
     cardEl.addEventListener("keydown", (e) => {
