@@ -60,8 +60,6 @@
     table.worker-table th, table.worker-table td { padding:11px 13px; text-align:left; border-bottom:1px solid var(--line); font-size:13.5px; vertical-align:middle; }
     table.worker-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
     table.worker-table tbody tr:hover { background:#FBF8F4; }
-    .btn-delete { background:none; border:1px solid var(--line); color:var(--accent); border-radius:6px; padding:6px 10px; font-size:13px; cursor:pointer; transition:background .15s,color .15s; font-family:'Poppins',sans-serif; }
-    .btn-delete:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
@@ -189,11 +187,10 @@
                 <th>Type</th>
                 <th>Salary</th>
                 <th>Manager</th>
-                <th></th>
               </tr>
             </thead>
             <tbody id="workerTableBody">
-              <tr><td colspan="8">Loading workers...</td></tr>
+              <tr><td colspan="7">Loading workers...</td></tr>
             </tbody>
           </table>
         </div>
@@ -255,7 +252,7 @@
 
       const workers = data.workers || [];
       tbody.innerHTML = workers.length === 0
-        ? '<tr><td colspan="8">No workers registered yet.</td></tr>'
+        ? '<tr><td colspan="7">No workers registered yet.</td></tr>'
         : workers.map(w => `
             <tr>
               <td>${w.worker_id}</td>
@@ -265,7 +262,6 @@
               <td>${badgeHtml(w.work_type)}${managerBadgeHtml(w.is_manager)}</td>
               <td>${salaryDisplay(w)}</td>
               <td>${w.manager_name || "-"}</td>
-              <td><button class="btn-delete" onclick="deleteWorker(${w.worker_id}, '${w.name.replace(/'/g, "\\'")}')"><i class="fa fa-trash"></i></button></td>
             </tr>`).join("");
 
       mgSel.innerHTML = '<option value="">No manager / Top level</option>' +
@@ -273,21 +269,7 @@
 
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="8">Failed to load workers. Please refresh.</td></tr>';
-    }
-  }
-
-  async function deleteWorker(id, name) {
-    if (!confirm(`Delete worker "${name}"? This cannot be undone.`)) return;
-    try {
-      const res  = await fetch(`/api/workers/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok || !data.success) { showAlert(data.message || "Failed to delete worker.", "error"); return; }
-      showAlert(data.message || "Worker deleted successfully.", "success");
-      loadWorkers();
-    } catch (err) {
-      console.error(err);
-      showAlert("Something went wrong. Please try again.", "error");
+      tbody.innerHTML = '<tr><td colspan="7">Failed to load workers. Please refresh.</td></tr>';
     }
   }
 

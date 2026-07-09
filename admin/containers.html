@@ -51,8 +51,6 @@
     table.cont-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
     table.cont-table tbody tr:hover { background:#FBF8F4; }
     .colour-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:8px; border:1px solid var(--line); vertical-align:middle; }
-    .btn-delete { background:none; border:1px solid var(--line); color:var(--accent); border-radius:6px; padding:6px 10px; font-size:13px; cursor:pointer; transition:background .15s,color .15s; font-family:'Poppins',sans-serif; }
-    .btn-delete:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
@@ -117,11 +115,10 @@
                 <th>ID</th>
                 <th>Name</th>
                 <th>Colour</th>
-                <th></th>
               </tr>
             </thead>
             <tbody id="containerTableBody">
-              <tr><td colspan="4">Loading containers...</td></tr>
+              <tr><td colspan="3">Loading containers...</td></tr>
             </tbody>
           </table>
         </div>
@@ -153,31 +150,16 @@
       if (!res.ok || !data.success) throw new Error(data.message);
       const containers = data.containers || [];
       tbody.innerHTML = containers.length === 0
-        ? '<tr><td colspan="4">No containers added yet.</td></tr>'
+        ? '<tr><td colspan="3">No containers added yet.</td></tr>'
         : containers.map(c => `
             <tr>
               <td>${c.container_id}</td>
               <td>${c.name}</td>
               <td>${c.colour ? `<span class="colour-dot" style="background:${c.colour.toLowerCase()}"></span>${c.colour}` : "-"}</td>
-              <td><button class="btn-delete" onclick="deleteContainer(${c.container_id}, '${c.name.replace(/'/g, "\\'")}')"><i class="fa fa-trash"></i></button></td>
             </tr>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="4">Failed to load containers. Please refresh.</td></tr>';
-    }
-  }
-
-  async function deleteContainer(id, name) {
-    if (!confirm(`Delete container "${name}"? This cannot be undone.`)) return;
-    try {
-      const res  = await fetch(`/api/containers/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok || !data.success) { showAlert(data.message || "Failed to delete container.", "error"); return; }
-      showAlert(data.message || "Container deleted successfully.", "success");
-      loadContainers();
-    } catch (err) {
-      console.error(err);
-      showAlert("Something went wrong. Please try again.", "error");
+      tbody.innerHTML = '<tr><td colspan="3">Failed to load containers. Please refresh.</td></tr>';
     }
   }
 

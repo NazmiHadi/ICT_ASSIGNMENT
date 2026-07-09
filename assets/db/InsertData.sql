@@ -234,6 +234,19 @@ CREATE TABLE PURCHASE_PRODUCT (
 -- don't drop/recreate — run this instead:
 -- =====================================================================
 
+-- 1) Add the new order columns
+ALTER TABLE ORDERS ADD (
+    TrackingNo VARCHAR2(30),
+    OrderStatus VARCHAR2(20) DEFAULT 'Processing' NOT NULL
+);
+
+ALTER TABLE ORDERS ADD CONSTRAINT CHK_ORDER_STATUS
+    CHECK (OrderStatus IN ('Processing','In Delivery','Delivered'));
+
+-- 1b) Add the real product image column (replaces the old guessed filename)
+ALTER TABLE PRODUCTS ADD (
+    ImageFileName VARCHAR2(200)
+);
 
 -- 2) Restart each identity column at a new value.
 --    IMPORTANT: pick a number higher than the current MAX(id) in that

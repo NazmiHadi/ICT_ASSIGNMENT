@@ -96,49 +96,4 @@ router.post("/vendors", async (req, res) => {
   }
 });
 
-// ── DELETE /api/vendors/:id ────────────────────────────────────
-// Blocks deletion if this vendor has any PURCHASE records on file —
-// those transactions need to stay linked to a real vendor for history/
-// reporting purposes, so the vendor can't be removed while purchases
-// still reference it.
-router.delete("/vendors/:id", async (req, res) => {
-  const vendId = Number(req.params.id);
-  if (!vendId) {
-    return res.status(400).json({ success: false, message: "Invalid vendor ID." });
-  }
-
-  let conn;
-  try {
-    conn = await getConnection();
-
-    const inUse = await conn.execute(
-      `SELECT COUNT(*) AS CNT FROM PURCHASE WHERE VendID = :vendId`,
-      { vendId }
-    );
-    if (inUse.rows[0].CNT > 0) {
-      return res.status(409).json({
-        success: false,
-        message: "This vendor has purchase records on file and can't be deleted."
-      });
-    }
-
-    const result = await conn.execute(
-      `DELETE FROM VENDORS WHERE VendID = :vendId`,
-      { vendId },
-      { autoCommit: true }
-    );
-
-    if (result.rowsAffected === 0) {
-      return res.status(404).json({ success: false, message: "Vendor not found." });
-    }
-
-    return res.json({ success: true, message: "Vendor deleted successfully." });
-  } catch (err) {
-    console.error("[VENDORS DELETE ERROR]", err);
-    return res.status(500).json({ success: false, message: "Could not delete vendor." });
-  } finally {
-    if (conn) await conn.close();
-  }
-});
-
 module.exports = router;
