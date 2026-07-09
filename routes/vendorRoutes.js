@@ -110,17 +110,6 @@ router.delete("/vendors/:id", async (req, res) => {
   try {
     conn = await getConnection();
 
-    const hasPurchases = await conn.execute(
-      `SELECT COUNT(*) AS CNT FROM PURCHASE WHERE VendID = :vendId`,
-      { vendId }
-    );
-    if (hasPurchases.rows[0].CNT > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete this vendor — they have purchase records on file."
-      });
-    }
-
     const result = await conn.execute(
       `DELETE FROM VENDORS WHERE VendID = :vendId`,
       { vendId },

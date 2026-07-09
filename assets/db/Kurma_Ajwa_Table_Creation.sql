@@ -263,3 +263,64 @@ CREATE TABLE INVENTORY (
         FOREIGN KEY (PurchID)
         REFERENCES PURCHASE(PurchID)
 );
+
+-- =====================================================================
+-- 1) PRODUCTS ↔ ORDER_PRODUCTS
+--    ProdID is part of the PK today, so it must get a surrogate key
+--    before it can be nulled out.
+-- =====================================================================
+ALTER TABLE ORDER_PRODUCTS DROP CONSTRAINT PK_ORDER_PRODUCTS;
+
+ALTER TABLE ORDER_PRODUCTS
+  ADD OrderProductID NUMBER GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1);
+
+ALTER TABLE ORDER_PRODUCTS
+  ADD CONSTRAINT PK_ORDER_PRODUCTS PRIMARY KEY (OrderProductID);
+
+-- keeps one line per order+product even though ProdID can now be NULL
+-- (multiple NULLs are allowed under a unique constraint in Oracle, so
+-- this only guards against duplicate *real* product lines)
+ALTER TABLE ORDER_PRODUCTS
+  ADD CONSTRAINT UQ_OP_ORDER_PROD UNIQUE (OrderID, ProdID);
+
+ALTER TABLE ORDER_PRODUCTS MODIFY ProdID NULL;
+
+ALTER TABLE ORDER_PRODUCTS DROP CONSTRAINT FK_OP_PRODUCT;
+ALTER TABLE ORDER_PRODUCTS
+  ADD CONSTRAINT FK_OP_PRODUCT
+  FOREIGN KEY (ProdID) REFERENCES PRODUCTS(ProdID)
+  ON DELETE SET NULL;
+
+-- Optional but recommended: once ProdID goes NULL, the order line item
+-- has no name to show anymore. A snapshot column preserves what was
+-- actually ordered, independent of whether the product still exists.
+ALTER TABLE ORDER_PRODUCTS ADD ProdNameSnapshot VARCHAR2(100);
+-- populate it going forward whenever a line is inserted (see route note below)
+
+-- =====================================================================
+-- 2) WORKERS ↔ ORDERS
+--    WorkID is already a plain nullable FK column — no PK issue here.
+-- =====================================================================
+ALTER TABLE ORDERS DROP CONSTRAINT FK_ORDER_WORKER;
+ALTER TABLE ORDERS
+  ADD CONSTRAINT FK_ORDER_WORKER
+  FOREIGN KEY (WorkID) REFERENCES WORKERS(WorkID)
+  ON DELETE SET NULL;
+
+-- =====================================================================
+-- 3) VENDORS ↔ PURCHASE
+--    VendID is currently NOT NULL, so that has to be relaxed first.
+-- =====================================================================
+ALTER TABLE PURCHASE MODIFY VendID NULL;
+
+ALTER TABLE PURCHASE DROP CONSTRAINT FK_PURCHASE_VENDOR;
+ALTER TABLE PURCHASE
+  ADD CONSTRAINT FK_PURCHASE_VENDOR
+  FOREIGN KEY (VendID) REFERENCES VENDORS(VendID)
+  ON DELETE SET NULL;
+
+ALTER TABLE ORDERS DROP CONSTRAINT FK_ORDER_WORKER;
+ALTER TABLE ORDERS
+  ADD CONSTRAINT FK_ORDER_WORKER
+  FOREIGN KEY (WorkID) REFERENCES WORKERS(WorkID)
+  ON DELETE SET NULL;

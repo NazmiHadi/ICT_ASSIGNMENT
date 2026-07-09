@@ -149,7 +149,6 @@ router.post("/workers", async (req, res) => {
 // record (if any) and then the WORKERS row itself.
 router.delete("/workers/:id", async (req, res) => {
   const workId = Number(req.params.id);
-
   if (!workId) {
     return res.status(400).json({ success: false, message: "Invalid worker ID." });
   }
@@ -159,8 +158,7 @@ router.delete("/workers/:id", async (req, res) => {
     conn = await getConnection();
 
     const managesOthers = await conn.execute(
-      `SELECT COUNT(*) AS CNT FROM WORKERS WHERE ManagerID = :workId`,
-      { workId }
+      `SELECT COUNT(*) AS CNT FROM WORKERS WHERE ManagerID = :workId`, { workId }
     );
     if (managesOthers.rows[0].CNT > 0) {
       return res.status(400).json({
@@ -169,46 +167,36 @@ router.delete("/workers/:id", async (req, res) => {
       });
     }
 
-    const hasOrders = await conn.execute(
-      `SELECT COUNT(*) AS CNT FROM ORDERS WHERE WorkID = :workId`,
+    // Only Processing / In Delivery orders block deletion. Delivered
+    // orders don't — they'll just have WorkID set to NULL automatically
+    // (ON DELETE SET NULL) once the worker row is removed.
+    const hasActiveOrders = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM ORDERS
+        WHERE WorkID = :workId
+          AND OrderStatus IN ('Processing', 'In Delivery')`,
       { workId }
     );
-    if (hasOrders.rows[0].CNT > 0) {
+    if (hasActiveOrders.rows[0].CNT > 0) {
       return res.status(400).json({
         success: false,
-        message: "Cannot delete this worker — they have orders assigned to them. Reassign those orders first."
+        message: "Cannot delete this worker — they have unshipped or undelivered orders assigned to them. Reassign or complete those first."
       });
     }
 
-    const hasPurchases = await conn.execute(
-      `SELECT COUNT(*) AS CNT FROM PURCHASE WHERE WorkID = :workId`,
-      { workId }
-    );
-    if (hasPurchases.rows[0].CNT > 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot delete this worker — they have purchase records tied to them."
-      });
-    }
+    // Purchases no longer block deletion — PURCHASE.WorkID is set to
+    // NULL automatically (ON DELETE SET NULL).
 
     const existing = await conn.execute(
-      `SELECT WorkID FROM WORKERS WHERE WorkID = :workId`,
-      { workId }
+      `SELECT WorkID FROM WORKERS WHERE WorkID = :workId`, { workId }
     );
     if (existing.rows.length === 0) {
       return res.status(404).json({ success: false, message: "Worker not found." });
     }
 
-    // Clear their pay-type record, whichever one exists, then the
-    // WORKERS row itself.
     await conn.execute(`DELETE FROM FULL_TIME_WORKERS WHERE WorkID = :workId`, { workId });
     await conn.execute(`DELETE FROM PART_TIME_WORKERS WHERE WorkID = :workId`, { workId });
 
-    const result = await conn.execute(
-      `DELETE FROM WORKERS WHERE WorkID = :workId`,
-      { workId }
-    );
-
+    const result = await conn.execute(`DELETE FROM WORKERS WHERE WorkID = :workId`, { workId });
     if (result.rowsAffected === 0) {
       await conn.rollback();
       return res.status(404).json({ success: false, message: "Worker not found." });
@@ -216,7 +204,6 @@ router.delete("/workers/:id", async (req, res) => {
 
     await conn.commit();
     return res.json({ success: true, message: "Worker deleted successfully." });
-
   } catch (err) {
     if (conn) { try { await conn.rollback(); } catch (_) {} }
     console.error("[WORKER DELETE ERROR]", err);
