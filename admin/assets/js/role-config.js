@@ -16,7 +16,6 @@ const NAV_ITEMS = {
   orders:         { label: "Manage Orders",     icon: "fa-list-alt",      href: "/admin/orders" },
   orderAssignment:{ label: "My Assigned Orders",icon: "fa-clipboard",     href: "/admin/orderAssignment" },
   purchase:       { label: "Manage Purchases",  icon: "fa-shopping-cart", href: "/admin/purchase" },
-  reports:        { label: "Reports",           icon: "fa-bar-chart",     href: "/admin/reports" },
   profile:        { label: "My Profile",        icon: "fa-user",          href: "/admin/profile" }
 };
 
@@ -30,11 +29,10 @@ const ROLE_CONFIG = {
     groups: [
       { label: "People",          keys: ["workers", "customers", "vendors"] },
       { label: "Catalog & Stock", keys: ["products", "containers", "inventory"] },
-      { label: "Transactions",    keys: ["orders", "purchase"] },
-      { label: "Insights",        keys: ["reports"] }
+      { label: "Transactions",    keys: ["orders", "purchase"] }
     ],
     stats:   ["workers", "customers", "orders", "products", "vendors"],
-    actions: ["workers", "orders", "products", "inventory", "purchase", "customers", "reports"]
+    actions: ["workers", "orders", "products", "inventory", "purchase", "customers"]
   },
   fulltime: {
     label: "Full-Time Worker",
@@ -43,11 +41,10 @@ const ROLE_CONFIG = {
     groups: [
       { label: "People",       keys: ["customers"] },
       { label: "Stock",        keys: ["inventory"] },
-      { label: "Transactions", keys: ["orders", "orderAssignment", "purchase"] },
-      { label: "Insights",     keys: ["reports"] }
+      { label: "Transactions", keys: ["orders", "orderAssignment", "purchase"] }
     ],
     stats:   ["customers", "orders", "inventory"],
-    actions: ["orders", "orderAssignment", "inventory", "purchase", "customers", "reports"]
+    actions: ["orders", "orderAssignment", "inventory", "purchase", "customers"]
   },
   parttime: {
     label: "Part-Time Worker",
@@ -100,9 +97,7 @@ const ACTION_ITEMS = {
   vendors: { href: "vendors", icon: "fa-handshake-o", title: "Manage Vendors",
     desc: "View vendor details and link purchases to a vendor." },
   containers: { href: "containers", icon: "fa-archive", title: "Manage Containers",
-    desc: "Track shipping containers and the products linked to them." },
-  reports: { href: "reports", icon: "fa-bar-chart", title: "Reports",
-    desc: "Sales, purchases, top products and team performance at a glance." }
+    desc: "Track shipping containers and the products linked to them." }
 };
 
 /* Access control: which roles may load each page directly by URL. */
@@ -117,6 +112,5 @@ const PAGE_ACCESS = {
   orders:          ["admin", "fulltime"],
   orderAssignment: ["admin", "fulltime", "parttime"],
   purchase:        ["admin", "fulltime", "parttime", "vendor"],
-  reports:         ["admin", "fulltime"],
   profile:         ["admin", "fulltime", "parttime", "vendor"]
 };

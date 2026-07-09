@@ -13,13 +13,11 @@ const containerRoutes = require("./routes/containerRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const profileRoutes   = require("./routes/profileRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
-const reportRoutes    = require("./routes/reportRoutes");
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 // ── Static files ─────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "assets")));
@@ -45,7 +43,6 @@ app.use("/api", containerRoutes);
 app.use("/api", inventoryRoutes);
 app.use("/api", profileRoutes);
 app.use("/api", dashboardRoutes);
-app.use("/api", reportRoutes);
 
 // ── Page routes ──────────────────────────────────────────────
 app.get("/", (req, res) => {
