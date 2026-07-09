@@ -209,6 +209,72 @@ router.put("/products/:id/image", upload.single("image"), async (req, res) => {
   }
 });
 
+// ── DELETE /api/products/:id ──────────────────────────────────
+// Blocks deletion if the product still has INVENTORY rows (stock
+// sitting in one or more containers) — that stock needs to be
+// removed/reassigned first. On success, also deletes the product's
+// uploaded image file from disk (if it had one).
+router.delete("/products/:id", async (req, res) => {
+  const prodId = Number(req.params.id);
+  if (!prodId) {
+    return res.status(400).json({ success: false, message: "Invalid product ID." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+
+    const inUse = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM INVENTORY WHERE ProdID = :prodId`,
+      { prodId }
+    );
+    if (inUse.rows[0].CNT > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "This product still has stock recorded in inventory. Remove that stock before deleting."
+      });
+    }
+
+    const existing = await conn.execute(
+      `SELECT ImageFileName FROM PRODUCTS WHERE ProdID = :prodId`,
+      { prodId }
+    );
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Product not found." });
+    }
+    const oldFileName = existing.rows[0].IMAGEFILENAME;
+
+    const result = await conn.execute(
+      `DELETE FROM PRODUCTS WHERE ProdID = :prodId`,
+      { prodId },
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ success: false, message: "Product not found." });
+    }
+
+    if (oldFileName) {
+      fs.unlink(path.join(UPLOAD_DIR, oldFileName), () => {});
+    }
+
+    return res.json({ success: true, message: "Product deleted successfully." });
+  } catch (err) {
+    console.error("[PRODUCTS DELETE ERROR]", err);
+    // ORA-02292: another table (e.g. purchase/order line items) still has
+    // a foreign key referencing this product, so Oracle refuses the delete.
+    if (err.errorNum === 2292) {
+      return res.status(409).json({
+        success: false,
+        message: "This product is still referenced in other records (e.g. purchase or order history) and can't be deleted."
+      });
+    }
+    return res.status(500).json({ success: false, message: "Could not delete product." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 // Multer errors (bad file type, too large) land here instead of the
 // generic Express error handler, so we can send a clean JSON message.
 router.use((err, req, res, next) => {
