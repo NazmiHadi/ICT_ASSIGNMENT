@@ -101,6 +101,10 @@
       font-size: 15px;
     }
 
+    /* Delete button (same styling as containers/orders pages) */
+    .delete-btn { background:none; border:1px solid var(--line); color:var(--accent); border-radius:6px; cursor:pointer; padding:6px 12px; font-size:12.5px; font-weight:600; transition:background .15s, border-color .15s; }
+    .delete-btn:hover { background:var(--accent-soft); border-color:var(--accent); }
+
     @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
     @media (max-width:860px) {
       .shell { flex-direction:column; }
@@ -190,10 +194,11 @@
                 <th>Price</th>
                 <th>Description</th>
                 <th>Stock</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="productTableBody">
-              <tr><td colspan="7">Loading products...</td></tr>
+              <tr><td colspan="8">Loading products...</td></tr>
             </tbody>
           </table>
         </div>
@@ -260,7 +265,7 @@
       if (!res.ok || !data.success) throw new Error(data.message);
       const products = data.products || [];
       tbody.innerHTML = products.length === 0
-        ? '<tr><td colspan="7">No products added yet.</td></tr>'
+        ? '<tr><td colspan="8">No products added yet.</td></tr>'
         : products.map(p => `
             <tr>
               <td>${thumbCell(p)}</td>
@@ -270,10 +275,11 @@
               <td>${priceDisplay(p)}</td>
               <td>${p.description || "-"}</td>
               <td>${p.stock ?? 0}</td>
+              <td><button class="delete-btn" onclick="deleteProduct(${p.product_id})">Delete</button></td>
             </tr>`).join("");
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="7">Failed to load products. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8">Failed to load products. Please refresh.</td></tr>';
     }
   }
 
@@ -308,6 +314,23 @@
       showAlert("Something went wrong. Please try again.", "error");
     }
   });
+
+  // Guards with a confirm() since deletion is irreversible — the backend
+  // itself will also refuse if the product still has inventory assigned
+  // or appears in any existing order.
+  async function deleteProduct(prodId) {
+    if (!confirm(`Delete product #${prodId}? This cannot be undone.`)) return;
+    try {
+      const res  = await fetch(`/api/products/${prodId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to delete product.", "error"); return; }
+      showAlert(data.message || "Product deleted.", "success");
+      loadProducts();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  }
 
   loadProducts();
 </script>

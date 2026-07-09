@@ -96,4 +96,49 @@ router.post("/vendors", async (req, res) => {
   }
 });
 
+// ── DELETE /api/vendors/:id ──────────────────────────────────
+// Blocked if this vendor has any PURCHASE records — deleting them
+// would corrupt purchase history. Move/clear those first.
+router.delete("/vendors/:id", async (req, res) => {
+  const vendId = Number(req.params.id);
+
+  if (!vendId) {
+    return res.status(400).json({ success: false, message: "Invalid vendor ID." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+
+    const hasPurchases = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM PURCHASE WHERE VendID = :vendId`,
+      { vendId }
+    );
+    if (hasPurchases.rows[0].CNT > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete this vendor — they have purchase records on file."
+      });
+    }
+
+    const result = await conn.execute(
+      `DELETE FROM VENDORS WHERE VendID = :vendId`,
+      { vendId },
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ success: false, message: "Vendor not found." });
+    }
+
+    return res.json({ success: true, message: "Vendor deleted successfully." });
+
+  } catch (err) {
+    console.error("[VENDOR DELETE ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not delete vendor." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 module.exports = router;

@@ -63,6 +63,8 @@
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
     #formAlert.error { background:#FBE9E7; color:#A8333D; border:1px solid #EFC2BD; }
+    .delete-btn { background:none; border:1px solid var(--line); color:var(--accent); border-radius:6px; cursor:pointer; padding:6px 12px; font-size:12.5px; font-weight:600; transition:background .15s, border-color .15s; }
+    .delete-btn:hover { background:var(--accent-soft); border-color:var(--accent); }
     @media (max-width:900px) { .two-col { grid-template-columns:1fr; } }
     @media (max-width:860px) {
       .shell { flex-direction:column; }
@@ -133,13 +135,13 @@
               Register this worker as a Manager / Admin
             </label>
             <p style="margin:6px 0 0;font-size:12.5px;color:var(--ink-soft);">
-              Grants full admin access (same as the "admin" role at login). Worker type below becomes optional.
+              Grants full admin access (same as the "admin" role at login).
             </p>
           </div>
 
           <div class="form-group">
-            <label>Worker Type <span id="workTypeOptionalTag" style="display:none;font-weight:400;color:var(--ink-soft);">(optional for managers)</span></label>
-            <select class="form-control" id="workType" onchange="toggleSalaryFields()">
+            <label>Worker Type</label>
+            <select class="form-control" id="workType" onchange="toggleSalaryFields()" required>
               <option value="">Select type...</option>
               <option value="Full Time">Full Time</option>
               <option value="Part Time">Part Time</option>
@@ -187,10 +189,11 @@
                 <th>Type</th>
                 <th>Salary</th>
                 <th>Manager</th>
+                <th></th>
               </tr>
             </thead>
             <tbody id="workerTableBody">
-              <tr><td colspan="7">Loading workers...</td></tr>
+              <tr><td colspan="8">Loading workers...</td></tr>
             </tbody>
           </table>
         </div>
@@ -208,12 +211,6 @@
     const type = document.getElementById("workType").value;
     document.getElementById("ftSection").classList.toggle("show", type === "Full Time");
     document.getElementById("ptSection").classList.toggle("show", type === "Part Time");
-  }
-
-  function toggleManagerMode() {
-    const isManager = document.getElementById("isManager").checked;
-    document.getElementById("workType").required = !isManager;
-    document.getElementById("workTypeOptionalTag").style.display = isManager ? "inline" : "none";
   }
 
   function showAlert(msg, type) {
@@ -252,7 +249,7 @@
 
       const workers = data.workers || [];
       tbody.innerHTML = workers.length === 0
-        ? '<tr><td colspan="7">No workers registered yet.</td></tr>'
+        ? '<tr><td colspan="8">No workers registered yet.</td></tr>'
         : workers.map(w => `
             <tr>
               <td>${w.worker_id}</td>
@@ -262,6 +259,7 @@
               <td>${badgeHtml(w.work_type)}${managerBadgeHtml(w.is_manager)}</td>
               <td>${salaryDisplay(w)}</td>
               <td>${w.manager_name || "-"}</td>
+              <td><button class="delete-btn" onclick="deleteWorker(${w.worker_id})">Delete</button></td>
             </tr>`).join("");
 
       mgSel.innerHTML = '<option value="">No manager / Top level</option>' +
@@ -269,7 +267,7 @@
 
     } catch (err) {
       console.error(err);
-      tbody.innerHTML = '<tr><td colspan="7">Failed to load workers. Please refresh.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8">Failed to load workers. Please refresh.</td></tr>';
     }
   }
 
@@ -297,13 +295,29 @@
       showAlert(data.message || "Worker added successfully.", "success");
       document.getElementById("workerForm").reset();
       toggleSalaryFields();
-      toggleManagerMode();
       loadWorkers();
     } catch (err) {
       console.error(err);
       showAlert("Something went wrong. Please try again.", "error");
     }
   });
+
+  // Guards with a confirm() since deletion is irreversible — the backend
+  // itself will also refuse if the worker manages others, or has
+  // orders/purchases tied to them.
+  async function deleteWorker(workId) {
+    if (!confirm(`Delete worker #${workId}? This cannot be undone.`)) return;
+    try {
+      const res  = await fetch(`/api/workers/${workId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok || !data.success) { showAlert(data.message || "Failed to delete worker.", "error"); return; }
+      showAlert(data.message || "Worker deleted.", "success");
+      loadWorkers();
+    } catch (err) {
+      console.error(err);
+      showAlert("Something went wrong. Please try again.", "error");
+    }
+  }
 
   loadWorkers();
 </script>

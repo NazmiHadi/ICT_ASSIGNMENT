@@ -66,4 +66,50 @@ router.post("/containers", async (req, res) => {
   }
 });
 
+// ── DELETE /api/containers/:contId ─────────────────────────────
+// Blocked if the container still has any INVENTORY rows pointing at it
+// (i.e. it currently holds stock, or held stock historically) — the
+// caller needs to move/clear that stock first rather than silently
+// losing track of where it went.
+router.delete("/containers/:contId", async (req, res) => {
+  const contId = Number(req.params.contId);
+
+  if (!contId) {
+    return res.status(400).json({ success: false, message: "Invalid container ID." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+
+    const inUse = await conn.execute(
+      `SELECT COUNT(*) AS CNT FROM INVENTORY WHERE ContID = :contId`,
+      { contId }
+    );
+    if (inUse.rows[0].CNT > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete this container — it still has inventory assigned to it. Move or clear its stock first."
+      });
+    }
+
+    const result = await conn.execute(
+      `DELETE FROM CONTAINERS WHERE ContID = :contId`,
+      { contId },
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ success: false, message: "Container not found." });
+    }
+
+    return res.json({ success: true, message: "Container deleted successfully." });
+  } catch (err) {
+    console.error("[CONTAINERS DELETE ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not delete container." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 module.exports = router;

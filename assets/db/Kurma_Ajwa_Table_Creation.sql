@@ -121,7 +121,7 @@ CREATE TABLE PRODUCTS (
     -- Stored filename of the uploaded product image (e.g. "abc123.jpg"),
     -- served from /uploads/products/<ImageFileName>. NULL until an image
     -- is uploaded for that product.
-    ImageFileName VARCHAR2(200),
+    ImageFileName VARCHAR2(200)
 );
 
 -- NOTE: INVENTORY used to be created here, but it now references

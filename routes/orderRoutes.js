@@ -96,7 +96,7 @@ router.get("/orders/pending-count", async (req, res) => {
 // Returns orders with customer, worker, tracking/status, and ordered products.
 // Used by the Manage Orders page (admin/fulltime — can (re)assign workers).
 //
-// Optional ?customer_id=... filters down to one customer's orders — this lets
+// Optional ?customer_id=... restricts down to one customer's orders — this lets
 // the same endpoint serve the customer-facing profile/orders pages, which
 // were calling /api/orders?customer_id=... but this route previously ignored
 // that param and returned every order in the system. See note at the bottom
@@ -392,6 +392,50 @@ router.put("/orders/:orderId/status", async (req, res) => {
   } catch (err) {
     console.error("[ORDER STATUS ERROR]", err);
     return res.status(500).json({ success: false, message: "Could not update status." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
+// ── DELETE /api/orders/:orderId ───────────────────────────────
+// Removes a wrongly-placed/duplicate order entirely — deletes its
+// ORDER_PRODUCTS lines first (FK), then the ORDERS row itself, both in
+// one transaction so a failure partway through doesn't leave orphaned
+// line items behind. No status restriction: an admin correcting a
+// mistake may need to remove an order at any stage, not just
+// unshipped ones — the frontend should confirm before calling this.
+router.delete("/orders/:orderId", async (req, res) => {
+  const orderId = Number(req.params.orderId);
+
+  if (!orderId) {
+    return res.status(400).json({ success: false, message: "Invalid order ID." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+
+    await conn.execute(
+      `DELETE FROM ORDER_PRODUCTS WHERE OrderID = :orderId`,
+      { orderId }
+    );
+
+    const result = await conn.execute(
+      `DELETE FROM ORDERS WHERE OrderID = :orderId`,
+      { orderId }
+    );
+
+    if (result.rowsAffected === 0) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    await conn.commit();
+    return res.json({ success: true, message: `Order #${orderId} deleted successfully.` });
+  } catch (err) {
+    if (conn) { try { await conn.rollback(); } catch (_) {} }
+    console.error("[ORDER DELETE ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not delete order." });
   } finally {
     if (conn) await conn.close();
   }
