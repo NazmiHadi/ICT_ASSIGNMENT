@@ -1,4 +1,4 @@
-  const express = require("express");
+const express = require("express");
   const path    = require("path");
   const fs      = require("fs");
   const multer  = require("multer");
@@ -151,6 +151,88 @@
       console.error("[PRODUCTS POST ERROR]", err);
       if (req.file) fs.unlink(req.file.path, () => {});
       return res.status(500).json({ success: false, message: "Could not add product." });
+    } finally {
+      if (conn) await conn.close();
+    }
+  });
+
+  // ── PUT /api/products/:id ────────────────────────────────────
+  // Full edit of a product's core fields (name, type, price, sales price,
+  // description), and optionally its picture in the same request.
+  // multipart/form-data, same fields as POST /api/products, plus an
+  // optional "image" file — send it only if the worker actually chose a
+  // new photo; otherwise the existing picture (if any) is left alone.
+  router.put("/products/:id", upload.single("image"), async (req, res) => {
+    const prodId = Number(req.params.id);
+    const { name, type, price, sales_price, description } = req.body;
+
+    if (!prodId) {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ success: false, message: "Invalid product ID." });
+    }
+
+    if (!name || price === undefined || price === null || price === "") {
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ success: false, message: "Product name and price are required." });
+    }
+
+    let conn;
+    try {
+      conn = await getConnection();
+
+      // Confirm the product exists first, and grab its current image so we
+      // can delete the old file after a successful swap (only if a new
+      // file was actually uploaded this time).
+      const existing = await conn.execute(
+        `SELECT ImageFileName FROM PRODUCTS WHERE ProdID = :prodId`,
+        { prodId }
+      );
+
+      if (existing.rows.length === 0) {
+        if (req.file) fs.unlink(req.file.path, () => {});
+        return res.status(404).json({ success: false, message: "Product not found." });
+      }
+
+      const oldFileName = existing.rows[0].IMAGEFILENAME;
+      const newFileName  = req.file ? req.file.filename : oldFileName;
+
+      await conn.execute(
+        `UPDATE PRODUCTS
+            SET ProdName    = :name,
+                Price       = :price,
+                ProdType    = :type,
+                SalesPrice  = :sales_price,
+                ProdDesc    = :description,
+                ImageFileName = :imageFileName
+          WHERE ProdID = :prodId`,
+        {
+          name,
+          price,
+          type:          type || null,
+          sales_price:   sales_price || null,
+          description:   description || null,
+          imageFileName: newFileName,
+          prodId
+        },
+        { autoCommit: true }
+      );
+
+      // Only remove the old file once the DB update succeeded, and only
+      // if it was actually replaced by a new one.
+      if (req.file && oldFileName && oldFileName !== newFileName) {
+        fs.unlink(path.join(UPLOAD_DIR, oldFileName), () => {});
+      }
+
+      return res.json({
+        success: true,
+        message: "Product updated successfully.",
+        image_url: imageUrl(newFileName)
+      });
+
+    } catch (err) {
+      console.error("[PRODUCT UPDATE ERROR]", err);
+      if (req.file) fs.unlink(req.file.path, () => {});
+      return res.status(500).json({ success: false, message: "Could not update product." });
     } finally {
       if (conn) await conn.close();
     }
