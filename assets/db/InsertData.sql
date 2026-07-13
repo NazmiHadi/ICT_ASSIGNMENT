@@ -20,15 +20,15 @@ DECLARE
   v_pt_id      WORKERS.WorkID%TYPE;
 BEGIN
   INSERT INTO WORKERS (WorkName, WorkPhoneNum, username, password, IsManager, ManagerID)
-    VALUES ('Aisyah Rahman', '019-1112001', 'admin', 'admin123', 1, NULL)
+    VALUES ('Aisyah Rahman', '019-1112001', 'aisyah', 'aisyah123', 1, NULL)
     RETURNING WorkID INTO v_manager_id;
 
   INSERT INTO WORKERS (WorkName, WorkPhoneNum, username, password, IsManager, ManagerID)
-    VALUES ('Hafiz Iskandar', '019-1112002', 'hafiz', 'pass123', 0, v_manager_id)
+    VALUES ('Hafiz Iskandar', '019-1112002', 'hafiz', 'hafiz123', 0, v_manager_id)
     RETURNING WorkID INTO v_ft_id;
 
   INSERT INTO WORKERS (WorkName, WorkPhoneNum, username, password, IsManager, ManagerID)
-    VALUES ('Syafiq Amran', '019-1112005', 'syafiq', 'pass123', 0, v_manager_id)
+    VALUES ('Syafiq Amran', '019-1112005', 'syafiq', 'syafiq123', 0, v_manager_id)
     RETURNING WorkID INTO v_pt_id;
 
   INSERT INTO FULL_TIME_WORKERS (WorkID, Salary, Bonus_Salary) VALUES (v_ft_id, 2800, 200);
@@ -40,7 +40,7 @@ END;
 
 -- ---------- VENDOR ----------
 INSERT INTO VENDORS (VendName, VendAddress, VendPhoneNum, username, password) VALUES
-  ('Al-Madinah Dates Trading', 'Lot 5, Jalan Industri 2, Klang', '03-33221001', 'almadinah', 'vend123');
+  ('Al-Madinah Dates Trading', 'Lot 5, Jalan Industri 2, Klang', '03-33221001', 'almadinah', 'almad123');
 
 -- ---------- CONTAINERS ----------
 INSERT INTO CONTAINERS (ContName, ContColour) VALUES ('Container A', 'Blue');
