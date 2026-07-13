@@ -38,7 +38,12 @@
     .page-head p { margin:0; color:var(--ink-soft); font-size:14.5px; }
     .two-col { display:grid; grid-template-columns:minmax(280px,360px) 1fr; gap:24px; align-items:start; }
     .panel { background:var(--card); border-radius:10px; padding:28px; box-shadow:0 1px 3px rgba(43,33,24,0.06); }
+    .panel-head-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .panel-head-row h3 { font-size:16px; font-weight:600; margin:0; }
     .panel h3 { font-size:16px; font-weight:600; margin:0 0 20px; }
+    .cancel-edit-link { font-size:12.5px; color:var(--ink-soft); text-decoration:none; font-weight:500; }
+    .cancel-edit-link:hover { color:var(--accent); }
+    .editing-badge { display:inline-block; font-size:11px; letter-spacing:.5px; text-transform:uppercase; font-weight:600; color:var(--accent); background:var(--accent-soft); border-radius:4px; padding:3px 8px; margin-left:8px; vertical-align:middle; }
     .form-group { margin-bottom:14px; }
     .form-group label { display:block; font-weight:500; font-size:13.5px; margin-bottom:5px; }
     .form-control { width:100%; border:1px solid var(--line); border-radius:6px; padding:10px 12px; font-size:14px; font-family:'Poppins',sans-serif; color:var(--ink); background:#fff; }
@@ -51,7 +56,11 @@
     table.cont-table th { background:#FBF8F4; font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:.5px; color:var(--ink-soft); }
     table.cont-table tbody tr:hover { background:#FBF8F4; }
     .colour-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:8px; border:1px solid var(--line); vertical-align:middle; }
-    .delete-btn { background:none; border:1px solid var(--line); color:var(--accent); border-radius:6px; cursor:pointer; padding:6px 12px; font-size:12.5px; font-weight:600; transition:background .15s, border-color .15s; }
+    .row-actions { display:flex; gap:8px; }
+    .action-btn { background:none; border:1px solid var(--line); border-radius:6px; cursor:pointer; padding:6px 12px; font-size:12.5px; font-weight:600; transition:background .15s, border-color .15s; }
+    .edit-btn { color:#5C6B73; }
+    .edit-btn:hover { background:#EEF2F3; border-color:#5C6B73; }
+    .delete-btn { color:var(--accent); }
     .delete-btn:hover { background:var(--accent-soft); border-color:var(--accent); }
     #formAlert { display:none; margin-bottom:20px; padding:12px 16px; border-radius:6px; font-size:14px; }
     #formAlert.success { background:#E8F5EA; color:#1C7A3D; border:1px solid #BFE6C8; }
@@ -94,8 +103,12 @@
 
     <div class="two-col">
       <div class="panel">
-        <h3>Add New Container</h3>
+        <div class="panel-head-row">
+          <h3 id="formTitle">Add New Container<span class="editing-badge" id="editingBadge" style="display:none;">Editing</span></h3>
+          <a href="#" class="cancel-edit-link" id="cancelEditLink" style="display:none;" onclick="cancelEdit(event)">Cancel</a>
+        </div>
         <form id="containerForm">
+          <input type="hidden" id="editingContId" value="">
           <div class="form-group">
             <label>Container Name</label>
             <input type="text" class="form-control" id="contName" placeholder="e.g. Container A1" required>
@@ -104,7 +117,7 @@
             <label>Colour</label>
             <input type="text" class="form-control" id="contColour" placeholder="e.g. Red, Blue, Green">
           </div>
-          <button type="submit" class="btn-primary">Add Container</button>
+          <button type="submit" class="btn-primary" id="submitBtn">Add Container</button>
         </form>
       </div>
 
@@ -141,6 +154,10 @@
     setTimeout(() => { box.style.display = "none"; }, 4000);
   }
 
+  // Keep the most recently loaded container list in memory so
+  // editContainer() can populate the form without an extra round trip.
+  let currentContainers = [];
+
   // Maps to CONTAINERS table: ContID, ContName, ContColour. A container
   // no longer has its own date — when stock landed in it is tracked per
   // batch on INVENTORY.DateAssigned instead (see Receive Purchase /
@@ -152,6 +169,7 @@
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
       const containers = data.containers || [];
+      currentContainers = containers;
       tbody.innerHTML = containers.length === 0
         ? '<tr><td colspan="4">No containers added yet.</td></tr>'
         : containers.map(c => `
@@ -159,7 +177,12 @@
               <td>${c.container_id}</td>
               <td>${c.name}</td>
               <td>${c.colour ? `<span class="colour-dot" style="background:${c.colour.toLowerCase()}"></span>${c.colour}` : "-"}</td>
-              <td><button class="delete-btn" onclick="deleteContainer(${c.container_id})">Delete</button></td>
+              <td>
+                <div class="row-actions">
+                  <button class="action-btn edit-btn" onclick="editContainer(${c.container_id})">Edit</button>
+                  <button class="action-btn delete-btn" onclick="deleteContainer(${c.container_id})">Delete</button>
+                </div>
+              </td>
             </tr>`).join("");
     } catch (err) {
       console.error(err);
@@ -167,18 +190,57 @@
     }
   }
 
+  // Switches the "Add New Container" form into edit mode for a given
+  // container, pre-filling its name and colour. Submitting from here
+  // calls PUT instead of POST — see the form submit handler below.
+  function editContainer(contId) {
+    const c = currentContainers.find(x => x.container_id === contId);
+    if (!c) return;
+
+    document.getElementById("editingContId").value = contId;
+    document.getElementById("contName").value   = c.name || "";
+    document.getElementById("contColour").value = c.colour || "";
+
+    document.getElementById("formTitle").firstChild.textContent = "Edit Container ";
+    document.getElementById("editingBadge").style.display = "inline-block";
+    document.getElementById("cancelEditLink").style.display = "inline";
+    document.getElementById("submitBtn").textContent = "Update Container";
+
+    document.querySelector(".panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // Resets the form back to "Add New Container" mode.
+  function cancelEdit(e) {
+    if (e) e.preventDefault();
+    document.getElementById("containerForm").reset();
+    document.getElementById("editingContId").value = "";
+    document.getElementById("formTitle").firstChild.textContent = "Add New Container";
+    document.getElementById("editingBadge").style.display = "none";
+    document.getElementById("cancelEditLink").style.display = "none";
+    document.getElementById("submitBtn").textContent = "Add Container";
+  }
+
   document.getElementById("containerForm").addEventListener("submit", async function(e) {
     e.preventDefault();
+
+    const editingId = document.getElementById("editingContId").value;
+    const isEditing = !!editingId;
+
     const payload = {
       name:   document.getElementById("contName").value.trim(),
       colour: document.getElementById("contColour").value.trim()
     };
     try {
-      const res  = await fetch("/api/containers", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-      const data = await res.json();
-      if (!res.ok || !data.success) { showAlert(data.message || "Failed to add container.", "error"); return; }
-      showAlert(data.message || "Container added successfully.", "success");
-      document.getElementById("containerForm").reset();
+      const url    = isEditing ? `/api/containers/${editingId}` : "/api/containers";
+      const method = isEditing ? "PUT" : "POST";
+      const res    = await fetch(url, { method, headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+      const data   = await res.json();
+      if (!res.ok || !data.success) {
+        showAlert(data.message || `Failed to ${isEditing ? "update" : "add"} container.`, "error");
+        return;
+      }
+      showAlert(data.message || `Container ${isEditing ? "updated" : "added"} successfully.`, "success");
+      cancelEdit();
       loadContainers();
     } catch (err) {
       console.error(err);
@@ -195,6 +257,7 @@
       const data = await res.json();
       if (!res.ok || !data.success) { showAlert(data.message || "Failed to delete container.", "error"); return; }
       showAlert(data.message || "Container deleted.", "success");
+      if (document.getElementById("editingContId").value == contId) cancelEdit();
       loadContainers();
     } catch (err) {
       console.error(err);
@@ -205,4 +268,4 @@
   loadContainers();
 </script>
 </body>
-</html>
+</html> 

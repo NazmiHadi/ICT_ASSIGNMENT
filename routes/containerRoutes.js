@@ -66,6 +66,50 @@ router.post("/containers", async (req, res) => {
   }
 });
 
+// ── PUT /api/containers/:contId ────────────────────────────────
+// Body: { name, colour }
+// Edits an existing container's name/colour. Doesn't touch INVENTORY —
+// stock assignment for a container is managed separately (Receive
+// Purchase / Manage Inventory), so renaming or recolouring a container
+// here has no effect on what stock is currently assigned to it.
+router.put("/containers/:contId", async (req, res) => {
+  const contId = Number(req.params.contId);
+  const { name, colour } = req.body;
+
+  if (!contId) {
+    return res.status(400).json({ success: false, message: "Invalid container ID." });
+  }
+
+  if (!name) {
+    return res.status(400).json({ success: false, message: "Container name is required." });
+  }
+
+  let conn;
+  try {
+    conn = await getConnection();
+
+    const result = await conn.execute(
+      `UPDATE CONTAINERS
+          SET ContName   = :name,
+              ContColour = :colour
+        WHERE ContID = :contId`,
+      { name, colour: colour || null, contId },
+      { autoCommit: true }
+    );
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ success: false, message: "Container not found." });
+    }
+
+    return res.json({ success: true, message: "Container updated successfully." });
+  } catch (err) {
+    console.error("[CONTAINERS PUT ERROR]", err);
+    return res.status(500).json({ success: false, message: "Could not update container." });
+  } finally {
+    if (conn) await conn.close();
+  }
+});
+
 // ── DELETE /api/containers/:contId ─────────────────────────────
 // Blocked if the container still has any INVENTORY rows pointing at it
 // (i.e. it currently holds stock, or held stock historically) — the
