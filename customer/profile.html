@@ -89,6 +89,22 @@
       font-style: italic;
     }
 
+    /* Read-only field styling (email) — looks visibly non-interactive
+       rather than just a plain disabled browser default. */
+    .profile-field input[readonly] {
+      background: #F5F2EC;
+      color: #7A6E5F;
+      cursor: not-allowed;
+    }
+
+    .profile-field-hint {
+      display: block;
+      font-size: 0.72rem;
+      color: #aaa;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
     /* ── Profile / Orders tabs ─────────────────────────── */
     .profile-tabs {
       display: flex;
@@ -414,7 +430,8 @@
               </div>
               <div class="profile-field">
                 <label for="profileEmailInput"><i class="fa fa-envelope-o"></i> Email</label>
-                <input type="email" class="form-control" id="profileEmailInput" required>
+                <input type="email" class="form-control" id="profileEmailInput" readonly>
+                <span class="profile-field-hint">Contact support to change your email address</span>
               </div>
               <div class="profile-field">
                 <label for="profilePhoneInput"><i class="fa fa-phone"></i> Phone</label>

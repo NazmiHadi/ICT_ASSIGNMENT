@@ -1,18 +1,7 @@
 // routes/orderRoutes.js
 const express = require("express");
-const crypto  = require("crypto");
 const router  = express.Router();
 const { getConnection } = require("../config/db");
-
-// ── Helper: generate a tracking number ────────────────────────
-// Format: KA-YYYYMMDD-<OrderID padded>-<4 random alphanumerics>
-// e.g. KA-20260704-008123-4F7A
-function generateTrackingNo(orderId) {
-  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const orderPart = String(orderId).padStart(6, "0");
-  const randomPart = crypto.randomBytes(2).toString("hex").toUpperCase();
-  return `KA-${datePart}-${orderPart}-${randomPart}`;
-}
 
 // ── GET /api/orders/workers ───────────────────────────────────
 router.get("/orders/workers", async (req, res) => {
@@ -283,15 +272,23 @@ router.put("/orders/:orderId/assign", async (req, res) => {
 });
 
 // ── PUT /api/orders/:orderId/ship ────────────────────────────
-// The assigned worker presses "Ship": generates a tracking number and
-// flips the order to "In Delivery". Only allowed once a worker is
-// assigned and the order hasn't already been shipped.
+// The assigned worker presses "Ship" and types in the tracking number
+// the delivery company gave them (couriers issue their own tracking
+// numbers — we can't generate one on our end that would actually
+// resolve on the courier's tracking page). Body: { worker_id, tracking_no }.
+// Only allowed once a worker is assigned and the order hasn't already
+// been shipped.
 router.put("/orders/:orderId/ship", async (req, res) => {
-  const orderId  = Number(req.params.orderId);
-  const workerId = req.body.worker_id ? Number(req.body.worker_id) : null;
+  const orderId    = Number(req.params.orderId);
+  const workerId   = req.body.worker_id ? Number(req.body.worker_id) : null;
+  const trackingNo = req.body.tracking_no ? String(req.body.tracking_no).trim() : "";
 
   if (!orderId) {
     return res.status(400).json({ success: false, message: "Invalid order ID." });
+  }
+
+  if (!trackingNo) {
+    return res.status(400).json({ success: false, message: "A tracking number from the delivery company is required to ship this order." });
   }
 
   let conn;
@@ -320,8 +317,6 @@ router.put("/orders/:orderId/ship", async (req, res) => {
     if (current.ORDERSTATUS !== "Processing") {
       return res.status(400).json({ success: false, message: "This order has already been shipped." });
     }
-
-    const trackingNo = generateTrackingNo(orderId);
 
     await conn.execute(
       `UPDATE ORDERS
@@ -375,7 +370,7 @@ router.put("/orders/:orderId/status", async (req, res) => {
     const current = check.rows[0];
 
     if (!current.TRACKINGNO) {
-      return res.status(400).json({ success: false, message: "Order must be shipped (tracking number generated) before its status can be changed." });
+      return res.status(400).json({ success: false, message: "Order must be shipped (tracking number entered) before its status can be changed." });
     }
 
     if (workerId && current.WORKID !== workerId) {
